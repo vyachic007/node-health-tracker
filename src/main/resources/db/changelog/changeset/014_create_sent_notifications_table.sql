@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
----changeset vyacheslav_borisov_04_04_2026:14_create_sent_notifications_table
+--changeset vyacheslav_borisov_04_04_2026:14_create_sent_notifications_table
 CREATE TABLE sent_notifications
 (
     id            BIGSERIAL PRIMARY KEY,
