@@ -14,11 +14,11 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "network_nodes")
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Entity
+@Table(name = "network_nodes")
 public class NetworkNode {
 
     @Id
