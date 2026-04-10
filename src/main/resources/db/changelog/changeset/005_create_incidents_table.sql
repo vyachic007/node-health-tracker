@@ -4,16 +4,15 @@
 CREATE TABLE incidents
 (
     id                        BIGSERIAL PRIMARY KEY,
-    service_id                BIGINT    NOT NULL,
-    status_id                 BIGINT    NOT NULL,
-    opened_at                 TIMESTAMP NOT NULL,
+    service_id                BIGINT      NOT NULL,
+    status                    VARCHAR(20) NOT NULL,
+    opened_at                 TIMESTAMP   NOT NULL,
     closed_at                 TIMESTAMP,
     reason                    TEXT,
     opened_by_check_result_id BIGINT,
     closed_by_check_result_id BIGINT,
     CHECK (closed_at IS NULL OR closed_at >= opened_at),
     FOREIGN KEY (service_id) REFERENCES network_services (id) ON DELETE CASCADE,
-    FOREIGN KEY (status_id) REFERENCES incident_statuses (id),
     FOREIGN KEY (opened_by_check_result_id) REFERENCES check_results (id),
     FOREIGN KEY (closed_by_check_result_id) REFERENCES check_results (id)
 );
