@@ -6,31 +6,16 @@ databaseChangeLog:
       file: db/changelog/changeset/002_create_network_nodes_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/003_create_check_types_table.sql
-      relativeToChangelogFile: false
-  - include:
       file: db/changelog/changeset/003_create_network_services_table.sql
-      relativeToChangelogFile: false
-  - include:
-      file: db/changelog/changeset/005_create_service_statuses_table.sql
       relativeToChangelogFile: false
   - include:
       file: db/changelog/changeset/004_create_check_results_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/007_create_incident_statuses_table.sql
-      relativeToChangelogFile: false
-  - include:
       file: db/changelog/changeset/005_create_incidents_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/009_create_notification_channels_table.sql
-      relativeToChangelogFile: false
-  - include:
       file: db/changelog/changeset/006_create_user_notification_settings_table.sql
-      relativeToChangelogFile: false
-  - include:
-      file: db/changelog/changeset/011_create_notification_events_table.sql
       relativeToChangelogFile: false
   - include:
       file: db/changelog/changeset/007_create_sent_notifications_table.sql
