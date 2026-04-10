@@ -1,5 +1,7 @@
-package by.slava_borisov.nodehealthtracker.model;
+package by.slava_borisov.nodehealthtracker.model.entity;
 
+import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
+import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.model;
+package by.slava_borisov.nodehealthtracker.model.enums;
 
 public enum NotificationEvent {
 

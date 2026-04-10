@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.model;
+package by.slava_borisov.nodehealthtracker.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

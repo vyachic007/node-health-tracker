@@ -1,5 +1,7 @@
-package by.slava_borisov.nodehealthtracker.model;
+package by.slava_borisov.nodehealthtracker.model.entity;
 
+import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
