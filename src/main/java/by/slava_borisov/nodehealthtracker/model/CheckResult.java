@@ -18,6 +18,10 @@ public class CheckResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ServiceStatus status;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
 
@@ -39,8 +43,4 @@ public class CheckResult {
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
     private NetworkService service;
-
-    @ManyToOne
-    @JoinColumn(name = "status_id", nullable = false)
-    private ServiceStatus status;
 }
