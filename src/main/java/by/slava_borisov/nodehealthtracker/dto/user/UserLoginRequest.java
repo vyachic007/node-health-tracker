@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 

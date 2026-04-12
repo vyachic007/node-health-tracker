@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.node;
 
 import java.time.LocalDateTime;
 

@@ -1,11 +1,11 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.user;
 
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 
 import java.time.LocalDateTime;
 
-public record UserAdminResponse(
+public record UserProfileResponse(
 
         Long id,
 

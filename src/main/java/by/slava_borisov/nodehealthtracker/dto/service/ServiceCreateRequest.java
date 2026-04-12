@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.service;
 
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import jakarta.validation.constraints.NotBlank;

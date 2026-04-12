@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.user;
 
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import jakarta.validation.constraints.Email;

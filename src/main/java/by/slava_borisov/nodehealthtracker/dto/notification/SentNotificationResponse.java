@@ -1,4 +1,4 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.notification;
 
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;

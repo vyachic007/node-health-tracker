@@ -1,13 +1,9 @@
-package by.slava_borisov.nodehealthtracker.dto;
+package by.slava_borisov.nodehealthtracker.dto.notification;
 
-import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record NotificationSettingCreateRequest(
-
-        @NotNull
-        NotificationChannel channel,
+public record NotificationSettingUpdateRequest(
 
         @NotNull
         Boolean isEnabled,
