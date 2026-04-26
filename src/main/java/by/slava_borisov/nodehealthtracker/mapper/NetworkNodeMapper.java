@@ -29,5 +29,8 @@ public interface NetworkNodeMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "owner", ignore = true)
-    void updateEntityFromDto(NodeUpdateRequest nodeUpdateRequest, @MappingTarget NetworkNode networkNode);
+    void updateEntityFromDto(
+            NodeUpdateRequest nodeUpdateRequest,
+            @MappingTarget NetworkNode networkNode
+    );
 }

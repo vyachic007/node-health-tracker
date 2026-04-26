@@ -28,5 +28,8 @@ public interface NetworkServiceMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "node", ignore = true)
-    void updateEntityFromDto(ServiceUpdateRequest serviceUpdateRequest, @MappingTarget NetworkService networkService);
+    void updateEntityFromDto(
+            ServiceUpdateRequest serviceUpdateRequest,
+            @MappingTarget NetworkService networkService
+    );
 }
