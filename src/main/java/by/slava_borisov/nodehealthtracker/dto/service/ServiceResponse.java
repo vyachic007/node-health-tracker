@@ -12,6 +12,10 @@ public record ServiceResponse(
 
         CheckType checkType,
 
+        String heartbeatToken,
+
+        LocalDateTime lastHeartbeatAt,
+
         String name,
 
         String targetHost,
