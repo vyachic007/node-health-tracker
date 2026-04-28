@@ -5,5 +5,8 @@ public enum CheckType {
     PING,
     TCP,
     HTTP,
-    HTTPS
+    HTTPS,
+    DNS,
+    SSL,
+    HEARTBEAT
 }
