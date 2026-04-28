@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.model.entity;
 
+import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +35,16 @@ public class CheckResult {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ServiceStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "failure_layer", length = 30)
+    private FailureLayer failureLayer;
+
+    @Column(name = "diagnostic_message")
+    private String diagnosticMessage;
+
+    @Column(name = "recommendation")
+    private String recommendation;
 
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
