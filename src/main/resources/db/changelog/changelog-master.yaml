@@ -1,22 +1,25 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/changeset/001_create_users_table.sql
+      file: db/changelog/changeset/v1.0.0/001_create_users_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/002_create_network_nodes_table.sql
+      file: db/changelog/changeset/v1.0.0/002_create_network_nodes_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/003_create_network_services_table.sql
+      file: db/changelog/changeset/v1.0.0/003_create_network_services_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/004_create_check_results_table.sql
+      file: db/changelog/changeset/v1.0.0/004_create_check_results_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/005_create_incidents_table.sql
+      file: db/changelog/changeset/v1.0.0/005_create_incidents_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/006_create_user_notification_settings_table.sql
+      file: db/changelog/changeset/v1.0.0/006_create_user_notification_settings_table.sql
       relativeToChangelogFile: false
   - include:
-      file: db/changelog/changeset/007_create_sent_notifications_table.sql
+      file: db/changelog/changeset/v1.0.0/007_create_sent_notifications_table.sql
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changeset/v1.1.0/008_add_heartbeat_fields_to_network_services.sql
       relativeToChangelogFile: false
