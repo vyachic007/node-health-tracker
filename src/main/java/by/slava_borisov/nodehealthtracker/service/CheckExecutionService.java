@@ -8,5 +8,7 @@ public interface CheckExecutionService {
 
     CheckResultResponse runCheck(Long serviceId);
 
+    List<CheckResultResponse> runEnabledChecks();
+
     List<CheckResultResponse> getCheckHistory(Long serviceId);
 }
