@@ -12,3 +12,9 @@ spring:
 
 server:
   port: ${APP_PORT:8081}
+
+app:
+  monitoring:
+    scheduler:
+      enabled: true
+      fixed-delay-ms: 60000
