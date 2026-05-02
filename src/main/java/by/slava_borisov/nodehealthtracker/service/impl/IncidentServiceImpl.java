@@ -76,7 +76,4 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.INCIDENT_NOT_FOUND));
     }
 
-    private User getCurrentUser() {
-        return currentUserService.getCurrentUser();
-    }
 }
