@@ -14,7 +14,7 @@ public class IncidentController {
 
     private final IncidentService incidentService;
 
-    @GetMapping("{incidentId}")
+    @GetMapping("/{incidentId}")
     public IncidentResponse getIncidentById(@PathVariable Long incidentId) {
         return incidentService.getIncidentById(incidentId);
     }
@@ -24,12 +24,12 @@ public class IncidentController {
         return incidentService.getCurrentUserIncidents();
     }
 
-    @GetMapping("{serviceId}")
+    @GetMapping("/services/{serviceId}")
     public List<IncidentResponse> getServiceIncidents(@PathVariable Long serviceId) {
         return incidentService.getServiceIncidents(serviceId);
     }
 
-    @PostMapping("{incidentId}")
+    @PostMapping("/{incidentId}/close")
     public IncidentResponse closeIncident(@PathVariable Long incidentId) {
         return incidentService.closeIncident(incidentId);
     }
