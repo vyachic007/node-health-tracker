@@ -10,6 +10,8 @@ public record IncidentResponse(
 
         Long serviceId,
 
+        String serviceName,
+
         IncidentStatus status,
 
         LocalDateTime openedAt,
