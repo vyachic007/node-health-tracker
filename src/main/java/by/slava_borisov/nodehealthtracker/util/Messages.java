@@ -52,4 +52,10 @@ public final class Messages {
 
     public static final String NO_ACTION_REQUIRED =
             "На данный момент дополнительных действий не требуется.";
+
+    public static final String NETWORK_SERVICE_NOT_FOUND =
+            "Сервис мониторинга не найден";
+
+    public static final String TCP_PORT_REQUIRED =
+            "Для TCP-проверки должен быть указан порт";
 }
