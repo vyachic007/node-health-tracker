@@ -94,4 +94,10 @@ public final class Messages {
 
     public static final String NOT_FOUND =
             "Ресурс не найден";
+
+    public static final String NETWORK_NODE_NOT_FOUND =
+            "Сетевой узел не найден";
+
+    public static final String NETWORK_NODE_ACCESS_DENIED =
+            "Нет доступа к этому сетевому узлу";
 }
