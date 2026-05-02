@@ -1,0 +1,81 @@
+package by.slava_borisov.nodehealthtracker.service.impl;
+
+import by.slava_borisov.nodehealthtracker.dto.incident.IncidentResponse;
+import by.slava_borisov.nodehealthtracker.mapper.IncidentMapper;
+import by.slava_borisov.nodehealthtracker.model.entity.Incident;
+import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
+import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
+import by.slava_borisov.nodehealthtracker.repository.UserRepository;
+import by.slava_borisov.nodehealthtracker.service.IncidentService;
+import by.slava_borisov.nodehealthtracker.util.Messages;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class IncidentServiceImpl implements IncidentService {
+
+    private final IncidentRepository incidentRepository;
+    private final UserRepository userRepository;
+    private final IncidentMapper incidentMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public IncidentResponse getIncidentById(Long incidentId) {
+        Incident incident = findIncidentById(incidentId);
+
+        return incidentMapper.toIncidentResponse(incident);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IncidentResponse> getCurrentUserIncidents() {
+        User currentUser = getCurrentUser();
+
+        return incidentRepository.findAllByServiceNodeOwnerIdOrderByOpenedAtDesc(currentUser.getId())
+                .stream()
+                .map(incidentMapper::toIncidentResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IncidentResponse> getServiceIncidents(Long serviceId) {
+        return incidentRepository.findAllByServiceIdOrderByOpenedAtDesc(serviceId)
+                .stream()
+                .map(incidentMapper::toIncidentResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public IncidentResponse closeIncident(Long incidentId) {
+        Incident incident = findIncidentById(incidentId);
+
+        if (incident.getStatus() == IncidentStatus.RESOLVED) {
+            throw new IllegalStateException(Messages.INCIDENT_ALREADY_CLOSED);
+        }
+
+        incident.setStatus(IncidentStatus.RESOLVED);
+        incident.setClosedAt(LocalDateTime.now());
+
+        Incident savedIncident = incidentRepository.save(incident);
+
+        return incidentMapper.toIncidentResponse(savedIncident);
+    }
+
+    private Incident findIncidentById(Long incidentId) {
+       return incidentRepository.findById(incidentId)
+               .orElseThrow(() -> new IllegalArgumentException(Messages.INCIDENT_NOT_FOUND));
+    }
+
+    private User getCurrentUser() {
+        return userRepository.findById(1L)
+                .orElseThrow(() -> new IllegalArgumentException(Messages.USER_NOT_FOUND));
+    }
+}

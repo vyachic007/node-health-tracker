@@ -79,4 +79,7 @@ public final class Messages {
 
     public static final String INCIDENT_ALREADY_CLOSED =
             "Инцидент уже закрыт";
+
+    public static final String USER_NOT_FOUND =
+            "Пользователь не найден";
 }
