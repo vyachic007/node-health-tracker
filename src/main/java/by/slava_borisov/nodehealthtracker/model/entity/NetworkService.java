@@ -40,6 +40,9 @@ public class NetworkService {
     @Column(name = "last_heartbeat_at")
     private LocalDateTime lastHeartbeatAt;
 
+    @Column(name = "last_checked_at")
+    private LocalDateTime lastCheckedAt;
+
     @Column(name = "name", length = 150, nullable = false)
     private String name;
 

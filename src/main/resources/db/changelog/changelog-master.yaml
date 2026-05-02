@@ -26,3 +26,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/v1.1.0/009_add_diagnostic_fields_to_check_results.sql
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changeset/v1.1.0/010_add_last_checked_at_to_network_services.sql
+      relativeToChangelogFile: false
