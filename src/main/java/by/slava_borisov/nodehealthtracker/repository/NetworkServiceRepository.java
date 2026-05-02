@@ -8,4 +8,8 @@ import java.util.List;
 public interface NetworkServiceRepository extends JpaRepository<NetworkService, Long> {
 
     List<NetworkService> findAllByIsEnabledTrue();
+
+    List<NetworkService> findAllByNodeIdOrderByCreatedAtDesc(Long nodeId);
+
+    List<NetworkService> findAllByNodeOwnerIdOrderByCreatedAtDesc(Long ownerId);
 }
