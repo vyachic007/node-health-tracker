@@ -8,8 +8,9 @@ public interface DiagnosticService {
             boolean dnsAvailable,
             boolean pingAvailable,
             boolean tcpAvailable,
-            Integer httpStatusCode,
             boolean sslValid,
+            boolean heartbeatAvailable,
+            Integer httpStatusCode,
             Integer responseTimeMs
     );
 

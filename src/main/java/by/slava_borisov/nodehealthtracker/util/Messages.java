@@ -58,4 +58,19 @@ public final class Messages {
 
     public static final String TCP_PORT_REQUIRED =
             "Для TCP-проверки должен быть указан порт";
+
+    public static final String CHECKER_NOT_FOUND =
+            "Обработчик проверки для типа %s не найден";
+
+    public static final String HEARTBEAT_NOT_RECEIVED =
+            "Heartbeat от сервиса еще не поступал";
+
+    public static final String HEARTBEAT_EXPIRED =
+            "Heartbeat от сервиса давно не поступал";
+
+    public static final String HEARTBEAT_FAILED =
+            "Heartbeat-мониторинг обнаружил отсутствие сигнала от сервиса.";
+
+    public static final String HEARTBEAT_FAILED_RECOMMENDATION =
+            "Проверьте, запущен ли внешний сервис, отправляет ли он heartbeat-запросы и корректно ли настроен heartbeat token.";
 }
