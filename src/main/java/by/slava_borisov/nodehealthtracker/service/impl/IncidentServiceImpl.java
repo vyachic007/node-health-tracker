@@ -1,6 +1,8 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.incident.IncidentResponse;
+import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
+import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.IncidentMapper;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
@@ -58,7 +60,7 @@ public class IncidentServiceImpl implements IncidentService {
         Incident incident = findIncidentById(incidentId);
 
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
-            throw new IllegalStateException(Messages.INCIDENT_ALREADY_CLOSED);
+            throw new InvalidOperationException(Messages.INCIDENT_ALREADY_CLOSED);
         }
 
         incident.setStatus(IncidentStatus.RESOLVED);
@@ -70,12 +72,12 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     private Incident findIncidentById(Long incidentId) {
-       return incidentRepository.findById(incidentId)
-               .orElseThrow(() -> new IllegalArgumentException(Messages.INCIDENT_NOT_FOUND));
+        return incidentRepository.findById(incidentId)
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.INCIDENT_NOT_FOUND));
     }
 
     private User getCurrentUser() {
         return userRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException(Messages.USER_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
     }
 }
