@@ -16,16 +16,14 @@ import org.mapstruct.NullValueCheckStrategy;
 public interface UserNotificationSettingMapper {
 
     @Mapping(source = "user.id", target = "userId")
-    NotificationSettingResponse toNotificationSettingResponse(UserNotificationSetting userNotificationSetting);
+    NotificationSettingResponse toResponse(UserNotificationSetting entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
-    NotificationSettingCreateRequest toNotificationSettingCreateRequest(UserNotificationSetting userNotificationSetting);
+    UserNotificationSetting toEntity(NotificationSettingCreateRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
-    void updateEntityToDto(
-            NotificationSettingUpdateRequest notificationSettingUpdateRequest,
-            @MappingTarget UserNotificationSetting userNotificationSetting
-    );
+    void updateEntity(NotificationSettingUpdateRequest request,
+                      @MappingTarget UserNotificationSetting entity);
 }
