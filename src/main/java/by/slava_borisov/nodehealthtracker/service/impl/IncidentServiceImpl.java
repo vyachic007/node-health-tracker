@@ -8,7 +8,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
-import by.slava_borisov.nodehealthtracker.repository.UserRepository;
+import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.IncidentService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +23,8 @@ import java.util.List;
 public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
-    private final UserRepository userRepository;
     private final IncidentMapper incidentMapper;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +37,7 @@ public class IncidentServiceImpl implements IncidentService {
     @Override
     @Transactional(readOnly = true)
     public List<IncidentResponse> getCurrentUserIncidents() {
-        User currentUser = getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         return incidentRepository.findAllByServiceNodeOwnerIdOrderByOpenedAtDesc(currentUser.getId())
                 .stream()
@@ -77,7 +77,6 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     private User getCurrentUser() {
-        return userRepository.findById(1L)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
+        return currentUserService.getCurrentUser();
     }
 }
