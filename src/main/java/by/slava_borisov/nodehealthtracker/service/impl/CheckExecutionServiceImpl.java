@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
+import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
 import by.slava_borisov.nodehealthtracker.check.checker.ServiceChecker;
 import by.slava_borisov.nodehealthtracker.check.dto.CheckProbeResult;
 import by.slava_borisov.nodehealthtracker.check.factory.ServiceCheckerFactory;
@@ -31,6 +32,7 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     private final CheckResultMapper checkResultMapper;
     private final DiagnosticService diagnosticService;
     private final ServiceCheckerFactory serviceCheckerFactory;
+    private final IncidentLifecycleService incidentLifecycleService;
 
     @Override
     @Transactional
@@ -39,7 +41,7 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
                 .orElseThrow(() -> new IllegalArgumentException(Messages.NETWORK_SERVICE_NOT_FOUND));
 
         CheckResult checkResult = executeCheck(service);
-        CheckResult savedCheckResult = checkResultRepository.save(checkResult);
+        CheckResult savedCheckResult = saveAndProcessIncident(checkResult);
 
         return checkResultMapper.toCheckResultResponse(savedCheckResult);
     }
@@ -50,7 +52,7 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         return networkServiceRepository.findAllByIsEnabledTrue()
                 .stream()
                 .map(this::executeCheck)
-                .map(checkResultRepository::save)
+                .map(this::saveAndProcessIncident)
                 .map(checkResultMapper::toCheckResultResponse)
                 .toList();
     }
@@ -119,5 +121,12 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         }
 
         return ServiceStatus.UP;
+    }
+
+    private CheckResult saveAndProcessIncident(CheckResult checkResult) {
+        CheckResult savedCheckResult = checkResultRepository.save(checkResult);
+        incidentLifecycleService.processCheckResult(savedCheckResult);
+
+        return savedCheckResult;
     }
 }
