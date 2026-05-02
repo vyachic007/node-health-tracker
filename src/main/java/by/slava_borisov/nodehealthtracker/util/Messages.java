@@ -82,4 +82,16 @@ public final class Messages {
 
     public static final String USER_NOT_FOUND =
             "Пользователь не найден";
+
+    public static final String INTERNAL_SERVER_ERROR =
+            "Внутренняя ошибка сервера";
+
+    public static final String VALIDATION_ERROR =
+            "Ошибка валидации входных данных";
+
+    public static final String BAD_REQUEST =
+            "Некорректный запрос";
+
+    public static final String NOT_FOUND =
+            "Ресурс не найден";
 }
