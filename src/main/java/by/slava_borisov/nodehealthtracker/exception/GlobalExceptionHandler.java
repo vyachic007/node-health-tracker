@@ -3,6 +3,7 @@ package by.slava_borisov.nodehealthtracker.exception;
 import by.slava_borisov.nodehealthtracker.dto.error.ApiErrorResponse;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -98,6 +100,13 @@ public class GlobalExceptionHandler {
             Exception exception,
             HttpServletRequest request
     ) {
+        log.error(
+                "Необработанная ошибка при обработке запроса: method={}, path={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception
+        );
+
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 Messages.INTERNAL_SERVER_ERROR,
