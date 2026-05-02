@@ -100,4 +100,7 @@ public final class Messages {
 
     public static final String NETWORK_NODE_ACCESS_DENIED =
             "Нет доступа к этому сетевому узлу";
+
+    public static final String NETWORK_SERVICE_ACCESS_DENIED =
+            "Нет доступа к этому сервису мониторинга";
 }
