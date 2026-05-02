@@ -103,4 +103,13 @@ public final class Messages {
 
     public static final String NETWORK_SERVICE_ACCESS_DENIED =
             "Нет доступа к этому сервису мониторинга";
+
+    public static final String HEARTBEAT_TOKEN_NOT_FOUND =
+            "Heartbeat token не найден";
+
+    public static final String HEARTBEAT_ACCEPTED =
+            "Heartbeat успешно принят";
+
+    public static final String HEARTBEAT_TOKEN_REQUIRED =
+            "Heartbeat token обязателен";
 }
