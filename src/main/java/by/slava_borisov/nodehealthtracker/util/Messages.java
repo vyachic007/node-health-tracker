@@ -73,4 +73,10 @@ public final class Messages {
 
     public static final String HEARTBEAT_FAILED_RECOMMENDATION =
             "Проверьте, запущен ли внешний сервис, отправляет ли он heartbeat-запросы и корректно ли настроен heartbeat token.";
+
+    public static final String INCIDENT_NOT_FOUND =
+            "Инцидент не найден";
+
+    public static final String INCIDENT_ALREADY_CLOSED =
+            "Инцидент уже закрыт";
 }
