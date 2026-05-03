@@ -4,6 +4,7 @@ import by.slava_borisov.nodehealthtracker.dto.error.ApiErrorResponse;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -91,6 +92,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 message,
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodNotSupportedException(
+            HttpRequestMethodNotSupportedException exception,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                exception.getMessage(),
                 request.getRequestURI()
         );
     }
