@@ -112,4 +112,13 @@ public final class Messages {
 
     public static final String HEARTBEAT_TOKEN_REQUIRED =
             "Heartbeat token обязателен";
+
+    public static final String JWT_TOKEN_INVALID =
+            "JWT-токен недействителен";
+
+    public static final String JWT_TOKEN_EXPIRED =
+            "Срок действия JWT-токена истек";
+
+    public static final String JWT_TOKEN_REQUIRED =
+            "JWT-токен обязателен";
 }
