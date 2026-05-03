@@ -121,4 +121,13 @@ public final class Messages {
 
     public static final String JWT_TOKEN_REQUIRED =
             "JWT-токен обязателен";
+
+    public static final String USERNAME_ALREADY_EXISTS =
+            "Пользователь с таким именем уже существует";
+
+    public static final String USER_EMAIL_ALREADY_EXISTS =
+            "Пользователь с таким email уже существует";
+
+    public static final String INVALID_USERNAME_OR_PASSWORD =
+            "Неверное имя пользователя или пароль";
 }
