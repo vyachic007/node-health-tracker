@@ -16,6 +16,8 @@ public record ServiceResponse(
 
         LocalDateTime lastHeartbeatAt,
 
+        LocalDateTime lastCheckedAt,
+
         String name,
 
         String targetHost,
