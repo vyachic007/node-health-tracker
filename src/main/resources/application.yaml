@@ -17,4 +17,8 @@ app:
   monitoring:
     scheduler:
       enabled: true
-      fixed-delay-ms: 10000
+      fixed-delay-ms: 60000
+  security:
+    jwt:
+      secret: ${JWT_SECRET:node-health-tracker-development-secret-key-must-be-long-enough}
+      expiration-ms: ${JWT_EXPIRATION_MS:86400000}
