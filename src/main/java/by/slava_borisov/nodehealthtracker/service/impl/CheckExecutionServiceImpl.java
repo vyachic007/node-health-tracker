@@ -1,10 +1,10 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
 import by.slava_borisov.nodehealthtracker.check.checker.ServiceChecker;
 import by.slava_borisov.nodehealthtracker.check.dto.CheckProbeResult;
 import by.slava_borisov.nodehealthtracker.check.factory.ServiceCheckerFactory;
 import by.slava_borisov.nodehealthtracker.dto.check.CheckResultResponse;
+import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.CheckResultMapper;
 import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
@@ -14,6 +14,7 @@ import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CheckExecutionService;
 import by.slava_borisov.nodehealthtracker.service.DiagnosticService;
 import by.slava_borisov.nodehealthtracker.service.DiagnosticService.DiagnosticResult;
+import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     @Transactional
     public CheckResultResponse runCheck(Long serviceId) {
         NetworkService service = networkServiceRepository.findById(serviceId)
-                .orElseThrow(() -> new IllegalArgumentException(Messages.NETWORK_SERVICE_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
 
         CheckResult checkResult = executeCheck(service);
         CheckResult savedCheckResult = saveAndProcessIncident(checkResult);
@@ -50,6 +51,17 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     @Transactional
     public List<CheckResultResponse> runEnabledChecks() {
         return networkServiceRepository.findAllByIsEnabledTrue()
+                .stream()
+                .map(this::executeCheck)
+                .map(this::saveAndProcessIncident)
+                .map(checkResultMapper::toCheckResultResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<CheckResultResponse> runDueChecks() {
+        return networkServiceRepository.findServicesDueForCheck()
                 .stream()
                 .map(this::executeCheck)
                 .map(this::saveAndProcessIncident)
@@ -74,6 +86,8 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
 
         LocalDateTime finishedAt = LocalDateTime.now();
         int responseTimeMs = calculateResponseTimeMs(startedAt, finishedAt);
+
+        service.setLastCheckedAt(finishedAt);
 
         DiagnosticResult diagnosticResult = diagnosticService.diagnose(
                 probeResult.dnsAvailable(),
@@ -116,11 +130,15 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
             return ServiceStatus.DOWN;
         }
 
-        if (probeResult.httpStatusCode() != null && probeResult.httpStatusCode() >= 400) {
+        if (probeResult.httpStatusCode() != null && httpStatusCodeIsError(probeResult.httpStatusCode())) {
             return ServiceStatus.DOWN;
         }
 
         return ServiceStatus.UP;
+    }
+
+    private boolean httpStatusCodeIsError(Integer httpStatusCode) {
+        return httpStatusCode >= 400;
     }
 
     private CheckResult saveAndProcessIncident(CheckResult checkResult) {

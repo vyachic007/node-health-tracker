@@ -10,5 +10,7 @@ public interface CheckExecutionService {
 
     List<CheckResultResponse> runEnabledChecks();
 
+    List<CheckResultResponse> runDueChecks();
+
     List<CheckResultResponse> getCheckHistory(Long serviceId);
 }
