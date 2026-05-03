@@ -21,16 +21,16 @@ public class ScheduledCheckRunner {
     private boolean schedulerEnabled;
 
     @Scheduled(fixedDelayString = "${app.monitoring.scheduler.fixed-delay-ms:60000}")
-    public void runEnabledChecks() {
+    public void runDueChecks() {
         if (!schedulerEnabled) {
             log.debug("Планировщик мониторинга отключен");
             return;
         }
 
-        log.info("Запуск плановой проверки включенных сервисов");
+        log.info("Запуск плановой проверки сервисов по индивидуальным интервалам");
 
         try {
-            List<CheckResultResponse> results = checkExecutionService.runEnabledChecks();
+            List<CheckResultResponse> results = checkExecutionService.runDueChecks();
 
             log.info(
                     "Плановая проверка завершена: checkedServices={}",

@@ -17,4 +17,4 @@ app:
   monitoring:
     scheduler:
       enabled: true
-      fixed-delay-ms: 60000
+      fixed-delay-ms: 10000
