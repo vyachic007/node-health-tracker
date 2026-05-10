@@ -22,7 +22,7 @@ public class AdminController {
     }
 
     @GetMapping("/users/{userId}")
-    public UserAdminResponse getUserById(Long userId) {
+    public UserAdminResponse getUserById(@PathVariable Long userId) {
         return adminService.getUserById(userId);
     }
 

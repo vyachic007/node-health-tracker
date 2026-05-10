@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -42,6 +43,7 @@ public class AdminServiceImpl implements AdminService {
         User user = findUserById(userId);
 
         user.setStatus(request.status());
+        user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
 
