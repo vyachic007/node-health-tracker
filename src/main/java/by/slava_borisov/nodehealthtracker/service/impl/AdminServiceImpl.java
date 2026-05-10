@@ -28,7 +28,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(readOnly = true)
     public List<UserAdminResponse> getAllUsers() {
-        return userRepository.findAll()
+        return userRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(this::toUserAdminResponse)
                 .toList();
