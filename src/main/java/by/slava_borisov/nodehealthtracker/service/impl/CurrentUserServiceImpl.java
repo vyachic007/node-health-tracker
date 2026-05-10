@@ -1,24 +1,33 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
+import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
-import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class CurrentUserServiceImpl implements CurrentUserService {
 
-    private static final Long TEMPORARY_USER_ID = 1L;
-
-    private final UserRepository userRepository;
-
     @Override
     public User getCurrentUser() {
-        return userRepository.findById(TEMPORARY_USER_ID)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException(Messages.ACCESS_DENIED);
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof User user)) {
+            throw new AccessDeniedException(Messages.ACCESS_DENIED);
+        }
+        return user;
     }
 }

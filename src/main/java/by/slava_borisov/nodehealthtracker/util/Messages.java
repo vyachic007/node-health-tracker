@@ -130,4 +130,7 @@ public final class Messages {
 
     public static final String INVALID_USERNAME_OR_PASSWORD =
             "Неверное имя пользователя или пароль";
+
+    public static final String ACCESS_DENIED =
+            "Доступ запрещен";
 }
