@@ -6,6 +6,7 @@ import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
@@ -27,8 +28,8 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserAdminResponse> getAllUsers() {
-        return userRepository.findAllByOrderByCreatedAtDesc()
+    public List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role) {
+        return findUsersByFilters(status, role)
                 .stream()
                 .map(this::toUserAdminResponse)
                 .toList();
@@ -111,5 +112,21 @@ public class AdminServiceImpl implements AdminService {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+    }
+
+    private List<User> findUsersByFilters(UserStatus status, RoleName role) {
+        if (status != null && role != null) {
+            return userRepository.findAllByStatusAndRoleOrderByCreatedAtDesc(status, role);
+        }
+
+        if (status != null) {
+            return userRepository.findAllByStatusOrderByCreatedAtDesc(status);
+        }
+
+        if (role != null) {
+            return userRepository.findAllByRoleOrderByCreatedAtDesc(role);
+        }
+
+        return userRepository.findAllByOrderByCreatedAtDesc();
     }
 }

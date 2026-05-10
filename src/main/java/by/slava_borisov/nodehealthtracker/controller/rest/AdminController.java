@@ -3,6 +3,8 @@ package by.slava_borisov.nodehealthtracker.controller.rest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
+import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
+import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +20,11 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public List<UserAdminResponse> getAllUsers() {
-        return adminService.getAllUsers();
+    public List<UserAdminResponse> getAllUsers(
+            @RequestParam(required = false) UserStatus status,
+            @RequestParam(name = "role", required = false) RoleName role
+    ) {
+        return adminService.getAllUsers(status, role);
     }
 
     @GetMapping("/users/{userId}")
