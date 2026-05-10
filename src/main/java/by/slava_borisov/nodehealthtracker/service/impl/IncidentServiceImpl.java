@@ -6,9 +6,11 @@ import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.IncidentMapper;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
+import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
+import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.IncidentService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
@@ -25,6 +27,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final IncidentMapper incidentMapper;
+    private final NetworkServiceRepository networkServiceRepository;
     private final CurrentUserService currentUserService;
 
     @Override
@@ -53,10 +56,12 @@ public class IncidentServiceImpl implements IncidentService {
     @Transactional(readOnly = true)
     public List<IncidentResponse> getServiceIncidents(Long serviceId) {
         User currentUser = currentUserService.getCurrentUser();
+        NetworkService service = findServiceById(serviceId);
 
-        return incidentRepository.findAllByServiceIdOrderByOpenedAtDesc(serviceId)
+        validateServiceAccess(service, currentUser);
+
+        return incidentRepository.findAllByServiceNodeOwnerIdOrderByOpenedAtDesc(serviceId)
                 .stream()
-                .filter(incident -> isIncidentOwner(incident, currentUser))
                 .map(incidentMapper::toIncidentResponse)
                 .toList();
     }
@@ -98,5 +103,16 @@ public class IncidentServiceImpl implements IncidentService {
                 .getOwner()
                 .getId()
                 .equals(currentUser.getId());
+    }
+
+   private NetworkService findServiceById(Long serviceId) {
+        return networkServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
+   }
+
+    private void validateServiceAccess(NetworkService service, User currentUser) {
+        if (!service.getNode().getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException(Messages.NETWORK_SERVICE_ACCESS_DENIED);
+        }
     }
 }
