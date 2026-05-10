@@ -136,4 +136,7 @@ public final class Messages {
 
     public static final String INCIDENT_ACCESS_DENIED =
             "Нет доступа к этому инциденту";
+
+    public static final String RESOURCE_NOT_FOUND =
+            "Ресурс не найден";
 }
