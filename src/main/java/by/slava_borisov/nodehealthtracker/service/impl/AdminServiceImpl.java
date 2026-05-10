@@ -69,7 +69,10 @@ public class AdminServiceImpl implements AdminService {
             throw new InvalidOperationException(Messages.ADMIN_CANNOT_DELETE_SELF);
         }
 
-        userRepository.delete(user);
+        user.setStatus(UserStatus.BLOCKED);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
     }
 
     private User findUserById(Long userId) {
