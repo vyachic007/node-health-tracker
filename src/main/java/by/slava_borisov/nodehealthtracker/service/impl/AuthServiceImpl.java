@@ -4,6 +4,7 @@ import by.slava_borisov.nodehealthtracker.dto.user.AuthResponse;
 import by.slava_borisov.nodehealthtracker.dto.user.UserLoginRequest;
 import by.slava_borisov.nodehealthtracker.dto.user.UserProfileResponse;
 import by.slava_borisov.nodehealthtracker.dto.user.UserRegistrationRequest;
+import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.InvalidCredentialsException;
 import by.slava_borisov.nodehealthtracker.exception.UserAlreadyExistsException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
@@ -65,6 +66,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new InvalidCredentialsException(Messages.INVALID_USERNAME_OR_PASSWORD);
+        }
+
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new AccessDeniedException(Messages.USER_BLOCKED);
         }
 
         return buildAuthResponse(user);

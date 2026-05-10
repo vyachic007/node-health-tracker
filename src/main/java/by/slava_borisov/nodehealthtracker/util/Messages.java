@@ -139,4 +139,7 @@ public final class Messages {
 
     public static final String RESOURCE_NOT_FOUND =
             "Ресурс не найден";
+
+    public static final String USER_BLOCKED =
+            "Пользователь заблокирован";
 }
