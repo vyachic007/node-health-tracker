@@ -2,10 +2,13 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
+import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
+import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import java.util.List;
 public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,7 +44,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public UserAdminResponse updateUserStatus(Long userId, UserBlockRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
         User user = findUserById(userId);
+
+        if (currentUser.getId().equals(user.getId()) && request.status() == UserStatus.BLOCKED) {
+            throw new InvalidOperationException(Messages.ADMIN_CANNOT_BLOCK_SELF);
+        }
 
         user.setStatus(request.status());
         user.setUpdatedAt(LocalDateTime.now());
@@ -53,7 +62,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public void deleteUser(Long userId) {
+        User currentUser = currentUserService.getCurrentUser();
         User user = findUserById(userId);
+
+        if (currentUser.getId().equals(user.getId())) {
+            throw new InvalidOperationException(Messages.ADMIN_CANNOT_DELETE_SELF);
+        }
 
         userRepository.delete(user);
     }
