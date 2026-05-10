@@ -148,4 +148,7 @@ public final class Messages {
 
     public static final String ADMIN_CANNOT_DELETE_SELF =
             "Администратор не может удалить самого себя";
+
+    public static final String ADMIN_CANNOT_CHANGE_OWN_ROLE =
+            "Администратор не может изменить собственную роль";
 }

@@ -2,6 +2,7 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
@@ -52,6 +53,24 @@ public class AdminServiceImpl implements AdminService {
         }
 
         user.setStatus(request.status());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        User savedUser = userRepository.save(user);
+
+        return toUserAdminResponse(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserAdminResponse updateUserRole(Long userId, UserRoleUpdateRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+        User user = findUserById(userId);
+
+        if (currentUser.getId().equals(user.getId())) {
+            throw new InvalidOperationException(Messages.ADMIN_CANNOT_CHANGE_OWN_ROLE);
+        }
+
+        user.setRole(request.role());
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);

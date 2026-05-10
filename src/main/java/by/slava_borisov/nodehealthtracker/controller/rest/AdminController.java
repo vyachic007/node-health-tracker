@@ -2,6 +2,7 @@ package by.slava_borisov.nodehealthtracker.controller.rest;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,14 @@ public class AdminController {
             @Valid @RequestBody UserBlockRequest request
     ) {
         return adminService.updateUserStatus(userId, request);
+    }
+
+    @PatchMapping("/users/{userId}/role")
+    public UserAdminResponse updateUserRole(
+            @PathVariable Long userId,
+            @Valid @RequestBody UserRoleUpdateRequest request
+    ) {
+        return adminService.updateUserRole(userId, request);
     }
 
     @DeleteMapping("/users/{userId}")
