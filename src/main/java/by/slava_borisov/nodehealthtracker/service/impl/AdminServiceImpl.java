@@ -61,7 +61,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public void deleteUser(Long userId) {
+    public UserAdminResponse deleteUser(Long userId) {
         User currentUser = currentUserService.getCurrentUser();
         User user = findUserById(userId);
 
@@ -72,7 +72,9 @@ public class AdminServiceImpl implements AdminService {
         user.setStatus(UserStatus.BLOCKED);
         user.setUpdatedAt(LocalDateTime.now());
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+       return toUserAdminResponse(savedUser);
     }
 
     private User findUserById(Long userId) {

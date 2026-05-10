@@ -13,5 +13,5 @@ public interface AdminService {
 
     UserAdminResponse updateUserStatus(Long userId, UserBlockRequest request);
 
-    void deleteUser(Long userId);
+    UserAdminResponse deleteUser(Long userId);
 }
