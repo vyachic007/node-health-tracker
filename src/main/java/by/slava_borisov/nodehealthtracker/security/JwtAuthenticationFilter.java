@@ -2,6 +2,7 @@ package by.slava_borisov.nodehealthtracker.security;
 
 import by.slava_borisov.nodehealthtracker.dto.error.ApiErrorResponse;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.JwtService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
@@ -57,6 +58,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user = userRepository.findByUsername(username).orElse(null);
 
                 if (user != null && jwtService.isTokenValid(token, user)) {
+                    if (user.getStatus() == UserStatus.BLOCKED) {
+                        writeForbiddenResponse(
+                                response,
+                                request.getRequestURI(),
+                                Messages.USER_BLOCKED
+                        );
+                        return;
+                    }
+
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
                                     user,
@@ -98,6 +108,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private void writeForbiddenResponse(
+            HttpServletResponse response,
+            String path,
+            String message
+    ) throws IOException {
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                message,
+                path
+        );
+
+        response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
