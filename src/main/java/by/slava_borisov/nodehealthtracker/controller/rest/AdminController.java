@@ -22,9 +22,10 @@ public class AdminController {
     @GetMapping("/users")
     public List<UserAdminResponse> getAllUsers(
             @RequestParam(required = false) UserStatus status,
-            @RequestParam(name = "role", required = false) RoleName role
+            @RequestParam(name = "role", required = false) RoleName role,
+            @RequestParam(required = false) String query
     ) {
-        return adminService.getAllUsers(status, role);
+        return adminService.getAllUsers(status, role, query);
     }
 
     @GetMapping("/users/{userId}")

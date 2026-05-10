@@ -28,8 +28,10 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role) {
-        return findUsersByFilters(status, role)
+    public List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role, String query) {
+        String normalizedQuery = normalizeQuery(query);
+
+        return userRepository.findAllByAdminFilters(status, role, normalizedQuery)
                 .stream()
                 .map(this::toUserAdminResponse)
                 .toList();
@@ -94,12 +96,20 @@ public class AdminServiceImpl implements AdminService {
 
         User savedUser = userRepository.save(user);
 
-       return toUserAdminResponse(savedUser);
+        return toUserAdminResponse(savedUser);
     }
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+
+        return query.trim();
     }
 
     private UserAdminResponse toUserAdminResponse(User user) {
@@ -112,21 +122,5 @@ public class AdminServiceImpl implements AdminService {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
-    }
-
-    private List<User> findUsersByFilters(UserStatus status, RoleName role) {
-        if (status != null && role != null) {
-            return userRepository.findAllByStatusAndRoleOrderByCreatedAtDesc(status, role);
-        }
-
-        if (status != null) {
-            return userRepository.findAllByStatusOrderByCreatedAtDesc(status);
-        }
-
-        if (role != null) {
-            return userRepository.findAllByRoleOrderByCreatedAtDesc(role);
-        }
-
-        return userRepository.findAllByOrderByCreatedAtDesc();
     }
 }

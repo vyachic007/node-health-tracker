@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface AdminService {
 
-    List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role);
+    List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role, String query);
 
     UserAdminResponse getUserById(Long userId);
 
