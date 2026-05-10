@@ -133,4 +133,7 @@ public final class Messages {
 
     public static final String ACCESS_DENIED =
             "Доступ запрещен";
+
+    public static final String INCIDENT_ACCESS_DENIED =
+            "Нет доступа к этому инциденту";
 }

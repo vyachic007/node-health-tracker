@@ -1,6 +1,7 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.incident.IncidentResponse;
+import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.IncidentMapper;
@@ -29,7 +30,10 @@ public class IncidentServiceImpl implements IncidentService {
     @Override
     @Transactional(readOnly = true)
     public IncidentResponse getIncidentById(Long incidentId) {
+        User currentUser = currentUserService.getCurrentUser();
         Incident incident = findIncidentById(incidentId);
+
+        validateIncidentAccess(incident, currentUser);
 
         return incidentMapper.toIncidentResponse(incident);
     }
@@ -48,8 +52,11 @@ public class IncidentServiceImpl implements IncidentService {
     @Override
     @Transactional(readOnly = true)
     public List<IncidentResponse> getServiceIncidents(Long serviceId) {
+        User currentUser = currentUserService.getCurrentUser();
+
         return incidentRepository.findAllByServiceIdOrderByOpenedAtDesc(serviceId)
                 .stream()
+                .filter(incident -> isIncidentOwner(incident, currentUser))
                 .map(incidentMapper::toIncidentResponse)
                 .toList();
     }
@@ -57,7 +64,10 @@ public class IncidentServiceImpl implements IncidentService {
     @Override
     @Transactional
     public IncidentResponse closeIncident(Long incidentId) {
+        User currentUser = currentUserService.getCurrentUser();
         Incident incident = findIncidentById(incidentId);
+
+        validateIncidentAccess(incident, currentUser);
 
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
             throw new InvalidOperationException(Messages.INCIDENT_ALREADY_CLOSED);
@@ -76,4 +86,17 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.INCIDENT_NOT_FOUND));
     }
 
+    private void validateIncidentAccess(Incident incident, User currentUser) {
+        if (!isIncidentOwner(incident, currentUser)) {
+            throw new AccessDeniedException(Messages.INCIDENT_ACCESS_DENIED);
+        }
+    }
+
+    private boolean isIncidentOwner(Incident incident, User currentUser) {
+        return incident.getService()
+                .getNode()
+                .getOwner()
+                .getId()
+                .equals(currentUser.getId());
+    }
 }
