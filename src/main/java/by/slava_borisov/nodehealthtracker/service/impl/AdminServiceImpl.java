@@ -1,6 +1,7 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
@@ -67,6 +68,24 @@ public class AdminServiceImpl implements AdminService {
                 usersPage.getSize(),
                 usersPage.getTotalElements(),
                 usersPage.getTotalPages()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAdminSummaryResponse getUserSummary() {
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
+        long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
+        long adminUsers = userRepository.countByRole(RoleName.ROLE_ADMIN);
+        long regularUsers = userRepository.countByRole(RoleName.ROLE_USER);
+
+        return new UserAdminSummaryResponse(
+                totalUsers,
+                activeUsers,
+                blockedUsers,
+                adminUsers,
+                regularUsers
         );
     }
 

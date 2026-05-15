@@ -1,6 +1,7 @@
 package by.slava_borisov.nodehealthtracker.controller.rest;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
@@ -10,8 +11,6 @@ import by.slava_borisov.nodehealthtracker.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -29,6 +28,11 @@ public class AdminController {
             @RequestParam(defaultValue = "20") int size
     ) {
         return adminService.getAllUsers(status, role, query, page, size);
+    }
+
+    @GetMapping("/users/summary")
+    public UserAdminSummaryResponse getUserSummary() {
+        return adminService.getUserSummary();
     }
 
     @GetMapping("/users/{userId}")

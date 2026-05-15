@@ -1,12 +1,12 @@
 package by.slava_borisov.nodehealthtracker.service;
 
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
-
 
 public interface AdminService {
 
@@ -17,6 +17,8 @@ public interface AdminService {
             int page,
             int size
     );
+
+    UserAdminSummaryResponse getUserSummary();
 
     UserAdminResponse getUserById(Long userId);
 
