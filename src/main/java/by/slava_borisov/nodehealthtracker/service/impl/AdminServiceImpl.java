@@ -33,7 +33,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<UserAdminResponse> getAllUsers(UserStatus status, RoleName role, String query, int page, int size) {
+    public PageResponse<UserAdminResponse> getAllUsers(
+            UserStatus status,
+            RoleName role,
+            String query,
+            int page,
+            int size
+    ) {
+        validatePagination(page, size);
         String normalizedQuery = normalizeQuery(query);
 
         PageRequest pageRequest = PageRequest.of(
@@ -148,5 +155,14 @@ public class AdminServiceImpl implements AdminService {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+    }
+
+    private void validatePagination(int page, int size) {
+        if (page < 0) {
+            throw new InvalidOperationException(Messages.PAGE_NUMBER_INVALID);
+        }
+        if (size < 1 || size > 100) {
+            throw new InvalidOperationException(Messages.PAGE_SIZE_INVALID);
+        }
     }
 }

@@ -151,4 +151,10 @@ public final class Messages {
 
     public static final String ADMIN_CANNOT_CHANGE_OWN_ROLE =
             "Администратор не может изменить собственную роль";
+
+    public static final String PAGE_NUMBER_INVALID =
+            "Номер страницы не может быть отрицательным";
+
+    public static final String PAGE_SIZE_INVALID =
+            "Размер страницы должен быть от 1 до 100";
 }
