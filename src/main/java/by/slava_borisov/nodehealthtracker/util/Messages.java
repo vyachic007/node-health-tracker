@@ -163,4 +163,7 @@ public final class Messages {
 
     public static final String NEW_PASSWORD_MUST_BE_DIFFERENT =
             "Новый пароль должен отличаться от текущего";
+
+    public static final String JWT_TOKEN_REVOKED =
+            "JWT-токен больше недействителен";
 }

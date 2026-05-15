@@ -52,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(RoleName.ROLE_USER);
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
+        user.setPasswordChangedAt(now);
 
         User savedUser = userRepository.save(user);
 
@@ -96,8 +97,11 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidOperationException(Messages.NEW_PASSWORD_MUST_BE_DIFFERENT);
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        currentUser.setUpdatedAt(LocalDateTime.now());
+        currentUser.setUpdatedAt(now);
+        currentUser.setPasswordChangedAt(now);
 
         userRepository.save(currentUser);
     }

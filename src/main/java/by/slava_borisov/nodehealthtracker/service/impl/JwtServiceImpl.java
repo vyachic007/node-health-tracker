@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 @Service
@@ -41,6 +43,17 @@ public class JwtServiceImpl implements JwtService {
     public String extractUsername(String token) {
         return extractAllClaims(token)
                 .getSubject();
+    }
+
+    @Override
+    public LocalDateTime extractIssuedAt(String token) {
+        Date issuedAt = extractAllClaims(token)
+                .getIssuedAt();
+
+        return LocalDateTime.ofInstant(
+                issuedAt.toInstant(),
+                ZoneId.systemDefault()
+        );
     }
 
     @Override

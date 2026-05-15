@@ -67,6 +67,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return;
                     }
 
+                    if (isTokenIssuedBeforePasswordChange(token, user)) {
+                        writeUnauthorizedResponse(
+                                response,
+                                request.getRequestURI(),
+                                Messages.JWT_TOKEN_REVOKED
+                        );
+                        return;
+                    }
+
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
                                     user,
@@ -92,6 +101,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Messages.JWT_TOKEN_INVALID
             );
         }
+    }
+
+    private boolean isTokenIssuedBeforePasswordChange(String token, User user) {
+        LocalDateTime tokenIssuedAt = jwtService.extractIssuedAt(token);
+
+        return tokenIssuedAt.isBefore(user.getPasswordChangedAt());
     }
 
     private void writeUnauthorizedResponse(
