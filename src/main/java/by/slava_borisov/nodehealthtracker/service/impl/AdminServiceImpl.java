@@ -3,6 +3,7 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
+import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
@@ -13,6 +14,9 @@ import by.slava_borisov.nodehealthtracker.service.AdminService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,15 +30,37 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
 
+
     @Override
     @Transactional(readOnly = true)
-    public List<UserAdminResponse> getAllUsers(UserStatus status, RoleName role, String query) {
+    public PageResponse<UserAdminResponse> getAllUsers(UserStatus status, RoleName role, String query, int page, int size) {
         String normalizedQuery = normalizeQuery(query);
 
-        return userRepository.findAllByAdminFilters(status, role, normalizedQuery)
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<User> usersPage = userRepository.findAllByAdminFilters(
+                status,
+                role,
+                normalizedQuery,
+                pageRequest
+        );
+
+        List<UserAdminResponse> content = usersPage.getContent()
                 .stream()
                 .map(this::toUserAdminResponse)
                 .toList();
+
+        return new PageResponse<>(
+                content,
+                usersPage.getNumber(),
+                usersPage.getSize(),
+                usersPage.getTotalElements(),
+                usersPage.getTotalPages()
+        );
     }
 
     @Override
@@ -106,7 +132,7 @@ public class AdminServiceImpl implements AdminService {
 
     private String normalizeQuery(String query) {
         if (query == null || query.isBlank()) {
-            return null;
+            return "";
         }
 
         return query.trim();

@@ -1,0 +1,12 @@
+package by.slava_borisov.nodehealthtracker.dto.common;
+
+import java.util.List;
+
+public record PageResponse<T> (
+        List<T> content,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages
+) {
+}
