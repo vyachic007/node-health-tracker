@@ -1,11 +1,9 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.dto.user.AuthResponse;
-import by.slava_borisov.nodehealthtracker.dto.user.UserLoginRequest;
-import by.slava_borisov.nodehealthtracker.dto.user.UserProfileResponse;
-import by.slava_borisov.nodehealthtracker.dto.user.UserRegistrationRequest;
+import by.slava_borisov.nodehealthtracker.dto.user.*;
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.InvalidCredentialsException;
+import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.UserAlreadyExistsException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
@@ -84,6 +82,26 @@ public class AuthServiceImpl implements AuthService {
 
         return buildUserProfileResponse(currentUser);
     }
+
+    @Override
+    @Transactional
+    public void changeCurrentUserPassword(PasswordChangeRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(request.currentPassword(), currentUser.getPasswordHash())) {
+            throw new InvalidCredentialsException(Messages.CURRENT_PASSWORD_INVALID);
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), currentUser.getPasswordHash())) {
+            throw new InvalidOperationException(Messages.NEW_PASSWORD_MUST_BE_DIFFERENT);
+        }
+
+        currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        currentUser.setUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(currentUser);
+    }
+
 
     private UserProfileResponse buildUserProfileResponse(User user) {
         return new UserProfileResponse(

@@ -1,9 +1,6 @@
 package by.slava_borisov.nodehealthtracker.controller.rest;
 
-import by.slava_borisov.nodehealthtracker.dto.user.AuthResponse;
-import by.slava_borisov.nodehealthtracker.dto.user.UserLoginRequest;
-import by.slava_borisov.nodehealthtracker.dto.user.UserProfileResponse;
-import by.slava_borisov.nodehealthtracker.dto.user.UserRegistrationRequest;
+import by.slava_borisov.nodehealthtracker.dto.user.*;
 import by.slava_borisov.nodehealthtracker.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +16,13 @@ public class AuthController {
     @GetMapping("/me")
     public UserProfileResponse getCurrentUserProfile() {
         return authService.getCurrentUserProfile();
+    }
+
+    @PatchMapping("/me/password")
+    public void changeCurrentUserPassword(
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
+        authService.changeCurrentUserPassword(request);
     }
 
     @PostMapping("/register")

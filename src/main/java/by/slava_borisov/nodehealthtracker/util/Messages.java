@@ -157,4 +157,10 @@ public final class Messages {
 
     public static final String PAGE_SIZE_INVALID =
             "Размер страницы должен быть от 1 до 100";
+
+    public static final String CURRENT_PASSWORD_INVALID =
+            "Текущий пароль указан неверно";
+
+    public static final String NEW_PASSWORD_MUST_BE_DIFFERENT =
+            "Новый пароль должен отличаться от текущего";
 }
