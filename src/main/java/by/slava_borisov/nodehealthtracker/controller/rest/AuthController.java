@@ -16,6 +16,11 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @GetMapping("/me")
+    public UserProfileResponse getCurrentUserProfile() {
+        return authService.getCurrentUserProfile();
+    }
+
     @PostMapping("/register")
     public UserProfileResponse register(
             @Valid @RequestBody UserRegistrationRequest request

@@ -12,6 +12,7 @@ import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.AuthService;
+import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.JwtService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional
@@ -73,6 +75,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return buildAuthResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileResponse getCurrentUserProfile() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        return buildUserProfileResponse(currentUser);
     }
 
     private UserProfileResponse buildUserProfileResponse(User user) {

@@ -10,4 +10,6 @@ public interface AuthService {
     UserProfileResponse register(UserRegistrationRequest request);
 
     AuthResponse login(UserLoginRequest request);
+
+    UserProfileResponse getCurrentUserProfile();
 }
