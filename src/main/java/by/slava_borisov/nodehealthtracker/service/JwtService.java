@@ -13,4 +13,6 @@ public interface JwtService {
     LocalDateTime extractIssuedAt(String token);
 
     boolean isTokenValid(String token, User user);
+
+    Long extractUserId(String token);
 }

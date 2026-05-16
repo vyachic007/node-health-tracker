@@ -54,4 +54,7 @@ public class User {
 
     @Column(name = "password_changed_at", nullable = false)
     private LocalDateTime passwordChangedAt;
+
+    @Column(name = "credentials_changed_at", nullable = false)
+    private LocalDateTime credentialsChangedAt;
 }

@@ -53,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         user.setPasswordChangedAt(now);
+        user.setCredentialsChangedAt(now);
 
         User savedUser = userRepository.save(user);
 
@@ -102,6 +103,7 @@ public class AuthServiceImpl implements AuthService {
         currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         currentUser.setUpdatedAt(now);
         currentUser.setPasswordChangedAt(now);
+        currentUser.setCredentialsChangedAt(now);
 
         userRepository.save(currentUser);
     }
@@ -121,9 +123,12 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistsException(Messages.USERNAME_ALREADY_EXISTS);
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         currentUser.setEmail(request.email());
         currentUser.setUsername(request.username());
-        currentUser.setUpdatedAt(LocalDateTime.now());
+        currentUser.setUpdatedAt(now);
+        currentUser.setCredentialsChangedAt(now);
 
         User savedUser = userRepository.save(currentUser);
 

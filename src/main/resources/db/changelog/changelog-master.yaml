@@ -32,3 +32,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/v1.1.0/011_add_password_changed_at_to_users.sql
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changeset/v1.1.0/012_add_credentials_changed_at_to_users.sql
+      relativeToChangelogFile: false

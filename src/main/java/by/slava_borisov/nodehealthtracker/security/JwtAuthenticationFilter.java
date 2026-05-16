@@ -52,10 +52,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authorizationHeader.substring(BEARER_PREFIX.length());
 
         try {
-            String username = jwtService.extractUsername(token);
+            Long userId = jwtService.extractUserId(token);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User user = userRepository.findByUsername(username).orElse(null);
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null && jwtService.isTokenValid(token, user)) {
                     if (user.getStatus() == UserStatus.BLOCKED) {
@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return;
                     }
 
-                    if (isTokenIssuedBeforePasswordChange(token, user)) {
+                    if (isTokenIssuedBeforeCredentialsChange(token, user)) {
                         writeUnauthorizedResponse(
                                 response,
                                 request.getRequestURI(),
@@ -103,10 +103,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isTokenIssuedBeforePasswordChange(String token, User user) {
+    private boolean isTokenIssuedBeforeCredentialsChange(String token, User user) {
         LocalDateTime tokenIssuedAt = jwtService.extractIssuedAt(token);
 
-        return tokenIssuedAt.isBefore(user.getPasswordChangedAt());
+        return tokenIssuedAt.isBefore(user.getCredentialsChangedAt());
     }
 
     private void writeUnauthorizedResponse(
