@@ -169,4 +169,7 @@ public final class Messages {
 
     public static final String INVALID_REQUEST_PARAMETER =
             "Некорректный параметр запроса";
+
+    public static final String INVALID_REQUEST_BODY =
+            "Некорректное тело запроса";
 }
