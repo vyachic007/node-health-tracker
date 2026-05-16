@@ -11,4 +11,6 @@ public interface AuthService {
     UserProfileResponse getCurrentUserProfile();
 
     void changeCurrentUserPassword(PasswordChangeRequest request);
+
+    UserProfileResponse updateCurrentUserProfile(UserProfileUpdateRequest request);
 }

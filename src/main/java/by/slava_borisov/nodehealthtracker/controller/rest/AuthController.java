@@ -18,6 +18,13 @@ public class AuthController {
         return authService.getCurrentUserProfile();
     }
 
+    @PatchMapping("/me")
+    public UserProfileResponse updateCurrentUserProfile(
+            @Valid @RequestBody UserProfileUpdateRequest request
+    ) {
+        return authService.updateCurrentUserProfile(request);
+    }
+
     @PatchMapping("/me/password")
     public void changeCurrentUserPassword(
             @Valid @RequestBody PasswordChangeRequest request

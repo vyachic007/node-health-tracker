@@ -106,6 +106,29 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(currentUser);
     }
 
+    @Override
+    @Transactional
+    public UserProfileResponse updateCurrentUserProfile(UserProfileUpdateRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (!currentUser.getEmail().equals(request.email())
+                && userRepository.existsByEmail(request.email())) {
+            throw new UserAlreadyExistsException(Messages.USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        if (!currentUser.getUsername().equals(request.username())
+                && userRepository.existsByUsername(request.username())) {
+            throw new UserAlreadyExistsException(Messages.USERNAME_ALREADY_EXISTS);
+        }
+
+        currentUser.setEmail(request.email());
+        currentUser.setUsername(request.username());
+        currentUser.setUpdatedAt(LocalDateTime.now());
+
+        User savedUser = userRepository.save(currentUser);
+
+        return buildUserProfileResponse(savedUser);
+    }
 
     private UserProfileResponse buildUserProfileResponse(User user) {
         return new UserProfileResponse(
