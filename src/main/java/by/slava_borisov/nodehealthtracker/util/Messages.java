@@ -166,4 +166,7 @@ public final class Messages {
 
     public static final String JWT_TOKEN_REVOKED =
             "JWT-токен больше недействителен";
+
+    public static final String INVALID_REQUEST_PARAMETER =
+            "Некорректный параметр запроса";
 }
