@@ -8,4 +8,6 @@ import java.util.List;
 public interface NetworkNodeRepository extends JpaRepository<NetworkNode, Long> {
 
     List<NetworkNode> findAllByOwnerIdOrderByCreatedAtDesc(Long ownerId);
+
+    long countByOwnerId(Long ownerId);
 }

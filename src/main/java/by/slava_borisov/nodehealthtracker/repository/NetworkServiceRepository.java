@@ -3,6 +3,7 @@ package by.slava_borisov.nodehealthtracker.repository;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,33 @@ public interface NetworkServiceRepository extends JpaRepository<NetworkService, 
     List<NetworkService> findAllByNodeOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
     Optional<NetworkService> findByHeartbeatToken(String heartbeatToken);
+
+    long countByNodeOwnerId(Long ownerId);
+
+    long countByNodeOwnerIdAndIsEnabledTrue(Long ownerId);
+
+    long countByNodeOwnerIdAndIsEnabledFalse(Long ownerId);
+
+    @Query(
+            value = """
+                    SELECT COUNT(*)
+                    FROM network_services ns
+                    JOIN network_nodes nn ON ns.node_id = nn.id
+                    JOIN check_results cr ON cr.service_id = ns.id
+                    WHERE nn.owner_id = :ownerId
+                      AND cr.checked_at = (
+                            SELECT MAX(cr2.checked_at)
+                            FROM check_results cr2
+                            WHERE cr2.service_id = ns.id
+                      )
+                      AND cr.status = :status
+                    """,
+            nativeQuery = true
+    )
+    long countCurrentServicesByStatus(
+            @Param("ownerId") Long ownerId,
+            @Param("status") String status
+    );
 
     @Query(
             value = """

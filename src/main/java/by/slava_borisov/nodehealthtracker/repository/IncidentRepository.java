@@ -14,4 +14,6 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
     List<Incident> findAllByServiceIdOrderByOpenedAtDesc(Long serviceId);
 
     List<Incident> findAllByServiceNodeOwnerIdOrderByOpenedAtDesc(Long ownerId);
+
+    long countByServiceNodeOwnerIdAndStatus(Long ownerId, IncidentStatus status);
 }
