@@ -172,4 +172,10 @@ public final class Messages {
 
     public static final String INVALID_REQUEST_BODY =
             "Некорректное тело запроса";
+
+    public static final String NOTIFICATION_SETTING_ALREADY_EXISTS =
+            "Настройка уведомлений для этого канала уже существует";
+
+    public static final String NOTIFICATION_SETTING_NOT_FOUND =
+            "Настройка уведомлений не найдена";
 }
