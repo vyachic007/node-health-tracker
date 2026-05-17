@@ -11,4 +11,6 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
     List<CheckResult> findAllByServiceIdOrderByCheckedAtDesc(Long serviceId);
 
     long countByServiceNodeOwnerIdAndCheckedAtAfter(Long ownerId, LocalDateTime checkedAt);
+
+    long countByCheckedAtAfter(LocalDateTime checkedAt);
 }

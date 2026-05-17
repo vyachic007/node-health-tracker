@@ -1,9 +1,6 @@
 package by.slava_borisov.nodehealthtracker.controller.rest;
 
-import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
+import by.slava_borisov.nodehealthtracker.dto.admin.*;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
@@ -33,6 +30,11 @@ public class AdminController {
     @GetMapping("/users/summary")
     public UserAdminSummaryResponse getUserSummary() {
         return adminService.getUserSummary();
+    }
+
+    @GetMapping("/summary")
+    public AdminPlatformSummaryResponse getPlatformSummary() {
+        return adminService.getPlatformSummary();
     }
 
     @GetMapping("/users/{userId}")

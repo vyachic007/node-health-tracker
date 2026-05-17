@@ -1,16 +1,15 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
-import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
+import by.slava_borisov.nodehealthtracker.dto.admin.*;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
+import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
-import by.slava_borisov.nodehealthtracker.repository.UserRepository;
+import by.slava_borisov.nodehealthtracker.repository.*;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
@@ -30,6 +29,10 @@ public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
+    private final NetworkNodeRepository networkNodeRepository;
+    private final NetworkServiceRepository networkServiceRepository;
+    private final IncidentRepository incidentRepository;
+    private final CheckResultRepository checkResultRepository;
 
 
     @Override
@@ -151,6 +154,8 @@ public class AdminServiceImpl implements AdminService {
         return toUserAdminResponse(savedUser);
     }
 
+
+
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
@@ -162,6 +167,54 @@ public class AdminServiceImpl implements AdminService {
         }
 
         return query.trim();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminPlatformSummaryResponse getPlatformSummary() {
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
+        long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
+        long adminUsers = userRepository.countByRole(RoleName.ROLE_ADMIN);
+        long regularUsers = userRepository.countByRole(RoleName.ROLE_USER);
+
+        long totalNodes = networkNodeRepository.count();
+
+        long totalServices = networkServiceRepository.count();
+        long enabledServices = networkServiceRepository.countByIsEnabledTrue();
+        long disabledServices = networkServiceRepository.countByIsEnabledFalse();
+
+        long upServices = networkServiceRepository.countCurrentServicesByStatus(
+                ServiceStatus.UP.name()
+        );
+
+        long downServices = networkServiceRepository.countCurrentServicesByStatus(
+                ServiceStatus.DOWN.name()
+        );
+
+        long openIncidents = incidentRepository.countByStatus(IncidentStatus.OPEN);
+        long resolvedIncidents = incidentRepository.countByStatus(IncidentStatus.RESOLVED);
+
+        long checksLast24Hours = checkResultRepository.countByCheckedAtAfter(
+                LocalDateTime.now().minusHours(24)
+        );
+
+        return new AdminPlatformSummaryResponse(
+                totalUsers,
+                activeUsers,
+                blockedUsers,
+                adminUsers,
+                regularUsers,
+                totalNodes,
+                totalServices,
+                enabledServices,
+                disabledServices,
+                upServices,
+                downServices,
+                openIncidents,
+                resolvedIncidents,
+                checksLast24Hours
+        );
     }
 
     private UserAdminResponse toUserAdminResponse(User user) {

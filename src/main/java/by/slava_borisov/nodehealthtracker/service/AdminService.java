@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.service;
 
+import by.slava_borisov.nodehealthtracker.dto.admin.AdminPlatformSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
@@ -19,6 +20,8 @@ public interface AdminService {
     );
 
     UserAdminSummaryResponse getUserSummary();
+
+    AdminPlatformSummaryResponse getPlatformSummary();
 
     UserAdminResponse getUserById(Long userId);
 
