@@ -7,9 +7,11 @@ import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationRespo
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
+import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.SentNotification;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.entity.UserNotificationSetting;
+import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;
 import by.slava_borisov.nodehealthtracker.repository.SentNotificationRepository;
 import by.slava_borisov.nodehealthtracker.repository.UserNotificationSettingRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
@@ -19,12 +21,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
+
+    private static final String NOTIFICATION_STATUS_SENT = "SENT";
 
     private final UserNotificationSettingRepository userNotificationSettingRepository;
     private final SentNotificationRepository sentNotificationRepository;
@@ -33,7 +38,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationSettingResponse createNotificationSetting(NotificationSettingCreateRequest request) {
-      User currentUser = currentUserService.getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
         userNotificationSettingRepository.findByUserIdAndChannel(
                 currentUser.getId(),
@@ -51,6 +56,7 @@ public class NotificationServiceImpl implements NotificationService {
         setting.setNotifyOnIncidentResolved(request.notifyOnIncidentResolved());
 
         UserNotificationSetting savedSetting = userNotificationSettingRepository.save(setting);
+
         return toNotificationSettingResponse(savedSetting);
     }
 
@@ -91,13 +97,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationSettingResponse> getCurrentUserNotificationSettings() {
-       User currentUser = currentUserService.getCurrentUser();
+        User currentUser = currentUserService.getCurrentUser();
 
-       return userNotificationSettingRepository.
-               findAllByUserIdOrderByChannelAsc(currentUser.getId())
-               .stream()
-               .map(this::toNotificationSettingResponse)
-               .toList();
+        return userNotificationSettingRepository
+                .findAllByUserIdOrderByChannelAsc(currentUser.getId())
+                .stream()
+                .map(this::toNotificationSettingResponse)
+                .toList();
     }
 
     @Override
@@ -110,6 +116,56 @@ public class NotificationServiceImpl implements NotificationService {
                 .stream()
                 .map(this::toSentNotificationResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void notifyIncidentOpened(Incident incident) {
+        sendIncidentNotification(incident, NotificationEvent.INCIDENT_OPENED);
+    }
+
+    @Override
+    @Transactional
+    public void notifyIncidentResolved(Incident incident) {
+        sendIncidentNotification(incident, NotificationEvent.INCIDENT_RESOLVED);
+    }
+
+    private void sendIncidentNotification(Incident incident, NotificationEvent event) {
+        User user = incident.getService()
+                .getNode()
+                .getOwner();
+
+        List<UserNotificationSetting> enabledSettings = userNotificationSettingRepository
+                .findAllByUserIdAndIsEnabledTrue(user.getId());
+
+        enabledSettings.stream()
+                .filter(setting -> shouldNotify(setting, event))
+                .forEach(setting -> saveSentNotification(user, incident, setting, event));
+    }
+
+    private boolean shouldNotify(UserNotificationSetting setting, NotificationEvent event) {
+        return switch (event) {
+            case INCIDENT_OPENED -> Boolean.TRUE.equals(setting.getNotifyOnIncidentOpen());
+            case INCIDENT_RESOLVED -> Boolean.TRUE.equals(setting.getNotifyOnIncidentResolved());
+        };
+    }
+
+    private void saveSentNotification(
+            User user,
+            Incident incident,
+            UserNotificationSetting setting,
+            NotificationEvent event
+    ) {
+        SentNotification notification = new SentNotification();
+        notification.setUser(user);
+        notification.setIncident(incident);
+        notification.setChannel(setting.getChannel());
+        notification.setEvent(event);
+        notification.setSentAt(LocalDateTime.now());
+        notification.setStatus(NOTIFICATION_STATUS_SENT);
+        notification.setErrorMessage(null);
+
+        sentNotificationRepository.save(notification);
     }
 
     private NotificationSettingResponse toNotificationSettingResponse(UserNotificationSetting setting) {

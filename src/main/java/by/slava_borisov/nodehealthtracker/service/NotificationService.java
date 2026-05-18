@@ -4,6 +4,7 @@ import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingCr
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingResponse;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationResponse;
+import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 
 import java.util.List;
 
@@ -18,4 +19,8 @@ public interface NotificationService {
     List<NotificationSettingResponse> getCurrentUserNotificationSettings();
 
     List<SentNotificationResponse> getCurrentUserSentNotifications();
+
+    void notifyIncidentOpened(Incident incident);
+
+    void notifyIncidentResolved(Incident incident);
 }

@@ -13,6 +13,7 @@ import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.IncidentService;
+import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final IncidentMapper incidentMapper;
     private final NetworkServiceRepository networkServiceRepository;
     private final CurrentUserService currentUserService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,7 +62,7 @@ public class IncidentServiceImpl implements IncidentService {
 
         validateServiceAccess(service, currentUser);
 
-        return incidentRepository.findAllByServiceNodeOwnerIdOrderByOpenedAtDesc(serviceId)
+        return incidentRepository.findAllByServiceIdOrderByOpenedAtDesc(serviceId)
                 .stream()
                 .map(incidentMapper::toIncidentResponse)
                 .toList();
@@ -82,6 +84,7 @@ public class IncidentServiceImpl implements IncidentService {
         incident.setClosedAt(LocalDateTime.now());
 
         Incident savedIncident = incidentRepository.save(incident);
+        notificationService.notifyIncidentResolved(savedIncident);
 
         return incidentMapper.toIncidentResponse(savedIncident);
     }

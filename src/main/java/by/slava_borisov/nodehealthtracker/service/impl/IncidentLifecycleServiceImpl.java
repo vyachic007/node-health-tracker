@@ -6,6 +6,7 @@ import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
+import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
 
     private final IncidentRepository incidentRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -50,7 +52,9 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         incident.setService(checkResult.getService());
         incident.setOpenedByCheckResult(checkResult);
 
-        incidentRepository.save(incident);
+        Incident savedIncident = incidentRepository.save(incident);
+
+        notificationService.notifyIncidentOpened(savedIncident);
     }
 
     private void closeIncidentIfExists(CheckResult checkResult) {
@@ -65,6 +69,8 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         incident.setClosedAt(LocalDateTime.now());
         incident.setClosedByCheckResult(checkResult);
 
-        incidentRepository.save(incident);
+        Incident savedIncident = incidentRepository.save(incident);
+
+        notificationService.notifyIncidentResolved(savedIncident);
     }
 }
