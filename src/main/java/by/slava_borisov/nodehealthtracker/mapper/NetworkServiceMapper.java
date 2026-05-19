@@ -27,6 +27,8 @@ public interface NetworkServiceMapper {
     @Mapping(target = "hasOpenIncident", ignore = true)
     @Mapping(target = "openIncidentId", ignore = true)
     @Mapping(target = "currentDowntimeSeconds", ignore = true)
+    @Mapping(target = "availabilityPercent24h", ignore = true)
+    @Mapping(target = "averageResponseTimeMs24h", ignore = true)
     ServiceResponse toServiceResponse(NetworkService networkService);
 
     @Mapping(target = "id", ignore = true)

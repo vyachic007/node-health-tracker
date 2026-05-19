@@ -13,6 +13,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
@@ -170,6 +171,21 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         Long secondsUntilNextCheck = calculateSecondsUntilNextCheck(nextCheckAt);
         Long currentDowntimeSeconds = calculateCurrentDowntimeSeconds(openIncident);
 
+        LocalDateTime last24Hours = LocalDateTime.now().minusHours(24);
+
+        Double availabilityPercent24h = calculateAvailabilityPercent24h(
+                networkService.getId(),
+                last24Hours
+        );
+
+        Double averageResponseTimeMs24h = roundToTwoDecimals(
+                checkResultRepository.findAverageResponseTimeByServiceIdAndStatusAfter(
+                        networkService.getId(),
+                        ServiceStatus.UP,
+                        last24Hours
+                )
+        );
+
         return new ServiceResponse(
                 networkService.getId(),
                 networkService.getNode().getId(),
@@ -197,6 +213,9 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 openIncident.isPresent(),
                 openIncident.map(Incident::getId).orElse(null),
                 currentDowntimeSeconds,
+
+                availabilityPercent24h,
+                averageResponseTimeMs24h,
 
                 networkService.getCreatedAt(),
                 networkService.getUpdatedAt()
@@ -229,6 +248,35 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 .map(Incident::getOpenedAt)
                 .map(openedAt -> Duration.between(openedAt, LocalDateTime.now()).getSeconds())
                 .orElse(0L);
+    }
+
+    private Double calculateAvailabilityPercent24h(Long serviceId, LocalDateTime checkedAtAfter) {
+        long totalChecks = checkResultRepository.countByServiceIdAndCheckedAtAfter(
+                serviceId,
+                checkedAtAfter
+        );
+
+        if (totalChecks == 0) {
+            return null;
+        }
+
+        long successfulChecks = checkResultRepository.countByServiceIdAndStatusAndCheckedAtAfter(
+                serviceId,
+                ServiceStatus.UP,
+                checkedAtAfter
+        );
+
+        double availability = successfulChecks * 100.0 / totalChecks;
+
+        return roundToTwoDecimals(availability);
+    }
+
+    private Double roundToTwoDecimals(Double value) {
+        if (value == null) {
+            return null;
+        }
+
+        return Math.round(value * 100.0) / 100.0;
     }
 
     private NetworkService findServiceById(Long serviceId) {

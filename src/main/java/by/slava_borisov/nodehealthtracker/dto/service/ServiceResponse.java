@@ -54,6 +54,10 @@ public record ServiceResponse(
 
         Long currentDowntimeSeconds,
 
+        Double availabilityPercent24h,
+
+        Double averageResponseTimeMs24h,
+
         LocalDateTime createdAt,
 
         LocalDateTime updatedAt
