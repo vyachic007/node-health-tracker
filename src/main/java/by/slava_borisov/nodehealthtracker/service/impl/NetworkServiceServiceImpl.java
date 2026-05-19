@@ -6,10 +6,15 @@ import by.slava_borisov.nodehealthtracker.dto.service.ServiceUpdateRequest;
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.NetworkServiceMapper;
+import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
+import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
+import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
+import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
@@ -19,8 +24,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,6 +36,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
     private final NetworkServiceRepository networkServiceRepository;
     private final NetworkNodeRepository networkNodeRepository;
+    private final CheckResultRepository checkResultRepository;
+    private final IncidentRepository incidentRepository;
     private final NetworkServiceMapper networkServiceMapper;
     private final CurrentUserService currentUserService;
 
@@ -38,11 +47,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         NetworkNode node = findNodeById(request.nodeId());
         validateNodeOwner(node);
 
+        LocalDateTime now = LocalDateTime.now();
+
         NetworkService networkService = networkServiceMapper.toEntity(request);
         networkService.setNode(node);
         networkService.setIsEnabled(true);
-        networkService.setCreatedAt(LocalDateTime.now());
-        networkService.setUpdatedAt(LocalDateTime.now());
+        networkService.setCreatedAt(now);
+        networkService.setUpdatedAt(now);
 
         if (networkService.getCheckType() == CheckType.HEARTBEAT) {
             networkService.setHeartbeatToken(generateHeartbeatToken());
@@ -50,7 +61,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
-        return networkServiceMapper.toServiceResponse(savedService);
+        return buildServiceResponse(savedService);
     }
 
     @Override
@@ -74,7 +85,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
-        return networkServiceMapper.toServiceResponse(savedService);
+        return buildServiceResponse(savedService);
     }
 
     @Override
@@ -92,7 +103,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
-        return networkServiceMapper.toServiceResponse(networkService);
+        return buildServiceResponse(networkService);
     }
 
     @Override
@@ -103,7 +114,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         return networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
                 .stream()
-                .map(networkServiceMapper::toServiceResponse)
+                .map(this::buildServiceResponse)
                 .toList();
     }
 
@@ -114,7 +125,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         return networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
-                .map(networkServiceMapper::toServiceResponse)
+                .map(this::buildServiceResponse)
                 .toList();
     }
 
@@ -129,7 +140,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
-        return networkServiceMapper.toServiceResponse(savedService);
+        return buildServiceResponse(savedService);
     }
 
     @Override
@@ -143,7 +154,81 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
-        return networkServiceMapper.toServiceResponse(savedService);
+        return buildServiceResponse(savedService);
+    }
+
+    private ServiceResponse buildServiceResponse(NetworkService networkService) {
+        Optional<CheckResult> latestCheckResult = checkResultRepository
+                .findTopByServiceIdOrderByCheckedAtDesc(networkService.getId());
+
+        Optional<Incident> openIncident = incidentRepository.findByServiceIdAndStatus(
+                networkService.getId(),
+                IncidentStatus.OPEN
+        );
+
+        LocalDateTime nextCheckAt = calculateNextCheckAt(networkService);
+        Long secondsUntilNextCheck = calculateSecondsUntilNextCheck(nextCheckAt);
+        Long currentDowntimeSeconds = calculateCurrentDowntimeSeconds(openIncident);
+
+        return new ServiceResponse(
+                networkService.getId(),
+                networkService.getNode().getId(),
+                networkService.getCheckType(),
+                networkService.getHeartbeatToken(),
+                networkService.getLastHeartbeatAt(),
+                networkService.getLastCheckedAt(),
+                networkService.getName(),
+                networkService.getTargetHost(),
+                networkService.getPort(),
+                networkService.getPath(),
+                networkService.getIntervalSeconds(),
+                networkService.getIsEnabled(),
+
+                latestCheckResult.map(CheckResult::getStatus).orElse(null),
+                latestCheckResult.map(CheckResult::getResponseTimeMs).orElse(null),
+                latestCheckResult.map(CheckResult::getHttpStatusCode).orElse(null),
+                latestCheckResult.map(CheckResult::getFailureLayer).orElse(null),
+                latestCheckResult.map(CheckResult::getDiagnosticMessage).orElse(null),
+                latestCheckResult.map(CheckResult::getRecommendation).orElse(null),
+
+                nextCheckAt,
+                secondsUntilNextCheck,
+
+                openIncident.isPresent(),
+                openIncident.map(Incident::getId).orElse(null),
+                currentDowntimeSeconds,
+
+                networkService.getCreatedAt(),
+                networkService.getUpdatedAt()
+        );
+    }
+
+    private LocalDateTime calculateNextCheckAt(NetworkService networkService) {
+        if (!Boolean.TRUE.equals(networkService.getIsEnabled())
+                || networkService.getLastCheckedAt() == null
+                || networkService.getIntervalSeconds() == null) {
+            return null;
+        }
+
+        return networkService.getLastCheckedAt()
+                .plusSeconds(networkService.getIntervalSeconds());
+    }
+
+    private Long calculateSecondsUntilNextCheck(LocalDateTime nextCheckAt) {
+        if (nextCheckAt == null) {
+            return null;
+        }
+
+        long seconds = Duration.between(LocalDateTime.now(), nextCheckAt).getSeconds();
+
+        return Math.max(seconds, 0);
+    }
+
+    private Long calculateCurrentDowntimeSeconds(Optional<Incident> openIncident) {
+        return openIncident
+                .map(Incident::getOpenedAt)
+                .map(openedAt -> Duration.between(openedAt, LocalDateTime.now()).getSeconds())
+                .orElse(0L);
     }
 
     private NetworkService findServiceById(Long serviceId) {

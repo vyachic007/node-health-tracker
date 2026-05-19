@@ -1,6 +1,8 @@
 package by.slava_borisov.nodehealthtracker.dto.service;
 
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
+import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
+import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 
 import java.time.LocalDateTime;
 
@@ -29,6 +31,28 @@ public record ServiceResponse(
         Integer intervalSeconds,
 
         Boolean isEnabled,
+
+        ServiceStatus lastStatus,
+
+        Integer lastResponseTimeMs,
+
+        Integer lastHttpStatusCode,
+
+        FailureLayer lastFailureLayer,
+
+        String lastDiagnosticMessage,
+
+        String lastRecommendation,
+
+        LocalDateTime nextCheckAt,
+
+        Long secondsUntilNextCheck,
+
+        Boolean hasOpenIncident,
+
+        Long openIncidentId,
+
+        Long currentDowntimeSeconds,
 
         LocalDateTime createdAt,
 
