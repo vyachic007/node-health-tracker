@@ -17,5 +17,7 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
 
     long countByServiceNodeOwnerIdAndStatus(Long ownerId, IncidentStatus status);
 
+    long countByServiceNodeIdAndStatus(Long nodeId, IncidentStatus status);
+
     long countByStatus(IncidentStatus status);
 }

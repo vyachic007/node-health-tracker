@@ -16,6 +16,17 @@ import org.mapstruct.NullValueCheckStrategy;
 public interface NetworkNodeMapper {
 
     @Mapping(target = "ownerId", source = "owner.id")
+    @Mapping(target = "healthStatus", ignore = true)
+    @Mapping(target = "totalServices", ignore = true)
+    @Mapping(target = "enabledServices", ignore = true)
+    @Mapping(target = "disabledServices", ignore = true)
+    @Mapping(target = "upServices", ignore = true)
+    @Mapping(target = "downServices", ignore = true)
+    @Mapping(target = "unknownServices", ignore = true)
+    @Mapping(target = "openIncidents", ignore = true)
+    @Mapping(target = "lastCheckedAt", ignore = true)
+    @Mapping(target = "availabilityPercent24h", ignore = true)
+    @Mapping(target = "averageResponseTimeMs24h", ignore = true)
     NodeResponse toNodeResponse(NetworkNode networkNode);
 
     @Mapping(target = "id", ignore = true)

@@ -16,6 +16,8 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
 
     Optional<CheckResult> findTopByServiceIdOrderByCheckedAtDesc(Long serviceId);
 
+    Optional<CheckResult> findTopByServiceNodeIdOrderByCheckedAtDesc(Long nodeId);
+
     long countByCheckedAtAfter(LocalDateTime checkedAt);
 
     long countByServiceNodeOwnerIdAndCheckedAtAfter(Long ownerId, LocalDateTime checkedAt);
@@ -24,6 +26,14 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
 
     long countByServiceIdAndStatusAndCheckedAtAfter(
             Long serviceId,
+            ServiceStatus status,
+            LocalDateTime checkedAt
+    );
+
+    long countByServiceNodeIdAndCheckedAtAfter(Long nodeId, LocalDateTime checkedAt);
+
+    long countByServiceNodeIdAndStatusAndCheckedAtAfter(
+            Long nodeId,
             ServiceStatus status,
             LocalDateTime checkedAt
     );
@@ -38,6 +48,20 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
             """)
     Double findAverageResponseTimeByServiceIdAndStatusAfter(
             @Param("serviceId") Long serviceId,
+            @Param("status") ServiceStatus status,
+            @Param("checkedAt") LocalDateTime checkedAt
+    );
+
+    @Query("""
+            SELECT AVG(c.responseTimeMs)
+            FROM CheckResult c
+            WHERE c.service.node.id = :nodeId
+              AND c.status = :status
+              AND c.checkedAt >= :checkedAt
+              AND c.responseTimeMs IS NOT NULL
+            """)
+    Double findAverageResponseTimeByNodeIdAndStatusAfter(
+            @Param("nodeId") Long nodeId,
             @Param("status") ServiceStatus status,
             @Param("checkedAt") LocalDateTime checkedAt
     );

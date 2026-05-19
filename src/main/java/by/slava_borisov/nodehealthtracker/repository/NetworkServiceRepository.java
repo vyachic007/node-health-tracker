@@ -28,6 +28,12 @@ public interface NetworkServiceRepository extends JpaRepository<NetworkService, 
 
     long countByIsEnabledFalse();
 
+    long countByNodeId(Long nodeId);
+
+    long countByNodeIdAndIsEnabledTrue(Long nodeId);
+
+    long countByNodeIdAndIsEnabledFalse(Long nodeId);
+
     @Query(
             value = """
                     SELECT COUNT(*)
@@ -66,6 +72,43 @@ public interface NetworkServiceRepository extends JpaRepository<NetworkService, 
     long countCurrentServicesByStatus(
             @Param("status") String status
     );
+
+    @Query(
+            value = """
+                    SELECT COUNT(*)
+                    FROM network_services ns
+                    JOIN check_results cr ON cr.service_id = ns.id
+                    WHERE ns.node_id = :nodeId
+                      AND ns.is_enabled = true
+                      AND cr.checked_at = (
+                            SELECT MAX(cr2.checked_at)
+                            FROM check_results cr2
+                            WHERE cr2.service_id = ns.id
+                      )
+                      AND cr.status = :status
+                    """,
+            nativeQuery = true
+    )
+    long countCurrentServicesByNodeIdAndStatus(
+            @Param("nodeId") Long nodeId,
+            @Param("status") String status
+    );
+
+    @Query(
+            value = """
+                    SELECT COUNT(*)
+                    FROM network_services ns
+                    WHERE ns.node_id = :nodeId
+                      AND ns.is_enabled = true
+                      AND NOT EXISTS (
+                            SELECT 1
+                            FROM check_results cr
+                            WHERE cr.service_id = ns.id
+                      )
+                    """,
+            nativeQuery = true
+    )
+    long countEnabledServicesWithoutChecksByNodeId(@Param("nodeId") Long nodeId);
 
     @Query(
             value = """
