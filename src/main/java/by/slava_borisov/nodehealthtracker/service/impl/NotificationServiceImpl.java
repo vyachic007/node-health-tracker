@@ -11,29 +11,45 @@ import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.SentNotification;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.entity.UserNotificationSetting;
+import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;
+import by.slava_borisov.nodehealthtracker.model.enums.NotificationStatus;
+import by.slava_borisov.nodehealthtracker.notification.dto.NotificationMessage;
+import by.slava_borisov.nodehealthtracker.notification.sender.NotificationSender;
 import by.slava_borisov.nodehealthtracker.repository.SentNotificationRepository;
 import by.slava_borisov.nodehealthtracker.repository.UserNotificationSettingRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private static final String NOTIFICATION_STATUS_SENT = "SENT";
-
     private final UserNotificationSettingRepository userNotificationSettingRepository;
     private final SentNotificationRepository sentNotificationRepository;
     private final CurrentUserService currentUserService;
+    private final List<NotificationSender> notificationSenders;
+
+    private final Map<NotificationChannel, NotificationSender> senderByChannel =
+            new EnumMap<>(NotificationChannel.class);
+
+    @PostConstruct
+    public void initSenders() {
+        notificationSenders.forEach(sender ->
+                senderByChannel.put(sender.getChannel(), sender)
+        );
+    }
 
     @Override
     @Transactional
@@ -140,7 +156,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         enabledSettings.stream()
                 .filter(setting -> shouldNotify(setting, event))
-                .forEach(setting -> saveSentNotification(user, incident, setting, event));
+                .forEach(setting -> sendAndSaveNotification(user, incident, setting, event));
     }
 
     private boolean shouldNotify(UserNotificationSetting setting, NotificationEvent event) {
@@ -150,11 +166,73 @@ public class NotificationServiceImpl implements NotificationService {
         };
     }
 
-    private void saveSentNotification(
+    private void sendAndSaveNotification(
             User user,
             Incident incident,
             UserNotificationSetting setting,
             NotificationEvent event
+    ) {
+        NotificationMessage message = buildNotificationMessage(incident, event);
+
+        try {
+            NotificationSender sender = findSender(setting.getChannel());
+            sender.send(message, setting);
+
+            saveSentNotification(
+                    user,
+                    incident,
+                    setting,
+                    event,
+                    NotificationStatus.SENT.name(),
+                    null
+            );
+        } catch (Exception exception) {
+            saveSentNotification(
+                    user,
+                    incident,
+                    setting,
+                    event,
+                    NotificationStatus.FAILED.name(),
+                    exception.getMessage()
+            );
+        }
+    }
+
+    private NotificationMessage buildNotificationMessage(Incident incident, NotificationEvent event) {
+        LocalDateTime eventTime = switch (event) {
+            case INCIDENT_OPENED -> incident.getOpenedAt();
+            case INCIDENT_RESOLVED -> incident.getClosedAt();
+        };
+
+        return new NotificationMessage(
+                event,
+                incident.getId(),
+                incident.getService().getId(),
+                incident.getService().getName(),
+                incident.getReason(),
+                eventTime
+        );
+    }
+
+    private NotificationSender findSender(NotificationChannel channel) {
+        NotificationSender sender = senderByChannel.get(channel);
+
+        if (sender == null) {
+            throw new InvalidOperationException(
+                    String.format(Messages.NOTIFICATION_SENDER_NOT_FOUND, channel)
+            );
+        }
+
+        return sender;
+    }
+
+    private void saveSentNotification(
+            User user,
+            Incident incident,
+            UserNotificationSetting setting,
+            NotificationEvent event,
+            String status,
+            String errorMessage
     ) {
         SentNotification notification = new SentNotification();
         notification.setUser(user);
@@ -162,8 +240,8 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setChannel(setting.getChannel());
         notification.setEvent(event);
         notification.setSentAt(LocalDateTime.now());
-        notification.setStatus(NOTIFICATION_STATUS_SENT);
-        notification.setErrorMessage(null);
+        notification.setStatus(status);
+        notification.setErrorMessage(errorMessage);
 
         sentNotificationRepository.save(notification);
     }

@@ -178,4 +178,7 @@ public final class Messages {
 
     public static final String NOTIFICATION_SETTING_NOT_FOUND =
             "Настройка уведомлений не найдена";
+
+    public static final String NOTIFICATION_SENDER_NOT_FOUND =
+            "Отправитель уведомлений для канала %s не найден";
 }
