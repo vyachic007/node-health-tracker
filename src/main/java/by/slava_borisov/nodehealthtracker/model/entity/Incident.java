@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.model.entity;
 
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentSeverity;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +34,10 @@ public class Incident {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private IncidentStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "severity", nullable = false, length = 20)
+    private IncidentSeverity severity;
 
     @Column(name = "opened_at", nullable = false)
     private LocalDateTime openedAt;

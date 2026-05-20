@@ -12,9 +12,9 @@ import org.mapstruct.NullValueCheckStrategy;
 )
 public interface IncidentMapper {
 
-    @Mapping(source = "service.id", target = "serviceId")
-    @Mapping(source = "service.name", target = "serviceName")
-    @Mapping(source = "openedByCheckResult.id", target = "openedByCheckResultId")
-    @Mapping(source = "closedByCheckResult.id", target = "closedByCheckResultId")
+    @Mapping(target = "serviceId", source = "service.id")
+    @Mapping(target = "serviceName", source = "service.name")
+    @Mapping(target = "openedByCheckResultId", source = "openedByCheckResult.id")
+    @Mapping(target = "closedByCheckResultId", source = "closedByCheckResult.id")
     IncidentResponse toIncidentResponse(Incident incident);
 }

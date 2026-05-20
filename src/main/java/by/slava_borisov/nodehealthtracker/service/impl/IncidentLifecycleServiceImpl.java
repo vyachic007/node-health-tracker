@@ -3,6 +3,8 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
+import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentSeverity;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
@@ -21,6 +23,7 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
 
     private static final int DEFAULT_FAILURE_THRESHOLD = 2;
     private static final int DEFAULT_RECOVERY_THRESHOLD = 2;
+    private static final int CRITICAL_FAILURE_COUNT = 5;
 
     private final IncidentRepository incidentRepository;
     private final NetworkServiceRepository networkServiceRepository;
@@ -53,7 +56,7 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
             return;
         }
 
-        openIncidentIfNotExists(checkResult);
+        openIncidentIfNotExists(checkResult, savedService);
     }
 
     private void processUpResult(CheckResult checkResult, NetworkService service) {
@@ -69,20 +72,21 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         closeIncidentIfExists(checkResult);
     }
 
-    private void openIncidentIfNotExists(CheckResult checkResult) {
+    private void openIncidentIfNotExists(CheckResult checkResult, NetworkService service) {
         incidentRepository.findByServiceIdAndStatus(
                 checkResult.getService().getId(),
                 IncidentStatus.OPEN
         ).ifPresentOrElse(
                 incident -> {
                 },
-                () -> openIncident(checkResult)
+                () -> openIncident(checkResult, service)
         );
     }
 
-    private void openIncident(CheckResult checkResult) {
+    private void openIncident(CheckResult checkResult, NetworkService service) {
         Incident incident = new Incident();
         incident.setStatus(IncidentStatus.OPEN);
+        incident.setSeverity(determineSeverity(checkResult, service));
         incident.setOpenedAt(LocalDateTime.now());
         incident.setReason(checkResult.getDiagnosticMessage());
         incident.setService(checkResult.getService());
@@ -108,6 +112,26 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         Incident savedIncident = incidentRepository.save(incident);
 
         notificationService.notifyIncidentResolved(savedIncident);
+    }
+
+    private IncidentSeverity determineSeverity(CheckResult checkResult, NetworkService service) {
+        if (service.getConsecutiveFailures() != null
+                && service.getConsecutiveFailures() >= CRITICAL_FAILURE_COUNT) {
+            return IncidentSeverity.CRITICAL;
+        }
+
+        FailureLayer failureLayer = checkResult.getFailureLayer();
+
+        if (failureLayer == null) {
+            return IncidentSeverity.MEDIUM;
+        }
+
+        return switch (failureLayer) {
+            case PERFORMANCE -> IncidentSeverity.LOW;
+            case APPLICATION, UNKNOWN -> IncidentSeverity.MEDIUM;
+            case DNS, PORT, SSL, HEARTBEAT -> IncidentSeverity.HIGH;
+            case NETWORK -> IncidentSeverity.CRITICAL;
+        };
     }
 
     private void initializeAntiFlappingFieldsIfNeeded(NetworkService service) {
