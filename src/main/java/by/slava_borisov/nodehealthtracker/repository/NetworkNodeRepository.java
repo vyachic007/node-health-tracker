@@ -10,4 +10,8 @@ public interface NetworkNodeRepository extends JpaRepository<NetworkNode, Long> 
     List<NetworkNode> findAllByOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
     long countByOwnerId(Long ownerId);
+
+    long countByOwnerIdAndIsActiveTrue(Long ownerId);
+
+    long countByOwnerIdAndIsActiveFalse(Long ownerId);
 }

@@ -34,6 +34,8 @@ public interface NetworkServiceRepository extends JpaRepository<NetworkService, 
 
     long countByNodeIdAndIsEnabledFalse(Long nodeId);
 
+    List<NetworkService> findAllByNodeOwnerId(Long ownerId);
+
     @Query(
             value = """
                     SELECT COUNT(*)
