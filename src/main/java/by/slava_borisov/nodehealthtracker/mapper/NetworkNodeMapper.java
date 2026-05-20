@@ -27,6 +27,12 @@ public interface NetworkNodeMapper {
     @Mapping(target = "lastCheckedAt", ignore = true)
     @Mapping(target = "availabilityPercent24h", ignore = true)
     @Mapping(target = "averageResponseTimeMs24h", ignore = true)
+    @Mapping(target = "healthScore", ignore = true)
+    @Mapping(target = "healthLevel", ignore = true)
+    @Mapping(target = "healthyServicesCount", ignore = true)
+    @Mapping(target = "degradedServicesCount", ignore = true)
+    @Mapping(target = "unstableServicesCount", ignore = true)
+    @Mapping(target = "criticalServicesCount", ignore = true)
     NodeResponse toNodeResponse(NetworkNode networkNode);
 
     @Mapping(target = "id", ignore = true)

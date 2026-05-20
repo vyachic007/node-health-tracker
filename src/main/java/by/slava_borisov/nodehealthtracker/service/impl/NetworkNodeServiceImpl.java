@@ -3,12 +3,15 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 import by.slava_borisov.nodehealthtracker.dto.node.NodeCreateRequest;
 import by.slava_borisov.nodehealthtracker.dto.node.NodeResponse;
 import by.slava_borisov.nodehealthtracker.dto.node.NodeUpdateRequest;
+import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.mapper.NetworkNodeMapper;
 import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
+import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.NodeHealthStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
@@ -18,6 +21,7 @@ import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NetworkNodeService;
+import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,7 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
     private final CheckResultRepository checkResultRepository;
     private final NetworkNodeMapper networkNodeMapper;
     private final CurrentUserService currentUserService;
+    private final ServiceHealthScoreService serviceHealthScoreService;
 
     @Override
     @Transactional
@@ -153,6 +158,36 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
                 unknownServices
         );
 
+        List<ServiceHealthScoreResponse> serviceHealthScores = networkServiceRepository
+                .findAllByNodeIdOrderByCreatedAtDesc(nodeId)
+                .stream()
+                .filter(NetworkService::getIsEnabled)
+                .map(service -> serviceHealthScoreService.calculateHealthScore(service.getId()))
+                .toList();
+
+        Integer healthScore = calculateNodeHealthScore(serviceHealthScores);
+        HealthLevel healthLevel = determineNodeHealthLevel(healthScore);
+
+        long healthyServicesCount = countServicesByHealthLevel(
+                serviceHealthScores,
+                HealthLevel.HEALTHY
+        );
+
+        long degradedServicesCount = countServicesByHealthLevel(
+                serviceHealthScores,
+                HealthLevel.DEGRADED
+        );
+
+        long unstableServicesCount = countServicesByHealthLevel(
+                serviceHealthScores,
+                HealthLevel.UNSTABLE
+        );
+
+        long criticalServicesCount = countServicesByHealthLevel(
+                serviceHealthScores,
+                HealthLevel.CRITICAL
+        );
+
         return new NodeResponse(
                 node.getId(),
                 node.getOwner().getId(),
@@ -172,6 +207,13 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
                 latestCheckResult.map(CheckResult::getCheckedAt).orElse(null),
                 availabilityPercent24h,
                 averageResponseTimeMs24h,
+
+                healthScore,
+                healthLevel,
+                healthyServicesCount,
+                degradedServicesCount,
+                unstableServicesCount,
+                criticalServicesCount,
 
                 node.getCreatedAt(),
                 node.getUpdatedAt()
@@ -236,6 +278,50 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
         double availability = successfulChecks * 100.0 / totalChecks;
 
         return roundToTwoDecimals(availability);
+    }
+
+    private Integer calculateNodeHealthScore(List<ServiceHealthScoreResponse> serviceHealthScores) {
+        if (serviceHealthScores.isEmpty()) {
+            return null;
+        }
+
+        double averageScore = serviceHealthScores.stream()
+                .map(ServiceHealthScoreResponse::healthScore)
+                .filter(score -> score != null)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+
+        return (int) Math.round(averageScore);
+    }
+
+    private HealthLevel determineNodeHealthLevel(Integer healthScore) {
+        if (healthScore == null) {
+            return null;
+        }
+
+        if (healthScore >= 90) {
+            return HealthLevel.HEALTHY;
+        }
+
+        if (healthScore >= 70) {
+            return HealthLevel.DEGRADED;
+        }
+
+        if (healthScore >= 40) {
+            return HealthLevel.UNSTABLE;
+        }
+
+        return HealthLevel.CRITICAL;
+    }
+
+    private long countServicesByHealthLevel(
+            List<ServiceHealthScoreResponse> serviceHealthScores,
+            HealthLevel healthLevel
+    ) {
+        return serviceHealthScores.stream()
+                .filter(serviceHealthScore -> serviceHealthScore.healthLevel() == healthLevel)
+                .count();
     }
 
     private Double roundToTwoDecimals(Double value) {
