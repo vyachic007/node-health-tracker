@@ -8,4 +8,6 @@ import java.util.List;
 public interface IncidentTimelineEventRepository extends JpaRepository<IncidentTimelineEvent, Long> {
 
     List<IncidentTimelineEvent> findAllByIncidentIdOrderByCreatedAtAsc(Long incidentId);
+
+    Long countByIncidentId(Long incidentId);
 }

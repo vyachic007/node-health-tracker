@@ -352,4 +352,34 @@ public final class Messages {
     public static final String RECOVERY_UNKNOWN_STEP_4_TITLE = "Проверить системные логи";
     public static final String RECOVERY_UNKNOWN_STEP_4_DESCRIPTION =
             "Изучите логи приложения, сервера и контейнеров.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_OPEN =
+            "Инцидент ещё открыт. Проблема требует внимания.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_RESOLVED =
+            "Инцидент закрыт. Сервис восстановлен.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_DNS =
+            "Основная причина была связана с разрешением доменного имени.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_NETWORK =
+            "Основная причина была связана с сетевой доступностью узла.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_PORT =
+            "Основная причина была связана с недоступностью целевого порта.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_SSL =
+            "Основная причина была связана с SSL/TLS-сертификатом или HTTPS-настройками.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_APPLICATION =
+            "Основная причина была связана с работой приложения или HTTP-ответом.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_PERFORMANCE =
+            "Основная причина была связана с производительностью сервиса.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_HEARTBEAT =
+            "Основная причина была связана с отсутствием heartbeat-сигнала.";
+
+    public static final String INCIDENT_REPORT_SUMMARY_UNKNOWN =
+            "Основная причина не была точно определена.";
 }
