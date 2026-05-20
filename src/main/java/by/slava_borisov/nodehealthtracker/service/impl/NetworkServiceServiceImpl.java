@@ -53,6 +53,10 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         NetworkService networkService = networkServiceMapper.toEntity(request);
         networkService.setNode(node);
         networkService.setIsEnabled(true);
+        networkService.setFailureThreshold(2);
+        networkService.setRecoveryThreshold(2);
+        networkService.setConsecutiveFailures(0);
+        networkService.setConsecutiveSuccesses(0);
         networkService.setCreatedAt(now);
         networkService.setUpdatedAt(now);
 

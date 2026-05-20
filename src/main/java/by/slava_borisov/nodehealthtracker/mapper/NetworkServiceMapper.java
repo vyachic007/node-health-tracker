@@ -39,6 +39,10 @@ public interface NetworkServiceMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "node", ignore = true)
+    @Mapping(target = "failureThreshold", ignore = true)
+    @Mapping(target = "recoveryThreshold", ignore = true)
+    @Mapping(target = "consecutiveFailures", ignore = true)
+    @Mapping(target = "consecutiveSuccesses", ignore = true)
     NetworkService toEntity(ServiceCreateRequest serviceCreateRequest);
 
     @Mapping(target = "id", ignore = true)
@@ -48,6 +52,10 @@ public interface NetworkServiceMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "node", ignore = true)
+    @Mapping(target = "failureThreshold", ignore = true)
+    @Mapping(target = "recoveryThreshold", ignore = true)
+    @Mapping(target = "consecutiveFailures", ignore = true)
+    @Mapping(target = "consecutiveSuccesses", ignore = true)
     void updateEntityFromDto(
             ServiceUpdateRequest serviceUpdateRequest,
             @MappingTarget NetworkService networkService

@@ -67,6 +67,18 @@ public class NetworkService {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "failure_threshold", nullable = false)
+    private Integer failureThreshold;
+
+    @Column(name = "recovery_threshold", nullable = false)
+    private Integer recoveryThreshold;
+
+    @Column(name = "consecutive_failures", nullable = false)
+    private Integer consecutiveFailures;
+
+    @Column(name = "consecutive_successes", nullable = false)
+    private Integer consecutiveSuccesses;
+
     @ManyToOne
     @JoinColumn(name = "node_id", nullable = false)
     private NetworkNode node;
