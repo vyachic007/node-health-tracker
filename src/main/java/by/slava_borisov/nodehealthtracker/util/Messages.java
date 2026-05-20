@@ -382,4 +382,13 @@ public final class Messages {
 
     public static final String INCIDENT_REPORT_SUMMARY_UNKNOWN =
             "Основная причина не была точно определена.";
+
+    public static final String RECURRENCE_RECOMMENDATION_LOW =
+            "Проблема выглядит как разовый сбой. Достаточно наблюдать за следующими проверками.";
+
+    public static final String RECURRENCE_RECOMMENDATION_MEDIUM =
+            "Проблема повторяется. Рекомендуется проверить конфигурацию сервиса и связанные компоненты.";
+
+    public static final String RECURRENCE_RECOMMENDATION_HIGH =
+            "Проблема повторяется часто. Рекомендуется искать корневую причину: конфигурацию сервиса, сеть, firewall, инфраструктуру или зависимости приложения.";
 }
