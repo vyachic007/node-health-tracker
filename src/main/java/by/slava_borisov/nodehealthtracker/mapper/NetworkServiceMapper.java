@@ -15,7 +15,7 @@ import org.mapstruct.NullValueCheckStrategy;
 )
 public interface NetworkServiceMapper {
 
-    @Mapping(source = "node.id", target = "nodeId")
+    @Mapping(target = "nodeId", source = "node.id")
     @Mapping(target = "lastStatus", ignore = true)
     @Mapping(target = "lastResponseTimeMs", ignore = true)
     @Mapping(target = "lastHttpStatusCode", ignore = true)
@@ -29,6 +29,9 @@ public interface NetworkServiceMapper {
     @Mapping(target = "currentDowntimeSeconds", ignore = true)
     @Mapping(target = "availabilityPercent24h", ignore = true)
     @Mapping(target = "averageResponseTimeMs24h", ignore = true)
+    @Mapping(target = "healthScore", ignore = true)
+    @Mapping(target = "healthLevel", ignore = true)
+    @Mapping(target = "recurrenceLevel", ignore = true)
     ServiceResponse toServiceResponse(NetworkService networkService);
 
     @Mapping(target = "id", ignore = true)

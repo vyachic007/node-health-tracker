@@ -1,6 +1,7 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceCreateRequest;
+import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceUpdateRequest;
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
@@ -20,6 +21,7 @@ import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NetworkServiceService;
+import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     private final IncidentRepository incidentRepository;
     private final NetworkServiceMapper networkServiceMapper;
     private final CurrentUserService currentUserService;
+    private final ServiceHealthScoreService serviceHealthScoreService;
 
     @Override
     @Transactional
@@ -190,6 +193,10 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 )
         );
 
+        ServiceHealthScoreResponse healthScoreResponse = serviceHealthScoreService.calculateHealthScore(
+                networkService.getId()
+        );
+
         return new ServiceResponse(
                 networkService.getId(),
                 networkService.getNode().getId(),
@@ -220,6 +227,10 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
                 availabilityPercent24h,
                 averageResponseTimeMs24h,
+
+                healthScoreResponse.healthScore(),
+                healthScoreResponse.healthLevel(),
+                healthScoreResponse.recurrenceLevel(),
 
                 networkService.getCreatedAt(),
                 networkService.getUpdatedAt()

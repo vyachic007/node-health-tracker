@@ -1,8 +1,6 @@
 package by.slava_borisov.nodehealthtracker.dto.service;
 
-import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
-import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
-import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.*;
 
 import java.time.LocalDateTime;
 
@@ -57,6 +55,12 @@ public record ServiceResponse(
         Double availabilityPercent24h,
 
         Double averageResponseTimeMs24h,
+
+        Integer healthScore,
+
+        HealthLevel healthLevel,
+
+        RecurrenceLevel recurrenceLevel,
 
         LocalDateTime createdAt,
 
