@@ -1,9 +1,11 @@
 package by.slava_borisov.nodehealthtracker.controller.rest;
 
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceCreateRequest;
+import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceUpdateRequest;
 import by.slava_borisov.nodehealthtracker.service.NetworkServiceService;
+import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.List;
 public class NetworkServiceController {
 
     private final NetworkServiceService networkServiceService;
+    private final ServiceHealthScoreService serviceHealthScoreService;
 
     @PostMapping
     public ServiceResponse createService(@Valid @RequestBody ServiceCreateRequest request) {
@@ -28,6 +31,11 @@ public class NetworkServiceController {
             @Valid @RequestBody ServiceUpdateRequest request
     ) {
         return networkServiceService.updateService(serviceId, request);
+    }
+
+    @GetMapping("/{serviceId}/health-score")
+    public ServiceHealthScoreResponse getServiceHealthScore(@PathVariable Long serviceId) {
+        return serviceHealthScoreService.calculateHealthScore(serviceId);
     }
 
     @DeleteMapping("/{serviceId}")

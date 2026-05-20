@@ -25,6 +25,8 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
 
     long countByStatus(IncidentStatus status);
 
+    Optional<Incident> findTopByServiceIdOrderByOpenedAtDesc(Long serviceId);
+
     @Query("""
             SELECT COUNT(i)
             FROM Incident i

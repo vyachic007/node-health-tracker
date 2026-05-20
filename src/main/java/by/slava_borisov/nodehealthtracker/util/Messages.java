@@ -391,4 +391,16 @@ public final class Messages {
 
     public static final String RECURRENCE_RECOMMENDATION_HIGH =
             "Проблема повторяется часто. Рекомендуется искать корневую причину: конфигурацию сервиса, сеть, firewall, инфраструктуру или зависимости приложения.";
+
+    public static final String HEALTH_SCORE_SUMMARY_HEALTHY =
+            "Сервис работает стабильно. Критичных признаков деградации не обнаружено.";
+
+    public static final String HEALTH_SCORE_SUMMARY_DEGRADED =
+            "Сервис доступен, но есть признаки деградации или нестабильности.";
+
+    public static final String HEALTH_SCORE_SUMMARY_UNSTABLE =
+            "Сервис работает нестабильно. Рекомендуется проверить причины сбоев и метрики доступности.";
+
+    public static final String HEALTH_SCORE_SUMMARY_CRITICAL =
+            "Сервис находится в критическом состоянии. Требуется немедленная диагностика.";
 }
