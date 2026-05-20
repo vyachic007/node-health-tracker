@@ -196,4 +196,160 @@ public final class Messages {
 
     public static final String INCIDENT_TIMELINE_INCIDENT_RESOLVED =
             "Инцидент закрыт, сервис восстановлен.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_DNS =
+            "Проблема связана с разрешением доменного имени.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_NETWORK =
+            "Проблема связана с сетевой доступностью узла.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_PORT =
+            "Проблема связана с недоступностью целевого порта.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_SSL =
+            "Проблема связана с SSL/TLS-сертификатом или HTTPS-настройками.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_APPLICATION =
+            "Проблема связана с работой приложения или HTTP-ответом.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_PERFORMANCE =
+            "Проблема связана с производительностью сервиса.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_HEARTBEAT =
+            "Проблема связана с отсутствием heartbeat-сигнала от агента.";
+
+    public static final String RECOVERY_CHECKLIST_SUMMARY_UNKNOWN =
+            "Точный уровень проблемы не определён, требуется базовая диагностика.";
+
+    public static final String RECOVERY_DNS_STEP_1_TITLE = "Проверить доменное имя";
+    public static final String RECOVERY_DNS_STEP_1_DESCRIPTION =
+            "Убедитесь, что домен указан без ошибки и соответствует нужному сервису.";
+
+    public static final String RECOVERY_DNS_STEP_2_TITLE = "Проверить DNS-записи";
+    public static final String RECOVERY_DNS_STEP_2_DESCRIPTION =
+            "Проверьте A, AAAA или CNAME-записи домена.";
+
+    public static final String RECOVERY_DNS_STEP_3_TITLE = "Проверить резолвинг";
+    public static final String RECOVERY_DNS_STEP_3_DESCRIPTION =
+            "Выполните nslookup или dig и убедитесь, что домен преобразуется в IP-адрес.";
+
+    public static final String RECOVERY_DNS_STEP_4_TITLE = "Проверить DNS-провайдера";
+    public static final String RECOVERY_DNS_STEP_4_DESCRIPTION =
+            "Убедитесь, что у DNS-провайдера нет сбоя или задержки обновления записей.";
+
+    public static final String RECOVERY_NETWORK_STEP_1_TITLE = "Проверить доступность хоста";
+    public static final String RECOVERY_NETWORK_STEP_1_DESCRIPTION =
+            "Выполните ping или traceroute до целевого узла.";
+
+    public static final String RECOVERY_NETWORK_STEP_2_TITLE = "Проверить сетевой маршрут";
+    public static final String RECOVERY_NETWORK_STEP_2_DESCRIPTION =
+            "Убедитесь, что между клиентом и сервером нет проблем маршрутизации.";
+
+    public static final String RECOVERY_NETWORK_STEP_3_TITLE = "Проверить firewall";
+    public static final String RECOVERY_NETWORK_STEP_3_DESCRIPTION =
+            "Проверьте, не блокирует ли firewall входящий или исходящий трафик.";
+
+    public static final String RECOVERY_NETWORK_STEP_4_TITLE = "Проверить состояние сервера";
+    public static final String RECOVERY_NETWORK_STEP_4_DESCRIPTION =
+            "Убедитесь, что сервер включён и доступен из сети.";
+
+    public static final String RECOVERY_PORT_STEP_1_TITLE = "Проверить запуск сервиса";
+    public static final String RECOVERY_PORT_STEP_1_DESCRIPTION =
+            "Убедитесь, что приложение или служба действительно запущены на сервере.";
+
+    public static final String RECOVERY_PORT_STEP_2_TITLE = "Проверить целевой порт";
+    public static final String RECOVERY_PORT_STEP_2_DESCRIPTION =
+            "Проверьте, слушает ли сервис нужный порт через netstat, ss или lsof.";
+
+    public static final String RECOVERY_PORT_STEP_3_TITLE = "Проверить firewall";
+    public static final String RECOVERY_PORT_STEP_3_DESCRIPTION =
+            "Убедитесь, что порт не заблокирован firewall или правилами безопасности.";
+
+    public static final String RECOVERY_PORT_STEP_4_TITLE = "Проверить Docker port mapping";
+    public static final String RECOVERY_PORT_STEP_4_DESCRIPTION =
+            "Если сервис работает в Docker, проверьте проброс портов в docker-compose.yml.";
+
+    public static final String RECOVERY_PORT_STEP_5_TITLE = "Проверить reverse proxy";
+    public static final String RECOVERY_PORT_STEP_5_DESCRIPTION =
+            "Если используется Nginx или другой proxy, проверьте upstream и proxy_pass.";
+
+    public static final String RECOVERY_SSL_STEP_1_TITLE = "Проверить срок сертификата";
+    public static final String RECOVERY_SSL_STEP_1_DESCRIPTION =
+            "Убедитесь, что SSL/TLS-сертификат не истёк.";
+
+    public static final String RECOVERY_SSL_STEP_2_TITLE = "Проверить цепочку сертификатов";
+    public static final String RECOVERY_SSL_STEP_2_DESCRIPTION =
+            "Проверьте, корректно ли настроены intermediate certificates.";
+
+    public static final String RECOVERY_SSL_STEP_3_TITLE = "Проверить HTTPS-конфигурацию";
+    public static final String RECOVERY_SSL_STEP_3_DESCRIPTION =
+            "Проверьте настройки HTTPS на сервере или reverse proxy.";
+
+    public static final String RECOVERY_SSL_STEP_4_TITLE = "Проверить домен сертификата";
+    public static final String RECOVERY_SSL_STEP_4_DESCRIPTION =
+            "Убедитесь, что сертификат выпущен именно для проверяемого домена.";
+
+    public static final String RECOVERY_APPLICATION_STEP_1_TITLE = "Проверить HTTP-статус";
+    public static final String RECOVERY_APPLICATION_STEP_1_DESCRIPTION =
+            "Посмотрите, какой HTTP-код возвращает приложение.";
+
+    public static final String RECOVERY_APPLICATION_STEP_2_TITLE = "Проверить логи приложения";
+    public static final String RECOVERY_APPLICATION_STEP_2_DESCRIPTION =
+            "Проверьте backend-логи на наличие исключений или ошибок обработки запроса.";
+
+    public static final String RECOVERY_APPLICATION_STEP_3_TITLE = "Проверить базу данных";
+    public static final String RECOVERY_APPLICATION_STEP_3_DESCRIPTION =
+            "Убедитесь, что приложение может подключиться к базе данных.";
+
+    public static final String RECOVERY_APPLICATION_STEP_4_TITLE = "Проверить reverse proxy";
+    public static final String RECOVERY_APPLICATION_STEP_4_DESCRIPTION =
+            "Проверьте настройки Nginx, gateway или другого прокси-сервера.";
+
+    public static final String RECOVERY_PERFORMANCE_STEP_1_TITLE = "Проверить нагрузку на сервер";
+    public static final String RECOVERY_PERFORMANCE_STEP_1_DESCRIPTION =
+            "Оцените CPU, RAM, disk I/O и сетевую нагрузку.";
+
+    public static final String RECOVERY_PERFORMANCE_STEP_2_TITLE = "Проверить время ответа БД";
+    public static final String RECOVERY_PERFORMANCE_STEP_2_DESCRIPTION =
+            "Убедитесь, что база данных не является причиной задержки.";
+
+    public static final String RECOVERY_PERFORMANCE_STEP_3_TITLE = "Проверить долгие запросы";
+    public static final String RECOVERY_PERFORMANCE_STEP_3_DESCRIPTION =
+            "Посмотрите slow queries, тяжёлые endpoints или зависшие операции.";
+
+    public static final String RECOVERY_PERFORMANCE_STEP_4_TITLE = "Проверить количество подключений";
+    public static final String RECOVERY_PERFORMANCE_STEP_4_DESCRIPTION =
+            "Убедитесь, что пул соединений и лимиты сервера не исчерпаны.";
+
+    public static final String RECOVERY_HEARTBEAT_STEP_1_TITLE = "Проверить работу агента";
+    public static final String RECOVERY_HEARTBEAT_STEP_1_DESCRIPTION =
+            "Убедитесь, что агент запущен на контролируемом узле.";
+
+    public static final String RECOVERY_HEARTBEAT_STEP_2_TITLE = "Проверить heartbeat token";
+    public static final String RECOVERY_HEARTBEAT_STEP_2_DESCRIPTION =
+            "Проверьте, что агент отправляет heartbeat с корректным токеном.";
+
+    public static final String RECOVERY_HEARTBEAT_STEP_3_TITLE = "Проверить расписание отправки";
+    public static final String RECOVERY_HEARTBEAT_STEP_3_DESCRIPTION =
+            "Убедитесь, что heartbeat отправляется с нужным интервалом.";
+
+    public static final String RECOVERY_HEARTBEAT_STEP_4_TITLE = "Проверить сетевой доступ агента";
+    public static final String RECOVERY_HEARTBEAT_STEP_4_DESCRIPTION =
+            "Проверьте, может ли агент подключиться к серверу мониторинга.";
+
+    public static final String RECOVERY_UNKNOWN_STEP_1_TITLE = "Проверить последние результаты проверок";
+    public static final String RECOVERY_UNKNOWN_STEP_1_DESCRIPTION =
+            "Посмотрите последние check results и errorMessage.";
+
+    public static final String RECOVERY_UNKNOWN_STEP_2_TITLE = "Проверить доступность хоста";
+    public static final String RECOVERY_UNKNOWN_STEP_2_DESCRIPTION =
+            "Убедитесь, что узел доступен из сети.";
+
+    public static final String RECOVERY_UNKNOWN_STEP_3_TITLE = "Проверить приложение и порт";
+    public static final String RECOVERY_UNKNOWN_STEP_3_DESCRIPTION =
+            "Проверьте, запущено ли приложение и открыт ли нужный порт.";
+
+    public static final String RECOVERY_UNKNOWN_STEP_4_TITLE = "Проверить системные логи";
+    public static final String RECOVERY_UNKNOWN_STEP_4_DESCRIPTION =
+            "Изучите логи приложения, сервера и контейнеров.";
 }
