@@ -181,4 +181,19 @@ public final class Messages {
 
     public static final String NOTIFICATION_SENDER_NOT_FOUND =
             "Отправитель уведомлений для канала %s не найден";
+
+    public static final String INCIDENT_TIMELINE_CHECK_FAILED =
+            "Проверка завершилась ошибкой: ";
+
+    public static final String INCIDENT_TIMELINE_SEVERITY_ASSIGNED =
+            "Назначена критичность инцидента: ";
+
+    public static final String INCIDENT_TIMELINE_INCIDENT_OPENED =
+            "Открыт инцидент по сервису: ";
+
+    public static final String INCIDENT_TIMELINE_CHECK_RECOVERED =
+            "Проверка снова завершилась успешно.";
+
+    public static final String INCIDENT_TIMELINE_INCIDENT_RESOLVED =
+            "Инцидент закрыт, сервис восстановлен.";
 }
