@@ -1,16 +1,26 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.dto.admin.*;
+import by.slava_borisov.nodehealthtracker.dto.admin.AdminPlatformSummaryResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserAdminSummaryResponse;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserBlockRequest;
+import by.slava_borisov.nodehealthtracker.dto.admin.UserRoleUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.common.PageResponse;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
-import by.slava_borisov.nodehealthtracker.repository.*;
+import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
+import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
+import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
+import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.AdminService;
+import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +37,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
+    private static final String USER_ENTITY_TYPE = "User";
+
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final NetworkNodeRepository networkNodeRepository;
     private final NetworkServiceRepository networkServiceRepository;
     private final IncidentRepository incidentRepository;
     private final CheckResultRepository checkResultRepository;
-
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -110,10 +122,14 @@ public class AdminServiceImpl implements AdminService {
             throw new InvalidOperationException(Messages.ADMIN_CANNOT_BLOCK_SELF);
         }
 
+        UserStatus previousStatus = user.getStatus();
+
         user.setStatus(request.status());
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
+
+        logUserStatusChange(savedUser, previousStatus, request.status());
 
         return toUserAdminResponse(savedUser);
     }
@@ -133,6 +149,13 @@ public class AdminServiceImpl implements AdminService {
 
         User savedUser = userRepository.save(user);
 
+        auditLogService.log(
+                AuditActionType.USER_ROLE_UPDATED,
+                Messages.AUDIT_USER_ROLE_UPDATED + savedUser.getUsername(),
+                USER_ENTITY_TYPE,
+                savedUser.getId()
+        );
+
         return toUserAdminResponse(savedUser);
     }
 
@@ -151,22 +174,14 @@ public class AdminServiceImpl implements AdminService {
 
         User savedUser = userRepository.save(user);
 
+        auditLogService.log(
+                AuditActionType.USER_BLOCKED,
+                Messages.AUDIT_USER_DELETED + savedUser.getUsername(),
+                USER_ENTITY_TYPE,
+                savedUser.getId()
+        );
+
         return toUserAdminResponse(savedUser);
-    }
-
-
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
-    }
-
-    private String normalizeQuery(String query) {
-        if (query == null || query.isBlank()) {
-            return "";
-        }
-
-        return query.trim();
     }
 
     @Override
@@ -217,6 +232,48 @@ public class AdminServiceImpl implements AdminService {
         );
     }
 
+    private void logUserStatusChange(
+            User savedUser,
+            UserStatus previousStatus,
+            UserStatus newStatus
+    ) {
+        if (previousStatus == newStatus) {
+            return;
+        }
+
+        if (newStatus == UserStatus.BLOCKED) {
+            auditLogService.log(
+                    AuditActionType.USER_BLOCKED,
+                    Messages.AUDIT_USER_BLOCKED + savedUser.getUsername(),
+                    USER_ENTITY_TYPE,
+                    savedUser.getId()
+            );
+            return;
+        }
+
+        if (newStatus == UserStatus.ACTIVE) {
+            auditLogService.log(
+                    AuditActionType.USER_UNBLOCKED,
+                    Messages.AUDIT_USER_UNBLOCKED + savedUser.getUsername(),
+                    USER_ENTITY_TYPE,
+                    savedUser.getId()
+            );
+        }
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null || query.isBlank()) {
+            return "";
+        }
+
+        return query.trim();
+    }
+
     private UserAdminResponse toUserAdminResponse(User user) {
         return new UserAdminResponse(
                 user.getId(),
@@ -233,6 +290,7 @@ public class AdminServiceImpl implements AdminService {
         if (page < 0) {
             throw new InvalidOperationException(Messages.PAGE_NUMBER_INVALID);
         }
+
         if (size < 1 || size > 100) {
             throw new InvalidOperationException(Messages.PAGE_SIZE_INVALID);
         }

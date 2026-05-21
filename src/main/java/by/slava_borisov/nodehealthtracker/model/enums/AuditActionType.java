@@ -16,5 +16,6 @@ public enum AuditActionType {
     INCIDENT_RESOLVED,
 
     USER_BLOCKED,
-    USER_UNBLOCKED
+    USER_UNBLOCKED,
+    USER_ROLE_UPDATED
 }

@@ -424,4 +424,12 @@ public final class Messages {
     public static final String AUDIT_INCIDENT_RESOLVED = "Система закрыла инцидент по сервису: ";
 
     public static final String AUDIT_INCIDENT_MANUALLY_RESOLVED = "Пользователь закрыл инцидент по сервису: ";
+
+    public static final String AUDIT_USER_BLOCKED = "Администратор заблокировал пользователя: ";
+
+    public static final String AUDIT_USER_UNBLOCKED = "Администратор разблокировал пользователя: ";
+
+    public static final String AUDIT_USER_ROLE_UPDATED = "Администратор изменил роль пользователя: ";
+
+    public static final String AUDIT_USER_DELETED = "Администратор удалил пользователя: ";
 }
