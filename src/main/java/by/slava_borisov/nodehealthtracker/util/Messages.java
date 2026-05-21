@@ -422,4 +422,6 @@ public final class Messages {
     public static final String AUDIT_INCIDENT_OPENED = "Система открыла инцидент по сервису: ";
 
     public static final String AUDIT_INCIDENT_RESOLVED = "Система закрыла инцидент по сервису: ";
+
+    public static final String AUDIT_INCIDENT_MANUALLY_RESOLVED = "Пользователь закрыл инцидент по сервису: ";
 }

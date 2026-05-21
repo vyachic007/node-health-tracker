@@ -8,9 +8,11 @@ import by.slava_borisov.nodehealthtracker.mapper.IncidentMapper;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.IncidentService;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
@@ -26,11 +28,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IncidentServiceImpl implements IncidentService {
 
+    private static final String INCIDENT_ENTITY_TYPE = "Incident";
+
     private final IncidentRepository incidentRepository;
     private final IncidentMapper incidentMapper;
     private final NetworkServiceRepository networkServiceRepository;
     private final CurrentUserService currentUserService;
     private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -84,6 +89,14 @@ public class IncidentServiceImpl implements IncidentService {
         incident.setClosedAt(LocalDateTime.now());
 
         Incident savedIncident = incidentRepository.save(incident);
+
+        auditLogService.log(
+                AuditActionType.INCIDENT_RESOLVED,
+                Messages.AUDIT_INCIDENT_MANUALLY_RESOLVED + savedIncident.getService().getName(),
+                INCIDENT_ENTITY_TYPE,
+                savedIncident.getId()
+        );
+
         notificationService.notifyIncidentResolved(savedIncident);
 
         return incidentMapper.toIncidentResponse(savedIncident);
@@ -108,10 +121,10 @@ public class IncidentServiceImpl implements IncidentService {
                 .equals(currentUser.getId());
     }
 
-   private NetworkService findServiceById(Long serviceId) {
+    private NetworkService findServiceById(Long serviceId) {
         return networkServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
-   }
+    }
 
     private void validateServiceAccess(NetworkService service, User currentUser) {
         if (!service.getNode().getOwner().getId().equals(currentUser.getId())) {
