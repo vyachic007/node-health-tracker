@@ -42,6 +42,8 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     private static final String DEMO_PASSWORD = "12345678";
 
+    private static final Integer DEMO_SERVICE_INTERVAL_SECONDS = 3600;
+
     private final UserRepository userRepository;
     private final NetworkNodeRepository networkNodeRepository;
     private final NetworkServiceRepository networkServiceRepository;
@@ -225,6 +227,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 .stream()
                 .filter(service -> service.getName().equals(name))
                 .findFirst()
+                .map(this::updateDemoServiceInterval)
                 .orElseGet(() -> createService(
                         node,
                         name,
@@ -234,6 +237,17 @@ public class DemoDataSeeder implements CommandLineRunner {
                         path,
                         heartbeatToken
                 ));
+    }
+
+    private NetworkService updateDemoServiceInterval(NetworkService service) {
+        if (!DEMO_SERVICE_INTERVAL_SECONDS.equals(service.getIntervalSeconds())) {
+            service.setIntervalSeconds(DEMO_SERVICE_INTERVAL_SECONDS);
+            service.setUpdatedAt(LocalDateTime.now());
+
+            return networkServiceRepository.save(service);
+        }
+
+        return service;
     }
 
     private NetworkService createService(
@@ -257,7 +271,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         service.setHeartbeatToken(heartbeatToken);
         service.setLastHeartbeatAt(null);
         service.setLastCheckedAt(null);
-        service.setIntervalSeconds(60);
+        service.setIntervalSeconds(DEMO_SERVICE_INTERVAL_SECONDS);
         service.setIsEnabled(true);
         service.setFailureThreshold(2);
         service.setRecoveryThreshold(2);
