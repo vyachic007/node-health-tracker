@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
+import by.slava_borisov.nodehealthtracker.dto.dashboard.AdminDashboardSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.dashboard.DashboardSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
@@ -7,10 +8,12 @@ import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.DashboardService;
 import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
@@ -26,6 +29,7 @@ import java.util.List;
 public class DashboardServiceImpl implements DashboardService {
 
     private final CurrentUserService currentUserService;
+    private final UserRepository userRepository;
     private final NetworkNodeRepository networkNodeRepository;
     private final NetworkServiceRepository networkServiceRepository;
     private final IncidentRepository incidentRepository;
@@ -109,7 +113,7 @@ public class DashboardServiceImpl implements DashboardService {
                 HealthLevel.CRITICAL
         );
 
-        Double availabilityPercent24h = calculateAvailabilityPercent24h(
+        Double availabilityPercent24h = calculateUserAvailabilityPercent24h(
                 ownerId,
                 last24Hours
         );
@@ -123,6 +127,100 @@ public class DashboardServiceImpl implements DashboardService {
         );
 
         return new DashboardSummaryResponse(
+                totalNodes,
+                activeNodes,
+                inactiveNodes,
+
+                totalServices,
+                enabledServices,
+                disabledServices,
+
+                upServices,
+                downServices,
+                unknownServices,
+
+                openIncidents,
+                resolvedIncidents,
+
+                checksLast24Hours,
+
+                averageHealthScore,
+                averageHealthLevel,
+
+                healthyServices,
+                degradedServices,
+                unstableServices,
+                criticalServices,
+
+                availabilityPercent24h,
+                averageResponseTimeMs24h
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminDashboardSummaryResponse getAdminSummary() {
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
+        long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
+
+        long totalNodes = networkNodeRepository.count();
+        long activeNodes = networkNodeRepository.countByIsActiveTrue();
+        long inactiveNodes = networkNodeRepository.countByIsActiveFalse();
+
+        long totalServices = networkServiceRepository.count();
+        long enabledServices = networkServiceRepository.countByIsEnabledTrue();
+        long disabledServices = networkServiceRepository.countByIsEnabledFalse();
+
+        long upServices = networkServiceRepository.countCurrentServicesByStatus(
+                ServiceStatus.UP.name()
+        );
+
+        long downServices = networkServiceRepository.countCurrentServicesByStatus(
+                ServiceStatus.DOWN.name()
+        );
+
+        long unknownServices = calculateUnknownServices(
+                enabledServices,
+                upServices,
+                downServices
+        );
+
+        long openIncidents = incidentRepository.countByStatus(IncidentStatus.OPEN);
+        long resolvedIncidents = incidentRepository.countByStatus(IncidentStatus.RESOLVED);
+
+        LocalDateTime last24Hours = LocalDateTime.now().minusHours(24);
+
+        long checksLast24Hours = checkResultRepository.countByCheckedAtAfter(last24Hours);
+
+        Double availabilityPercent24h = calculateAdminAvailabilityPercent24h(last24Hours);
+
+        Double averageResponseTimeMs24h = roundToTwoDecimals(
+                checkResultRepository.findAverageResponseTimeByStatusAfter(
+                        ServiceStatus.UP,
+                        last24Hours
+                )
+        );
+
+        Integer averageHealthScore = calculateAdminAverageHealthScore(
+                enabledServices,
+                upServices,
+                downServices,
+                unknownServices
+        );
+
+        HealthLevel averageHealthLevel = determineHealthLevel(averageHealthScore);
+
+        long healthyServices = averageHealthLevel == HealthLevel.HEALTHY ? enabledServices : 0;
+        long degradedServices = averageHealthLevel == HealthLevel.DEGRADED ? enabledServices : 0;
+        long unstableServices = averageHealthLevel == HealthLevel.UNSTABLE ? enabledServices : 0;
+        long criticalServices = averageHealthLevel == HealthLevel.CRITICAL ? enabledServices : 0;
+
+        return new AdminDashboardSummaryResponse(
+                totalUsers,
+                activeUsers,
+                blockedUsers,
+
                 totalNodes,
                 activeNodes,
                 inactiveNodes,
@@ -178,6 +276,24 @@ public class DashboardServiceImpl implements DashboardService {
         return (int) Math.round(averageScore);
     }
 
+    private Integer calculateAdminAverageHealthScore(
+            long enabledServices,
+            long upServices,
+            long downServices,
+            long unknownServices
+    ) {
+        if (enabledServices == 0) {
+            return null;
+        }
+
+        long totalScore =
+                upServices * 100
+                        + unknownServices * 60
+                        + downServices * 30;
+
+        return (int) Math.round(totalScore * 1.0 / enabledServices);
+    }
+
     private HealthLevel determineHealthLevel(Integer healthScore) {
         if (healthScore == null) {
             return null;
@@ -207,7 +323,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .count();
     }
 
-    private Double calculateAvailabilityPercent24h(Long ownerId, LocalDateTime checkedAtAfter) {
+    private Double calculateUserAvailabilityPercent24h(Long ownerId, LocalDateTime checkedAtAfter) {
         long totalChecks = checkResultRepository.countByServiceNodeOwnerIdAndCheckedAtAfter(
                 ownerId,
                 checkedAtAfter
@@ -219,6 +335,23 @@ public class DashboardServiceImpl implements DashboardService {
 
         long successfulChecks = checkResultRepository.countByServiceNodeOwnerIdAndStatusAndCheckedAtAfter(
                 ownerId,
+                ServiceStatus.UP,
+                checkedAtAfter
+        );
+
+        double availability = successfulChecks * 100.0 / totalChecks;
+
+        return roundToTwoDecimals(availability);
+    }
+
+    private Double calculateAdminAvailabilityPercent24h(LocalDateTime checkedAtAfter) {
+        long totalChecks = checkResultRepository.countByCheckedAtAfter(checkedAtAfter);
+
+        if (totalChecks == 0) {
+            return null;
+        }
+
+        long successfulChecks = checkResultRepository.countByStatusAndCheckedAtAfter(
                 ServiceStatus.UP,
                 checkedAtAfter
         );

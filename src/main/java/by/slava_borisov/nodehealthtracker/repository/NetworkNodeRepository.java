@@ -14,4 +14,8 @@ public interface NetworkNodeRepository extends JpaRepository<NetworkNode, Long> 
     long countByOwnerIdAndIsActiveTrue(Long ownerId);
 
     long countByOwnerIdAndIsActiveFalse(Long ownerId);
+
+    long countByIsActiveTrue();
+
+    long countByIsActiveFalse();
 }

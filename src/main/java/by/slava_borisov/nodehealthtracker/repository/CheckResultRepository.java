@@ -44,6 +44,23 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
             LocalDateTime checkedAt
     );
 
+    long countByStatusAndCheckedAtAfter(
+            ServiceStatus status,
+            LocalDateTime checkedAt
+    );
+
+    @Query("""
+        SELECT AVG(c.responseTimeMs)
+        FROM CheckResult c
+        WHERE c.status = :status
+          AND c.checkedAt >= :checkedAt
+          AND c.responseTimeMs IS NOT NULL
+        """)
+    Double findAverageResponseTimeByStatusAfter(
+            @Param("status") ServiceStatus status,
+            @Param("checkedAt") LocalDateTime checkedAt
+    );
+
     @Query("""
         SELECT AVG(c.responseTimeMs)
         FROM CheckResult c

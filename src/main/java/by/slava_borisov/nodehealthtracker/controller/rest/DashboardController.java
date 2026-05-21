@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.controller.rest;
 
+import by.slava_borisov.nodehealthtracker.dto.dashboard.AdminDashboardSummaryResponse;
 import by.slava_borisov.nodehealthtracker.dto.dashboard.DashboardSummaryResponse;
 import by.slava_borisov.nodehealthtracker.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -15,5 +16,10 @@ public class DashboardController {
     @GetMapping("/my")
     public DashboardSummaryResponse getCurrentUserSummary() {
         return dashboardService.getCurrentUserSummary();
+    }
+
+    @GetMapping("/admin")
+    public AdminDashboardSummaryResponse getAdminSummary() {
+        return dashboardService.getAdminSummary();
     }
 }
