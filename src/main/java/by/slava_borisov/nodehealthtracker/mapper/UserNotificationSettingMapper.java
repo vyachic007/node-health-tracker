@@ -20,10 +20,12 @@ public interface UserNotificationSettingMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "channel", ignore = true)
     UserNotificationSetting toEntity(NotificationSettingCreateRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "channel", ignore = true)
     void updateEntity(NotificationSettingUpdateRequest request,
                       @MappingTarget UserNotificationSetting entity);
 }
