@@ -409,4 +409,17 @@ public final class Messages {
     public static final String AUDIT_NODE_UPDATED = "Обновлён узел: ";
 
     public static final String AUDIT_NODE_DELETED = "Удалён узел: ";
+
+    public static final String AUDIT_SERVICE_CREATED = "Создан сервис: ";
+
+    public static final String AUDIT_SERVICE_UPDATED = "Обновлён сервис: ";
+    public static final String AUDIT_SERVICE_DELETED = "Удалён сервис: ";
+
+    public static final String AUDIT_SERVICE_ENABLED = "Включён сервис: ";
+
+    public static final String AUDIT_SERVICE_DISABLED = "Отключён сервис: ";
+
+    public static final String AUDIT_INCIDENT_OPENED = "Система открыла инцидент по сервису: ";
+
+    public static final String AUDIT_INCIDENT_RESOLVED = "Система закрыла инцидент по сервису: ";
 }

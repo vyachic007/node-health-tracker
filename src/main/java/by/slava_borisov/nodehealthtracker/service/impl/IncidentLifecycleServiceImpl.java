@@ -3,11 +3,13 @@ package by.slava_borisov.nodehealthtracker.service.impl;
 import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
+import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentTimelineEventType;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
 import by.slava_borisov.nodehealthtracker.service.IncidentSeverityService;
 import by.slava_borisov.nodehealthtracker.service.IncidentTimelineService;
@@ -23,11 +25,14 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
 
+    private static final String INCIDENT_ENTITY_TYPE = "Incident";
+
     private final IncidentRepository incidentRepository;
     private final NetworkServiceRepository networkServiceRepository;
     private final NotificationService notificationService;
     private final IncidentSeverityService incidentSeverityService;
     private final IncidentTimelineService incidentTimelineService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -111,6 +116,13 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
                 Messages.INCIDENT_TIMELINE_INCIDENT_OPENED + savedIncident.getService().getName()
         );
 
+        auditLogService.logSystemAction(
+                AuditActionType.INCIDENT_OPENED,
+                Messages.AUDIT_INCIDENT_OPENED + savedIncident.getService().getName(),
+                INCIDENT_ENTITY_TYPE,
+                savedIncident.getId()
+        );
+
         notificationService.notifyIncidentOpened(savedIncident);
     }
 
@@ -140,6 +152,13 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
                 checkResult,
                 IncidentTimelineEventType.INCIDENT_RESOLVED,
                 Messages.INCIDENT_TIMELINE_INCIDENT_RESOLVED
+        );
+
+        auditLogService.logSystemAction(
+                AuditActionType.INCIDENT_RESOLVED,
+                Messages.AUDIT_INCIDENT_RESOLVED + savedIncident.getService().getName(),
+                INCIDENT_ENTITY_TYPE,
+                savedIncident.getId()
         );
 
         notificationService.notifyIncidentResolved(savedIncident);

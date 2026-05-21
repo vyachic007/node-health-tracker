@@ -12,6 +12,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
@@ -19,6 +20,7 @@ import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NetworkServiceService;
 import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
@@ -37,6 +39,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NetworkServiceServiceImpl implements NetworkServiceService {
 
+    private static final String NETWORK_SERVICE_ENTITY_TYPE = "NetworkService";
+
     private final NetworkServiceRepository networkServiceRepository;
     private final NetworkNodeRepository networkNodeRepository;
     private final CheckResultRepository checkResultRepository;
@@ -44,6 +48,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     private final NetworkServiceMapper networkServiceMapper;
     private final CurrentUserService currentUserService;
     private final ServiceHealthScoreService serviceHealthScoreService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -69,6 +74,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
+        auditLogService.log(
+                AuditActionType.SERVICE_CREATED,
+                Messages.AUDIT_SERVICE_CREATED + savedService.getName(),
+                NETWORK_SERVICE_ENTITY_TYPE,
+                savedService.getId()
+        );
+
         return buildServiceResponse(savedService);
     }
 
@@ -93,6 +105,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
+        auditLogService.log(
+                AuditActionType.SERVICE_UPDATED,
+                Messages.AUDIT_SERVICE_UPDATED + savedService.getName(),
+                NETWORK_SERVICE_ENTITY_TYPE,
+                savedService.getId()
+        );
+
         return buildServiceResponse(savedService);
     }
 
@@ -101,6 +120,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     public void deleteService(Long serviceId) {
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
+
+        auditLogService.log(
+                AuditActionType.SERVICE_DELETED,
+                Messages.AUDIT_SERVICE_DELETED + networkService.getName(),
+                NETWORK_SERVICE_ENTITY_TYPE,
+                networkService.getId()
+        );
 
         networkServiceRepository.delete(networkService);
     }
@@ -148,6 +174,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
+        auditLogService.log(
+                AuditActionType.SERVICE_UPDATED,
+                Messages.AUDIT_SERVICE_ENABLED + savedService.getName(),
+                NETWORK_SERVICE_ENTITY_TYPE,
+                savedService.getId()
+        );
+
         return buildServiceResponse(savedService);
     }
 
@@ -161,6 +194,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         networkService.setUpdatedAt(LocalDateTime.now());
 
         NetworkService savedService = networkServiceRepository.save(networkService);
+
+        auditLogService.log(
+                AuditActionType.SERVICE_UPDATED,
+                Messages.AUDIT_SERVICE_DISABLED + savedService.getName(),
+                NETWORK_SERVICE_ENTITY_TYPE,
+                savedService.getId()
+        );
 
         return buildServiceResponse(savedService);
     }
