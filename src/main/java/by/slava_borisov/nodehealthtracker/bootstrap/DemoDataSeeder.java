@@ -1,11 +1,22 @@
 package by.slava_borisov.nodehealthtracker.bootstrap;
 
+import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
+import by.slava_borisov.nodehealthtracker.model.entity.Incident;
+import by.slava_borisov.nodehealthtracker.model.entity.IncidentTimelineEvent;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
+import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentSeverity;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.IncidentTimelineEventType;
 import by.slava_borisov.nodehealthtracker.model.enums.RoleName;
+import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
+import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
+import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
+import by.slava_borisov.nodehealthtracker.repository.IncidentTimelineEventRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
@@ -34,6 +45,9 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final NetworkNodeRepository networkNodeRepository;
     private final NetworkServiceRepository networkServiceRepository;
+    private final CheckResultRepository checkResultRepository;
+    private final IncidentRepository incidentRepository;
+    private final IncidentTimelineEventRepository incidentTimelineEventRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -65,7 +79,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 "Демонстрационный инфраструктурный узел."
         );
 
-        createServiceIfNotExists(
+        NetworkService websiteService = createServiceIfNotExists(
                 productionNode,
                 "Demo Website HTTP",
                 CheckType.HTTP,
@@ -75,7 +89,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null
         );
 
-        createServiceIfNotExists(
+        NetworkService apiService = createServiceIfNotExists(
                 productionNode,
                 "Demo API HTTPS",
                 CheckType.HTTPS,
@@ -85,7 +99,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null
         );
 
-        createServiceIfNotExists(
+        NetworkService databaseService = createServiceIfNotExists(
                 productionNode,
                 "Demo TCP Database Port",
                 CheckType.TCP,
@@ -95,7 +109,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null
         );
 
-        createServiceIfNotExists(
+        NetworkService dnsService = createServiceIfNotExists(
                 infrastructureNode,
                 "Demo DNS Resolver",
                 CheckType.DNS,
@@ -105,7 +119,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null
         );
 
-        createServiceIfNotExists(
+        NetworkService sslService = createServiceIfNotExists(
                 infrastructureNode,
                 "Demo SSL Certificate",
                 CheckType.SSL,
@@ -115,7 +129,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null
         );
 
-        createServiceIfNotExists(
+        NetworkService heartbeatService = createServiceIfNotExists(
                 infrastructureNode,
                 "Demo Heartbeat Agent",
                 CheckType.HEARTBEAT,
@@ -123,6 +137,15 @@ public class DemoDataSeeder implements CommandLineRunner {
                 null,
                 null,
                 "demo-heartbeat-token"
+        );
+
+        createDemoMonitoringDataIfNotExists(
+                websiteService,
+                apiService,
+                databaseService,
+                dnsService,
+                sslService,
+                heartbeatService
         );
     }
 
@@ -244,5 +267,301 @@ public class DemoDataSeeder implements CommandLineRunner {
         service.setUpdatedAt(now);
 
         return networkServiceRepository.save(service);
+    }
+
+    private void createDemoMonitoringDataIfNotExists(
+            NetworkService websiteService,
+            NetworkService apiService,
+            NetworkService databaseService,
+            NetworkService dnsService,
+            NetworkService sslService,
+            NetworkService heartbeatService
+    ) {
+        if (checkResultRepository.countByServiceIdAndCheckedAtAfter(
+                websiteService.getId(),
+                LocalDateTime.now().minusYears(10)
+        ) > 0) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        CheckResult websiteUpResult = createCheckResult(
+                websiteService,
+                ServiceStatus.UP,
+                FailureLayer.UNKNOWN,
+                "Критическая проблема не обнаружена.",
+                "На данный момент дополнительных действий не требуется.",
+                now.minusMinutes(50),
+                142,
+                200,
+                null
+        );
+
+        CheckResult apiUpResult = createCheckResult(
+                apiService,
+                ServiceStatus.UP,
+                FailureLayer.UNKNOWN,
+                "Критическая проблема не обнаружена.",
+                "На данный момент дополнительных действий не требуется.",
+                now.minusMinutes(45),
+                238,
+                200,
+                null
+        );
+
+        CheckResult databaseDownResult = createCheckResult(
+                databaseService,
+                ServiceStatus.DOWN,
+                FailureLayer.PORT,
+                "Не удалось установить TCP-соединение с целевым портом.",
+                "Проверьте, запущен ли сервис, открыт ли порт и не блокирует ли подключение firewall.",
+                now.minusMinutes(40),
+                null,
+                null,
+                "Connection refused"
+        );
+
+        CheckResult databaseRecoveryResult = createCheckResult(
+                databaseService,
+                ServiceStatus.UP,
+                FailureLayer.UNKNOWN,
+                "Критическая проблема не обнаружена.",
+                "На данный момент дополнительных действий не требуется.",
+                now.minusMinutes(25),
+                18,
+                null,
+                null
+        );
+
+        CheckResult dnsUpResult = createCheckResult(
+                dnsService,
+                ServiceStatus.UP,
+                FailureLayer.UNKNOWN,
+                "DNS-резолвинг выполняется успешно.",
+                "DNS-проблем не обнаружено.",
+                now.minusMinutes(35),
+                64,
+                null,
+                null
+        );
+
+        CheckResult sslDownResult = createCheckResult(
+                sslService,
+                ServiceStatus.DOWN,
+                FailureLayer.SSL,
+                "Обнаружена проблема SSL/TLS-сертификата.",
+                "Проверьте срок действия сертификата, домен и цепочку сертификатов.",
+                now.minusMinutes(20),
+                null,
+                null,
+                "SSL certificate validation failed"
+        );
+
+        CheckResult heartbeatDownResult = createCheckResult(
+                heartbeatService,
+                ServiceStatus.DOWN,
+                FailureLayer.HEARTBEAT,
+                "Heartbeat от агента давно не поступал.",
+                "Проверьте, запущен ли агент и может ли он подключиться к серверу мониторинга.",
+                now.minusMinutes(15),
+                null,
+                null,
+                "Heartbeat timeout"
+        );
+
+        createResolvedIncidentIfNotExists(
+                databaseService,
+                databaseDownResult,
+                databaseRecoveryResult,
+                now.minusMinutes(40),
+                now.minusMinutes(25)
+        );
+
+        createOpenIncidentIfNotExists(
+                sslService,
+                sslDownResult,
+                IncidentSeverity.HIGH,
+                now.minusMinutes(20)
+        );
+
+        createOpenIncidentIfNotExists(
+                heartbeatService,
+                heartbeatDownResult,
+                IncidentSeverity.MEDIUM,
+                now.minusMinutes(15)
+        );
+
+        updateLastCheckedAt(websiteService, websiteUpResult.getCheckedAt());
+        updateLastCheckedAt(apiService, apiUpResult.getCheckedAt());
+        updateLastCheckedAt(databaseService, databaseRecoveryResult.getCheckedAt());
+        updateLastCheckedAt(dnsService, dnsUpResult.getCheckedAt());
+        updateLastCheckedAt(sslService, sslDownResult.getCheckedAt());
+        updateLastCheckedAt(heartbeatService, heartbeatDownResult.getCheckedAt());
+    }
+
+    private CheckResult createCheckResult(
+            NetworkService service,
+            ServiceStatus status,
+            FailureLayer failureLayer,
+            String diagnosticMessage,
+            String recommendation,
+            LocalDateTime checkedAt,
+            Integer responseTimeMs,
+            Integer httpStatusCode,
+            String errorMessage
+    ) {
+        CheckResult checkResult = new CheckResult();
+        checkResult.setService(service);
+        checkResult.setStatus(status);
+        checkResult.setFailureLayer(failureLayer);
+        checkResult.setDiagnosticMessage(diagnosticMessage);
+        checkResult.setRecommendation(recommendation);
+        checkResult.setStartedAt(checkedAt.minusSeconds(1));
+        checkResult.setFinishedAt(checkedAt);
+        checkResult.setResponseTimeMs(responseTimeMs);
+        checkResult.setHttpStatusCode(httpStatusCode);
+        checkResult.setErrorMessage(errorMessage);
+        checkResult.setCheckedAt(checkedAt);
+
+        return checkResultRepository.save(checkResult);
+    }
+
+    private void createResolvedIncidentIfNotExists(
+            NetworkService service,
+            CheckResult openedByCheckResult,
+            CheckResult closedByCheckResult,
+            LocalDateTime openedAt,
+            LocalDateTime closedAt
+    ) {
+        if (incidentRepository.countByServiceIdAndStatus(service.getId(), IncidentStatus.RESOLVED) > 0) {
+            return;
+        }
+
+        Incident incident = new Incident();
+        incident.setService(service);
+        incident.setStatus(IncidentStatus.RESOLVED);
+        incident.setSeverity(IncidentSeverity.HIGH);
+        incident.setOpenedAt(openedAt);
+        incident.setClosedAt(closedAt);
+        incident.setReason(openedByCheckResult.getDiagnosticMessage());
+        incident.setOpenedByCheckResult(openedByCheckResult);
+        incident.setClosedByCheckResult(closedByCheckResult);
+
+        Incident savedIncident = incidentRepository.save(incident);
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.CHECK_FAILED,
+                "Проверка завершилась ошибкой: " + openedByCheckResult.getDiagnosticMessage(),
+                openedAt
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.SEVERITY_ASSIGNED,
+                "Назначена критичность инцидента: " + savedIncident.getSeverity(),
+                openedAt.plusSeconds(1)
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.INCIDENT_OPENED,
+                "Открыт инцидент по сервису: " + service.getName(),
+                openedAt.plusSeconds(2)
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                closedByCheckResult,
+                IncidentTimelineEventType.CHECK_RECOVERED,
+                "Проверка снова завершилась успешно.",
+                closedAt
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                closedByCheckResult,
+                IncidentTimelineEventType.INCIDENT_RESOLVED,
+                "Инцидент закрыт, сервис восстановлен.",
+                closedAt.plusSeconds(1)
+        );
+    }
+
+    private void createOpenIncidentIfNotExists(
+            NetworkService service,
+            CheckResult openedByCheckResult,
+            IncidentSeverity severity,
+            LocalDateTime openedAt
+    ) {
+        if (incidentRepository.findByServiceIdAndStatus(service.getId(), IncidentStatus.OPEN).isPresent()) {
+            return;
+        }
+
+        Incident incident = new Incident();
+        incident.setService(service);
+        incident.setStatus(IncidentStatus.OPEN);
+        incident.setSeverity(severity);
+        incident.setOpenedAt(openedAt);
+        incident.setClosedAt(null);
+        incident.setReason(openedByCheckResult.getDiagnosticMessage());
+        incident.setOpenedByCheckResult(openedByCheckResult);
+        incident.setClosedByCheckResult(null);
+
+        Incident savedIncident = incidentRepository.save(incident);
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.CHECK_FAILED,
+                "Проверка завершилась ошибкой: " + openedByCheckResult.getDiagnosticMessage(),
+                openedAt
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.SEVERITY_ASSIGNED,
+                "Назначена критичность инцидента: " + savedIncident.getSeverity(),
+                openedAt.plusSeconds(1)
+        );
+
+        createTimelineEvent(
+                savedIncident,
+                openedByCheckResult,
+                IncidentTimelineEventType.INCIDENT_OPENED,
+                "Открыт инцидент по сервису: " + service.getName(),
+                openedAt.plusSeconds(2)
+        );
+    }
+
+    private void createTimelineEvent(
+            Incident incident,
+            CheckResult checkResult,
+            IncidentTimelineEventType eventType,
+            String message,
+            LocalDateTime createdAt
+    ) {
+        IncidentTimelineEvent event = new IncidentTimelineEvent();
+        event.setIncident(incident);
+        event.setCheckResult(checkResult);
+        event.setEventType(eventType);
+        event.setMessage(message);
+        event.setCreatedAt(createdAt);
+
+        incidentTimelineEventRepository.save(event);
+    }
+
+    private void updateLastCheckedAt(
+            NetworkService service,
+            LocalDateTime lastCheckedAt
+    ) {
+        service.setLastCheckedAt(lastCheckedAt);
+        service.setUpdatedAt(LocalDateTime.now());
+
+        networkServiceRepository.save(service);
     }
 }
