@@ -403,4 +403,10 @@ public final class Messages {
 
     public static final String HEALTH_SCORE_SUMMARY_CRITICAL =
             "Сервис находится в критическом состоянии. Требуется немедленная диагностика.";
+
+    public static final String AUDIT_NODE_CREATED = "Создан узел: ";
+
+    public static final String AUDIT_NODE_UPDATED = "Обновлён узел: ";
+
+    public static final String AUDIT_NODE_DELETED = "Удалён узел: ";
 }

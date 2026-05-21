@@ -11,6 +11,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.CheckResult;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
+import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
 import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.NodeHealthStatus;
@@ -19,6 +20,7 @@ import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
 import by.slava_borisov.nodehealthtracker.repository.IncidentRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkNodeRepository;
 import by.slava_borisov.nodehealthtracker.repository.NetworkServiceRepository;
+import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NetworkNodeService;
 import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
@@ -35,6 +37,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class NetworkNodeServiceImpl implements NetworkNodeService {
 
+    private static final String NETWORK_NODE_ENTITY_TYPE = "NetworkNode";
+
     private final NetworkNodeRepository networkNodeRepository;
     private final NetworkServiceRepository networkServiceRepository;
     private final IncidentRepository incidentRepository;
@@ -42,6 +46,7 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
     private final NetworkNodeMapper networkNodeMapper;
     private final CurrentUserService currentUserService;
     private final ServiceHealthScoreService serviceHealthScoreService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -58,6 +63,13 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
 
         NetworkNode savedNode = networkNodeRepository.save(networkNode);
 
+        auditLogService.log(
+                AuditActionType.NODE_CREATED,
+                Messages.AUDIT_NODE_CREATED + savedNode.getName(),
+                NETWORK_NODE_ENTITY_TYPE,
+                savedNode.getId()
+        );
+
         return buildNodeResponse(savedNode);
     }
 
@@ -72,6 +84,13 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
 
         NetworkNode savedNode = networkNodeRepository.save(networkNode);
 
+        auditLogService.log(
+                AuditActionType.NODE_UPDATED,
+                Messages.AUDIT_NODE_UPDATED + savedNode.getName(),
+                NETWORK_NODE_ENTITY_TYPE,
+                savedNode.getId()
+        );
+
         return buildNodeResponse(savedNode);
     }
 
@@ -80,6 +99,13 @@ public class NetworkNodeServiceImpl implements NetworkNodeService {
     public void deleteNode(Long nodeId) {
         NetworkNode networkNode = findNodeById(nodeId);
         validateNodeOwner(networkNode);
+
+        auditLogService.log(
+                AuditActionType.NODE_DELETED,
+                Messages.AUDIT_NODE_DELETED + networkNode.getName(),
+                NETWORK_NODE_ENTITY_TYPE,
+                networkNode.getId()
+        );
 
         networkNodeRepository.delete(networkNode);
     }
