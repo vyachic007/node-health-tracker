@@ -24,6 +24,7 @@ import by.slava_borisov.nodehealthtracker.service.AuditLogService;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
@@ -56,6 +58,19 @@ public class AdminServiceImpl implements AdminService {
             int page,
             int size
     ) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор запросил список пользователей: adminId={}, adminUsername={}, statusFilter={}, roleFilter={}, query={}, page={}, size={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                status,
+                role,
+                query,
+                page,
+                size
+        );
+
         validatePagination(page, size);
         String normalizedQuery = normalizeQuery(query);
 
@@ -77,6 +92,15 @@ public class AdminServiceImpl implements AdminService {
                 .map(this::toUserAdminResponse)
                 .toList();
 
+        log.info(
+                "Список пользователей сформирован: adminId={}, returnedUsers={}, totalUsers={}, totalPages={}, page={}",
+                currentUser.getId(),
+                content.size(),
+                usersPage.getTotalElements(),
+                usersPage.getTotalPages(),
+                usersPage.getNumber()
+        );
+
         return new PageResponse<>(
                 content,
                 usersPage.getNumber(),
@@ -89,11 +113,28 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(readOnly = true)
     public UserAdminSummaryResponse getUserSummary() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор запросил сводку пользователей: adminId={}, adminUsername={}",
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
         long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
         long adminUsers = userRepository.countByRole(RoleName.ROLE_ADMIN);
         long regularUsers = userRepository.countByRole(RoleName.ROLE_USER);
+
+        log.info(
+                "Сводка пользователей сформирована: totalUsers={}, activeUsers={}, blockedUsers={}, adminUsers={}, regularUsers={}",
+                totalUsers,
+                activeUsers,
+                blockedUsers,
+                adminUsers,
+                regularUsers
+        );
 
         return new UserAdminSummaryResponse(
                 totalUsers,
@@ -107,6 +148,15 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(readOnly = true)
     public UserAdminResponse getUserById(Long userId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор запросил пользователя по id: adminId={}, adminUsername={}, targetUserId={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                userId
+        );
+
         User user = findUserById(userId);
 
         return toUserAdminResponse(user);
@@ -116,9 +166,24 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserAdminResponse updateUserStatus(Long userId, UserBlockRequest request) {
         User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор изменяет статус пользователя: adminId={}, adminUsername={}, targetUserId={}, newStatus={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                userId,
+                request.status()
+        );
+
         User user = findUserById(userId);
 
         if (currentUser.getId().equals(user.getId()) && request.status() == UserStatus.BLOCKED) {
+            log.warn(
+                    "Попытка администратора заблокировать самого себя отклонена: adminId={}, adminUsername={}",
+                    currentUser.getId(),
+                    currentUser.getUsername()
+            );
+
             throw new InvalidOperationException(Messages.ADMIN_CANNOT_BLOCK_SELF);
         }
 
@@ -131,6 +196,15 @@ public class AdminServiceImpl implements AdminService {
 
         logUserStatusChange(savedUser, previousStatus, request.status());
 
+        log.info(
+                "Статус пользователя изменён: adminId={}, targetUserId={}, targetUsername={}, previousStatus={}, newStatus={}",
+                currentUser.getId(),
+                savedUser.getId(),
+                savedUser.getUsername(),
+                previousStatus,
+                savedUser.getStatus()
+        );
+
         return toUserAdminResponse(savedUser);
     }
 
@@ -138,11 +212,28 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserAdminResponse updateUserRole(Long userId, UserRoleUpdateRequest request) {
         User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор изменяет роль пользователя: adminId={}, adminUsername={}, targetUserId={}, newRole={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                userId,
+                request.role()
+        );
+
         User user = findUserById(userId);
 
         if (currentUser.getId().equals(user.getId())) {
+            log.warn(
+                    "Попытка администратора изменить собственную роль отклонена: adminId={}, adminUsername={}",
+                    currentUser.getId(),
+                    currentUser.getUsername()
+            );
+
             throw new InvalidOperationException(Messages.ADMIN_CANNOT_CHANGE_OWN_ROLE);
         }
+
+        RoleName previousRole = user.getRole();
 
         user.setRole(request.role());
         user.setUpdatedAt(LocalDateTime.now());
@@ -156,6 +247,15 @@ public class AdminServiceImpl implements AdminService {
                 savedUser.getId()
         );
 
+        log.info(
+                "Роль пользователя изменена: adminId={}, targetUserId={}, targetUsername={}, previousRole={}, newRole={}",
+                currentUser.getId(),
+                savedUser.getId(),
+                savedUser.getUsername(),
+                previousRole,
+                savedUser.getRole()
+        );
+
         return toUserAdminResponse(savedUser);
     }
 
@@ -163,9 +263,23 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserAdminResponse deleteUser(Long userId) {
         User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор выполняет удаление пользователя: adminId={}, adminUsername={}, targetUserId={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                userId
+        );
+
         User user = findUserById(userId);
 
         if (currentUser.getId().equals(user.getId())) {
+            log.warn(
+                    "Попытка администратора удалить самого себя отклонена: adminId={}, adminUsername={}",
+                    currentUser.getId(),
+                    currentUser.getUsername()
+            );
+
             throw new InvalidOperationException(Messages.ADMIN_CANNOT_DELETE_SELF);
         }
 
@@ -181,12 +295,28 @@ public class AdminServiceImpl implements AdminService {
                 savedUser.getId()
         );
 
+        log.info(
+                "Пользователь удалён через soft-delete: adminId={}, targetUserId={}, targetUsername={}, finalStatus={}",
+                currentUser.getId(),
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getStatus()
+        );
+
         return toUserAdminResponse(savedUser);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AdminPlatformSummaryResponse getPlatformSummary() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Администратор запросил платформенную сводку: adminId={}, adminUsername={}",
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
         long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
@@ -214,6 +344,19 @@ public class AdminServiceImpl implements AdminService {
                 LocalDateTime.now().minusHours(24)
         );
 
+        log.info(
+                "Платформенная сводка сформирована: totalUsers={}, totalNodes={}, totalServices={}, enabledServices={}, upServices={}, downServices={}, openIncidents={}, resolvedIncidents={}, checksLast24Hours={}",
+                totalUsers,
+                totalNodes,
+                totalServices,
+                enabledServices,
+                upServices,
+                downServices,
+                openIncidents,
+                resolvedIncidents,
+                checksLast24Hours
+        );
+
         return new AdminPlatformSummaryResponse(
                 totalUsers,
                 activeUsers,
@@ -238,6 +381,13 @@ public class AdminServiceImpl implements AdminService {
             UserStatus newStatus
     ) {
         if (previousStatus == newStatus) {
+            log.info(
+                    "Статус пользователя не изменился: userId={}, username={}, status={}",
+                    savedUser.getId(),
+                    savedUser.getUsername(),
+                    newStatus
+            );
+
             return;
         }
 
@@ -248,6 +398,13 @@ public class AdminServiceImpl implements AdminService {
                     USER_ENTITY_TYPE,
                     savedUser.getId()
             );
+
+            log.info(
+                    "В audit записана блокировка пользователя: userId={}, username={}",
+                    savedUser.getId(),
+                    savedUser.getUsername()
+            );
+
             return;
         }
 
@@ -258,12 +415,25 @@ public class AdminServiceImpl implements AdminService {
                     USER_ENTITY_TYPE,
                     savedUser.getId()
             );
+
+            log.info(
+                    "В audit записана разблокировка пользователя: userId={}, username={}",
+                    savedUser.getId(),
+                    savedUser.getUsername()
+            );
         }
     }
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn(
+                            "Пользователь не найден: userId={}",
+                            userId
+                    );
+
+                    return new ResourceNotFoundException(Messages.USER_NOT_FOUND);
+                });
     }
 
     private String normalizeQuery(String query) {
@@ -288,10 +458,20 @@ public class AdminServiceImpl implements AdminService {
 
     private void validatePagination(int page, int size) {
         if (page < 0) {
+            log.warn(
+                    "Некорректный номер страницы при запросе пользователей: page={}",
+                    page
+            );
+
             throw new InvalidOperationException(Messages.PAGE_NUMBER_INVALID);
         }
 
         if (size < 1 || size > 100) {
+            log.warn(
+                    "Некорректный размер страницы при запросе пользователей: size={}",
+                    size
+            );
+
             throw new InvalidOperationException(Messages.PAGE_SIZE_INVALID);
         }
     }

@@ -20,6 +20,7 @@ import by.slava_borisov.nodehealthtracker.service.DiagnosticService.DiagnosticRe
 import by.slava_borisov.nodehealthtracker.service.IncidentLifecycleService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CheckExecutionServiceImpl implements CheckExecutionService {
@@ -47,8 +49,24 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
 
         validateServiceAccess(service, currentUser);
 
+        log.info(
+                "Запущена ручная проверка сервиса: serviceId={}, serviceName={}, username={}",
+                service.getId(),
+                service.getName(),
+                currentUser.getUsername()
+        );
+
         CheckResult checkResult = executeCheck(service);
         CheckResult savedCheckResult = saveAndProcessIncident(checkResult);
+
+        log.info(
+                "Ручная проверка сервиса завершена: serviceId={}, checkResultId={}, status={}, failureLayer={}, responseTimeMs={}",
+                service.getId(),
+                savedCheckResult.getId(),
+                savedCheckResult.getStatus(),
+                savedCheckResult.getFailureLayer(),
+                savedCheckResult.getResponseTimeMs()
+        );
 
         return checkResultMapper.toCheckResultResponse(savedCheckResult);
     }
@@ -56,23 +74,51 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     @Override
     @Transactional
     public List<CheckResultResponse> runEnabledChecks() {
-        return networkServiceRepository.findAllByIsEnabledTrue()
+        List<NetworkService> enabledServices = networkServiceRepository.findAllByIsEnabledTrue();
+
+        log.info(
+                "Запущена проверка всех включённых сервисов: servicesCount={}",
+                enabledServices.size()
+        );
+
+        List<CheckResultResponse> responses = enabledServices
                 .stream()
                 .map(this::executeCheck)
                 .map(this::saveAndProcessIncident)
                 .map(checkResultMapper::toCheckResultResponse)
                 .toList();
+
+        log.info(
+                "Проверка всех включённых сервисов завершена: checkedServices={}",
+                responses.size()
+        );
+
+        return responses;
     }
 
     @Override
     @Transactional
     public List<CheckResultResponse> runDueChecks() {
-        return networkServiceRepository.findServicesDueForCheck()
+        List<NetworkService> dueServices = networkServiceRepository.findServicesDueForCheck();
+
+        log.info(
+                "Запущена проверка сервисов по расписанию: dueServicesCount={}",
+                dueServices.size()
+        );
+
+        List<CheckResultResponse> responses = dueServices
                 .stream()
                 .map(this::executeCheck)
                 .map(this::saveAndProcessIncident)
                 .map(checkResultMapper::toCheckResultResponse)
                 .toList();
+
+        log.info(
+                "Проверка сервисов по расписанию завершена: checkedServices={}",
+                responses.size()
+        );
+
+        return responses;
     }
 
     @Override
@@ -83,6 +129,13 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
 
         validateServiceAccess(service, currentUser);
 
+        log.info(
+                "Запрошена история проверок сервиса: serviceId={}, serviceName={}, username={}",
+                service.getId(),
+                service.getName(),
+                currentUser.getUsername()
+        );
+
         return checkResultRepository.findAllByServiceIdOrderByCheckedAtDesc(serviceId)
                 .stream()
                 .map(checkResultMapper::toCheckResultResponse)
@@ -92,8 +145,32 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     private CheckResult executeCheck(NetworkService service) {
         LocalDateTime startedAt = LocalDateTime.now();
 
-        ServiceChecker serviceChecker = serviceCheckerFactory.getChecker(service.getCheckType());
-        CheckProbeResult probeResult = serviceChecker.check(service);
+        log.info(
+                "Начата проверка сервиса: serviceId={}, serviceName={}, checkType={}, targetHost={}, port={}, path={}",
+                service.getId(),
+                service.getName(),
+                service.getCheckType(),
+                service.getTargetHost(),
+                service.getPort(),
+                service.getPath()
+        );
+
+        CheckProbeResult probeResult;
+
+        try {
+            ServiceChecker serviceChecker = serviceCheckerFactory.getChecker(service.getCheckType());
+            probeResult = serviceChecker.check(service);
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Ошибка при выполнении проверки сервиса: serviceId={}, serviceName={}, checkType={}",
+                    service.getId(),
+                    service.getName(),
+                    service.getCheckType(),
+                    exception
+            );
+
+            throw exception;
+        }
 
         LocalDateTime finishedAt = LocalDateTime.now();
         int responseTimeMs = calculateResponseTimeMs(startedAt, finishedAt);
@@ -125,6 +202,16 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         checkResult.setErrorMessage(probeResult.errorMessage());
         checkResult.setCheckedAt(finishedAt);
 
+        log.info(
+                "Проверка сервиса выполнена: serviceId={}, serviceName={}, status={}, failureLayer={}, responseTimeMs={}, httpStatusCode={}",
+                service.getId(),
+                service.getName(),
+                checkResult.getStatus(),
+                checkResult.getFailureLayer(),
+                checkResult.getResponseTimeMs(),
+                checkResult.getHttpStatusCode()
+        );
+
         return checkResult;
     }
 
@@ -154,6 +241,14 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
 
     private CheckResult saveAndProcessIncident(CheckResult checkResult) {
         CheckResult savedCheckResult = checkResultRepository.save(checkResult);
+
+        log.info(
+                "Результат проверки сохранён: checkResultId={}, serviceId={}, status={}",
+                savedCheckResult.getId(),
+                savedCheckResult.getService().getId(),
+                savedCheckResult.getStatus()
+        );
+
         incidentLifecycleService.processCheckResult(savedCheckResult);
 
         return savedCheckResult;
@@ -166,6 +261,12 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
 
     private void validateServiceAccess(NetworkService service, User currentUser) {
         if (!isServiceOwner(service, currentUser)) {
+            log.warn(
+                    "Отказано в доступе к сервису: serviceId={}, username={}",
+                    service.getId(),
+                    currentUser.getUsername()
+            );
+
             throw new AccessDeniedException(Messages.NETWORK_SERVICE_ACCESS_DENIED);
         }
     }

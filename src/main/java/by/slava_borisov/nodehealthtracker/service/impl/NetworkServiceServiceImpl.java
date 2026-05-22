@@ -26,6 +26,7 @@ import by.slava_borisov.nodehealthtracker.service.NetworkServiceService;
 import by.slava_borisov.nodehealthtracker.service.ServiceHealthScoreService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NetworkServiceServiceImpl implements NetworkServiceService {
@@ -53,6 +55,21 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional
     public ServiceResponse createService(ServiceCreateRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Создание сервиса: userId={}, username={}, nodeId={}, name={}, checkType={}, targetHost={}, port={}, path={}, intervalSeconds={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                request.nodeId(),
+                request.name(),
+                request.checkType(),
+                request.targetHost(),
+                request.port(),
+                request.path(),
+                request.intervalSeconds()
+        );
+
         NetworkNode node = findNodeById(request.nodeId());
         validateNodeOwner(node);
 
@@ -70,6 +87,12 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         if (networkService.getCheckType() == CheckType.HEARTBEAT) {
             networkService.setHeartbeatToken(generateHeartbeatToken());
+
+            log.info(
+                    "Для HEARTBEAT-сервиса сгенерирован heartbeat-token: serviceName={}, nodeId={}",
+                    networkService.getName(),
+                    node.getId()
+            );
         }
 
         NetworkService savedService = networkServiceRepository.save(networkService);
@@ -81,12 +104,37 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 savedService.getId()
         );
 
+        log.info(
+                "Сервис успешно создан: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}",
+                savedService.getId(),
+                savedService.getNode().getId(),
+                currentUser.getId(),
+                savedService.getName(),
+                savedService.getCheckType(),
+                savedService.getIsEnabled()
+        );
+
         return buildServiceResponse(savedService);
     }
 
     @Override
     @Transactional
     public ServiceResponse updateService(Long serviceId, ServiceUpdateRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Обновление сервиса: serviceId={}, userId={}, username={}, newName={}, newCheckType={}, newTargetHost={}, newPort={}, newPath={}, newIntervalSeconds={}",
+                serviceId,
+                currentUser.getId(),
+                currentUser.getUsername(),
+                request.name(),
+                request.checkType(),
+                request.targetHost(),
+                request.port(),
+                request.path(),
+                request.intervalSeconds()
+        );
+
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
@@ -96,11 +144,24 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         if (networkService.getCheckType() == CheckType.HEARTBEAT
                 && networkService.getHeartbeatToken() == null) {
             networkService.setHeartbeatToken(generateHeartbeatToken());
+
+            log.info(
+                    "Для обновлённого HEARTBEAT-сервиса сгенерирован heartbeat-token: serviceId={}, serviceName={}",
+                    networkService.getId(),
+                    networkService.getName()
+            );
         }
 
         if (networkService.getCheckType() != CheckType.HEARTBEAT) {
             networkService.setHeartbeatToken(null);
             networkService.setLastHeartbeatAt(null);
+
+            log.info(
+                    "Heartbeat-данные очищены, так как сервис больше не HEARTBEAT: serviceId={}, serviceName={}, checkType={}",
+                    networkService.getId(),
+                    networkService.getName(),
+                    networkService.getCheckType()
+            );
         }
 
         NetworkService savedService = networkServiceRepository.save(networkService);
@@ -112,12 +173,31 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 savedService.getId()
         );
 
+        log.info(
+                "Сервис успешно обновлён: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}",
+                savedService.getId(),
+                savedService.getNode().getId(),
+                currentUser.getId(),
+                savedService.getName(),
+                savedService.getCheckType(),
+                savedService.getIsEnabled()
+        );
+
         return buildServiceResponse(savedService);
     }
 
     @Override
     @Transactional
     public void deleteService(Long serviceId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Удаление сервиса: serviceId={}, userId={}, username={}",
+                serviceId,
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
@@ -129,11 +209,28 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         networkServiceRepository.delete(networkService);
+
+        log.info(
+                "Сервис успешно удалён: serviceId={}, serviceName={}, nodeId={}, userId={}",
+                networkService.getId(),
+                networkService.getName(),
+                networkService.getNode().getId(),
+                currentUser.getId()
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceById(Long serviceId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Запрошен сервис по id: serviceId={}, userId={}, username={}",
+                serviceId,
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
@@ -143,13 +240,31 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByNodeId(Long nodeId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Запрошен список сервисов узла: nodeId={}, userId={}, username={}",
+                nodeId,
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         NetworkNode node = findNodeById(nodeId);
         validateNodeOwner(node);
 
-        return networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
+        List<ServiceResponse> services = networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
+
+        log.info(
+                "Список сервисов узла сформирован: nodeId={}, userId={}, servicesCount={}",
+                nodeId,
+                currentUser.getId(),
+                services.size()
+        );
+
+        return services;
     }
 
     @Override
@@ -157,15 +272,38 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     public List<ServiceResponse> getCurrentUserServices() {
         User currentUser = currentUserService.getCurrentUser();
 
-        return networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
+        log.info(
+                "Запрошен список всех сервисов текущего пользователя: userId={}, username={}",
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
+        List<ServiceResponse> services = networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
+
+        log.info(
+                "Список сервисов текущего пользователя сформирован: userId={}, servicesCount={}",
+                currentUser.getId(),
+                services.size()
+        );
+
+        return services;
     }
 
     @Override
     @Transactional
     public ServiceResponse enableService(Long serviceId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Включение сервиса: serviceId={}, userId={}, username={}",
+                serviceId,
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
@@ -181,12 +319,29 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 savedService.getId()
         );
 
+        log.info(
+                "Сервис включён: serviceId={}, serviceName={}, nodeId={}, userId={}",
+                savedService.getId(),
+                savedService.getName(),
+                savedService.getNode().getId(),
+                currentUser.getId()
+        );
+
         return buildServiceResponse(savedService);
     }
 
     @Override
     @Transactional
     public ServiceResponse disableService(Long serviceId) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        log.info(
+                "Отключение сервиса: serviceId={}, userId={}, username={}",
+                serviceId,
+                currentUser.getId(),
+                currentUser.getUsername()
+        );
+
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
@@ -200,6 +355,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 Messages.AUDIT_SERVICE_DISABLED + savedService.getName(),
                 NETWORK_SERVICE_ENTITY_TYPE,
                 savedService.getId()
+        );
+
+        log.info(
+                "Сервис отключён: serviceId={}, serviceName={}, nodeId={}, userId={}",
+                savedService.getId(),
+                savedService.getName(),
+                savedService.getNode().getId(),
+                currentUser.getId()
         );
 
         return buildServiceResponse(savedService);
@@ -352,6 +515,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (!networkNode.getOwner().getId().equals(currentUser.getId())) {
+            log.warn(
+                    "Отказано в доступе к узлу/сервису: nodeId={}, ownerId={}, currentUserId={}, currentUsername={}",
+                    networkNode.getId(),
+                    networkNode.getOwner().getId(),
+                    currentUser.getId(),
+                    currentUser.getUsername()
+            );
+
             throw new AccessDeniedException(Messages.NETWORK_NODE_ACCESS_DENIED);
         }
     }

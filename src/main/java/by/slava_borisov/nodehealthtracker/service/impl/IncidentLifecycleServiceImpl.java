@@ -16,11 +16,13 @@ import by.slava_borisov.nodehealthtracker.service.IncidentTimelineService;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
@@ -39,6 +41,14 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
     public void processCheckResult(CheckResult checkResult) {
         NetworkService networkService = checkResult.getService();
 
+        log.info(
+                "Обработка результата проверки для жизненного цикла инцидента: checkResultId={}, serviceId={}, serviceName={}, status={}",
+                checkResult.getId(),
+                networkService.getId(),
+                networkService.getName(),
+                checkResult.getStatus()
+        );
+
         if (checkResult.getStatus() == ServiceStatus.DOWN) {
             processFailedCheck(checkResult, networkService);
             return;
@@ -50,11 +60,29 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
     }
 
     private void processFailedCheck(CheckResult checkResult, NetworkService networkService) {
-        networkService.setConsecutiveFailures(networkService.getConsecutiveFailures() + 1);
+        int consecutiveFailures = networkService.getConsecutiveFailures() + 1;
+
+        networkService.setConsecutiveFailures(consecutiveFailures);
         networkService.setConsecutiveSuccesses(0);
         networkServiceRepository.save(networkService);
 
+        log.warn(
+                "Зафиксирована неуспешная проверка сервиса: serviceId={}, serviceName={}, consecutiveFailures={}, failureThreshold={}",
+                networkService.getId(),
+                networkService.getName(),
+                networkService.getConsecutiveFailures(),
+                networkService.getFailureThreshold()
+        );
+
         if (networkService.getConsecutiveFailures() < networkService.getFailureThreshold()) {
+            log.info(
+                    "Инцидент пока не открывается: serviceId={}, serviceName={}, consecutiveFailures={}, failureThreshold={}",
+                    networkService.getId(),
+                    networkService.getName(),
+                    networkService.getConsecutiveFailures(),
+                    networkService.getFailureThreshold()
+            );
+
             return;
         }
 
@@ -62,11 +90,29 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
     }
 
     private void processSuccessfulCheck(CheckResult checkResult, NetworkService networkService) {
-        networkService.setConsecutiveSuccesses(networkService.getConsecutiveSuccesses() + 1);
+        int consecutiveSuccesses = networkService.getConsecutiveSuccesses() + 1;
+
+        networkService.setConsecutiveSuccesses(consecutiveSuccesses);
         networkService.setConsecutiveFailures(0);
         networkServiceRepository.save(networkService);
 
+        log.info(
+                "Зафиксирована успешная проверка сервиса: serviceId={}, serviceName={}, consecutiveSuccesses={}, recoveryThreshold={}",
+                networkService.getId(),
+                networkService.getName(),
+                networkService.getConsecutiveSuccesses(),
+                networkService.getRecoveryThreshold()
+        );
+
         if (networkService.getConsecutiveSuccesses() < networkService.getRecoveryThreshold()) {
+            log.info(
+                    "Инцидент пока не закрывается: serviceId={}, serviceName={}, consecutiveSuccesses={}, recoveryThreshold={}",
+                    networkService.getId(),
+                    networkService.getName(),
+                    networkService.getConsecutiveSuccesses(),
+                    networkService.getRecoveryThreshold()
+            );
+
             return;
         }
 
@@ -74,12 +120,17 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
     }
 
     private void openIncidentIfNotExists(CheckResult checkResult) {
+        Long serviceId = checkResult.getService().getId();
+
         incidentRepository.findByServiceIdAndStatus(
-                checkResult.getService().getId(),
+                serviceId,
                 IncidentStatus.OPEN
         ).ifPresentOrElse(
-                incident -> {
-                },
+                incident -> log.info(
+                        "Открытие нового инцидента пропущено, так как активный инцидент уже существует: incidentId={}, serviceId={}",
+                        incident.getId(),
+                        serviceId
+                ),
                 () -> openIncident(checkResult)
         );
     }
@@ -94,6 +145,15 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         incident.setOpenedByCheckResult(checkResult);
 
         Incident savedIncident = incidentRepository.save(incident);
+
+        log.warn(
+                "Открыт инцидент: incidentId={}, serviceId={}, serviceName={}, severity={}, failureLayer={}",
+                savedIncident.getId(),
+                savedIncident.getService().getId(),
+                savedIncident.getService().getName(),
+                savedIncident.getSeverity(),
+                checkResult.getFailureLayer()
+        );
 
         incidentTimelineService.createEvent(
                 savedIncident,
@@ -127,10 +187,19 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
     }
 
     private void closeIncidentIfExists(CheckResult checkResult) {
+        Long serviceId = checkResult.getService().getId();
+
         incidentRepository.findByServiceIdAndStatus(
-                checkResult.getService().getId(),
+                serviceId,
                 IncidentStatus.OPEN
-        ).ifPresent(incident -> closeIncident(incident, checkResult));
+        ).ifPresentOrElse(
+                incident -> closeIncident(incident, checkResult),
+                () -> log.info(
+                        "Закрытие инцидента пропущено, так как открытый инцидент не найден: serviceId={}, serviceName={}",
+                        checkResult.getService().getId(),
+                        checkResult.getService().getName()
+                )
+        );
     }
 
     private void closeIncident(Incident incident, CheckResult checkResult) {
@@ -139,6 +208,14 @@ public class IncidentLifecycleServiceImpl implements IncidentLifecycleService {
         incident.setClosedByCheckResult(checkResult);
 
         Incident savedIncident = incidentRepository.save(incident);
+
+        log.info(
+                "Инцидент закрыт автоматически: incidentId={}, serviceId={}, serviceName={}, closedByCheckResultId={}",
+                savedIncident.getId(),
+                savedIncident.getService().getId(),
+                savedIncident.getService().getName(),
+                checkResult.getId()
+        );
 
         incidentTimelineService.createEvent(
                 savedIncident,
