@@ -47,8 +47,11 @@ services:
       MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH}
       MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS}
       MAIL_FROM: ${MAIL_FROM}
+
+      PASSWORD_RESET_LOG_TOKEN: ${PASSWORD_RESET_LOG_TOKEN}
     ports:
       - "${APP_PORT}:8081"
 
 volumes:
   postgres_data:
+

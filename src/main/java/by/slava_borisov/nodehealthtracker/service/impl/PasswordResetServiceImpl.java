@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
+import by.slava_borisov.nodehealthtracker.config.PasswordResetProperties;
 import by.slava_borisov.nodehealthtracker.dto.user.PasswordResetConfirmRequest;
 import by.slava_borisov.nodehealthtracker.dto.user.PasswordResetRequest;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
@@ -24,19 +25,19 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.UUID;
 
-import static by.slava_borisov.nodehealthtracker.util.Messages.TOKEN_HASH_ALGORITHM;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PasswordResetServiceImpl implements PasswordResetService {
 
     private static final long RESET_TOKEN_TTL_MINUTES = 30;
+    private static final String TOKEN_HASH_ALGORITHM = "SHA-256";
 
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetMailService passwordResetMailService;
+    private final PasswordResetProperties passwordResetProperties;
 
     @Override
     @Transactional
@@ -141,11 +142,13 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                 savedToken.getExpiresAt()
         );
 
-        log.info(
-                "DEV password reset token for username={}: {}",
-                user.getUsername(),
-                rawToken
-        );
+        if (passwordResetProperties.isLogToken()) {
+            log.info(
+                    "DEV password reset token for username={}: {}",
+                    user.getUsername(),
+                    rawToken
+            );
+        }
     }
 
     private void validatePasswordResetToken(PasswordResetToken passwordResetToken) {
@@ -185,7 +188,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     private String hashToken(String token) {
         try {
-            MessageDigest digest = MessageDigest.getInstance(Messages.TOKEN_HASH_ALGORITHM);
+            MessageDigest digest = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
 
             return HexFormat.of().formatHex(hash);

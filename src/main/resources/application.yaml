@@ -35,3 +35,5 @@ app:
       expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   mail:
     from: ${MAIL_FROM:node-health-tracker@example.com}
+  password-reset:
+    log-token: ${PASSWORD_RESET_LOG_TOKEN:false}
