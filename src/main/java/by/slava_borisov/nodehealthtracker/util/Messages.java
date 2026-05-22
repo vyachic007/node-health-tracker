@@ -438,4 +438,28 @@ public final class Messages {
     public static final String PASSWORD_RESET_TOKEN_EXPIRED = "Срок действия токена восстановления пароля истёк";
 
     public static final String PASSWORD_RESET_TOKEN_ALREADY_USED = "Токен восстановления пароля уже был использован";
+
+    public static final String PASSWORD_RESET_EMAIL_SUBJECT =
+            "Node Health Tracker: восстановление пароля";
+
+    public static final String PASSWORD_RESET_EMAIL_BODY = """
+        Восстановление пароля
+
+        Пользователь: %s
+
+        Для восстановления пароля используйте следующий token:
+
+        %s
+
+        Token действует до: %s
+
+        Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
+
+        Это автоматическое уведомление Node Health Tracker.
+        """;
+
+    public static final String TOKEN_HASH_ALGORITHM = "SHA-256";
+
+    public static final String PASSWORD_RESET_HASH_ALGORITHM_NOT_AVAILABLE =
+            "SHA-256 algorithm is not available";
 }

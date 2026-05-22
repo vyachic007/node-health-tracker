@@ -8,11 +8,11 @@ import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.PasswordResetTokenRepository;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
+import by.slava_borisov.nodehealthtracker.service.PasswordResetMailService;
 import by.slava_borisov.nodehealthtracker.service.PasswordResetService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.UUID;
 
+import static by.slava_borisov.nodehealthtracker.util.Messages.TOKEN_HASH_ALGORITHM;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetMailService passwordResetMailService;
 
     @Override
     @Transactional
@@ -132,6 +135,12 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                 savedToken.getExpiresAt()
         );
 
+        passwordResetMailService.sendPasswordResetToken(
+                user,
+                rawToken,
+                savedToken.getExpiresAt()
+        );
+
         log.info(
                 "DEV password reset token for username={}: {}",
                 user.getUsername(),
@@ -176,12 +185,15 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     private String hashToken(String token) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(Messages.TOKEN_HASH_ALGORITHM);
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
 
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 algorithm is not available", exception);
+            throw new IllegalStateException(
+                    Messages.PASSWORD_RESET_HASH_ALGORITHM_NOT_AVAILABLE,
+                    exception
+            );
         }
     }
 }
