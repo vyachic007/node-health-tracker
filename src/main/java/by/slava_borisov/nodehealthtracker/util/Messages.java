@@ -432,4 +432,10 @@ public final class Messages {
     public static final String AUDIT_USER_ROLE_UPDATED = "Администратор изменил роль пользователя: ";
 
     public static final String AUDIT_USER_DELETED = "Администратор удалил пользователя: ";
+
+    public static final String PASSWORD_RESET_TOKEN_INVALID = "Недействительный токен восстановления пароля";
+
+    public static final String PASSWORD_RESET_TOKEN_EXPIRED = "Срок действия токена восстановления пароля истёк";
+
+    public static final String PASSWORD_RESET_TOKEN_ALREADY_USED = "Токен восстановления пароля уже был использован";
 }

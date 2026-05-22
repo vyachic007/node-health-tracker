@@ -2,8 +2,10 @@ package by.slava_borisov.nodehealthtracker.controller.rest;
 
 import by.slava_borisov.nodehealthtracker.dto.user.*;
 import by.slava_borisov.nodehealthtracker.service.AuthService;
+import by.slava_borisov.nodehealthtracker.service.PasswordResetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     @GetMapping("/me")
     public UserProfileResponse getCurrentUserProfile() {
@@ -44,5 +47,23 @@ public class AuthController {
             @Valid @RequestBody UserLoginRequest request
     ) {
         return authService.login(request);
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        passwordResetService.requestPasswordReset(request);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(
+            @Valid @RequestBody PasswordResetConfirmRequest request
+    ) {
+        passwordResetService.confirmPasswordReset(request);
+
+        return ResponseEntity.noContent().build();
     }
 }

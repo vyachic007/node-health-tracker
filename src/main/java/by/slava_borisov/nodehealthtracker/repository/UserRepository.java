@@ -23,6 +23,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByRole(RoleName role);
 
+    Optional<User> findByEmail(String email);
+
     @Query(
             value = """
                 SELECT u
