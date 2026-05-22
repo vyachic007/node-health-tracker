@@ -17,12 +17,21 @@ services:
       retries: 5
       start_period: 10s
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: node-health-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   app:
     build: .
     container_name: network-services-app
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -30,6 +39,12 @@ services:
       SPRING_LIQUIBASE_ENABLED: "true"
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_SMTP_AUTH: "false"
+      MAIL_SMTP_STARTTLS: "false"
+      MAIL_FROM: node-health-tracker@example.com
     ports:
       - "${APP_PORT}:8081"
 
