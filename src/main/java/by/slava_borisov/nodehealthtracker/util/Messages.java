@@ -462,4 +462,64 @@ public final class Messages {
 
     public static final String PASSWORD_RESET_HASH_ALGORITHM_NOT_AVAILABLE =
             "SHA-256 algorithm is not available";
+
+    public static final String TELEGRAM_BOT_TOKEN_NOT_CONFIGURED =
+            "Telegram bot token is not configured";
+
+    public static final String TELEGRAM_DESTINATION_NOT_CONFIGURED =
+            "Telegram chat id is not configured";
+
+    public static final String TELEGRAM_INCIDENT_OPENED_TITLE =
+            "🚨 Открыт инцидент";
+
+    public static final String TELEGRAM_INCIDENT_RESOLVED_TITLE =
+            "✅ Инцидент закрыт";
+
+    public static final String TELEGRAM_NOTIFICATION_TEXT = """
+        %s
+
+        Сервис: %s
+        Тип проверки: %s
+        Проверяемый адрес: %s
+        Порт: %s
+        Путь: %s
+
+        ID сервиса: %d
+        ID инцидента: %d
+
+        Причина: %s
+        Время события: %s
+
+        Node Health Tracker
+        """;
+
+    public static final String EMAIL_INCIDENT_OPENED_SUBJECT =
+            "Node Health Tracker: открыт инцидент";
+
+    public static final String EMAIL_INCIDENT_RESOLVED_SUBJECT =
+            "Node Health Tracker: инцидент закрыт";
+
+    public static final String EMAIL_INCIDENT_OPENED_TITLE =
+            "Открыт инцидент";
+
+    public static final String EMAIL_INCIDENT_RESOLVED_TITLE =
+            "Инцидент закрыт";
+
+    public static final String EMAIL_NOTIFICATION_TEXT = """
+        %s
+
+        Сервис: %s
+        Тип проверки: %s
+        Проверяемый адрес: %s
+        Порт: %s
+        Путь: %s
+
+        ID сервиса: %d
+        ID инцидента: %d
+
+        Причина: %s
+        Время события: %s
+
+        Это автоматическое уведомление Node Health Tracker.
+        """;
 }

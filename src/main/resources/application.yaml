@@ -37,3 +37,7 @@ app:
     from: ${MAIL_FROM:node-health-tracker@example.com}
   password-reset:
     log-token: ${PASSWORD_RESET_LOG_TOKEN:false}
+
+  telegram:
+    api-url: ${TELEGRAM_API_URL:https://api.telegram.org}
+    bot-token: ${TELEGRAM_BOT_TOKEN:}

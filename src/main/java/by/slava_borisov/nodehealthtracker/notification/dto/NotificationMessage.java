@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.notification.dto;
 
+import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,14 @@ public record NotificationMessage(
         Long serviceId,
 
         String serviceName,
+
+        CheckType checkType,
+
+        String targetHost,
+
+        Integer port,
+
+        String path,
 
         String reason,
 

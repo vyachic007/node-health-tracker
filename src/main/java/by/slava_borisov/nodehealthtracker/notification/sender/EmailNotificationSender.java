@@ -5,6 +5,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.UserNotificationSetting;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationEvent;
 import by.slava_borisov.nodehealthtracker.notification.dto.NotificationMessage;
+import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
@@ -59,35 +60,37 @@ public class EmailNotificationSender implements NotificationSender {
 
     private String buildSubject(NotificationMessage message) {
         if (message.event() == NotificationEvent.INCIDENT_OPENED) {
-            return "Node Health Tracker: открыт инцидент";
+            return Messages.EMAIL_INCIDENT_OPENED_SUBJECT;
         }
 
-        return "Node Health Tracker: инцидент закрыт";
+        return Messages.EMAIL_INCIDENT_RESOLVED_SUBJECT;
     }
 
     private String buildBody(NotificationMessage message) {
         String eventName = switch (message.event()) {
-            case INCIDENT_OPENED -> "Открыт инцидент";
-            case INCIDENT_RESOLVED -> "Инцидент закрыт";
+            case INCIDENT_OPENED -> Messages.EMAIL_INCIDENT_OPENED_TITLE;
+            case INCIDENT_RESOLVED -> Messages.EMAIL_INCIDENT_RESOLVED_TITLE;
         };
 
-        return """
-                %s
-
-                Сервис: %s
-                ID сервиса: %d
-                ID инцидента: %d
-                Причина: %s
-                Время события: %s
-
-                Это автоматическое уведомление Node Health Tracker.
-                """.formatted(
+        return Messages.EMAIL_NOTIFICATION_TEXT.formatted(
                 eventName,
                 message.serviceName(),
+                message.checkType(),
+                formatNullable(message.targetHost()),
+                formatNullable(message.port()),
+                formatNullable(message.path()),
                 message.serviceId(),
                 message.incidentId(),
                 message.reason(),
                 message.eventTime()
         );
+    }
+
+    private String formatNullable(Object value) {
+        if (value == null) {
+            return "-";
+        }
+
+        return value.toString();
     }
 }

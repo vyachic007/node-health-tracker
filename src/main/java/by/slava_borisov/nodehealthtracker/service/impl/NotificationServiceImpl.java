@@ -346,6 +346,10 @@ public class NotificationServiceImpl implements NotificationService {
                 incident.getId(),
                 incident.getService().getId(),
                 incident.getService().getName(),
+                incident.getService().getCheckType(),
+                incident.getService().getTargetHost(),
+                incident.getService().getPort(),
+                incident.getService().getPath(),
                 incident.getReason(),
                 eventTime
         );
