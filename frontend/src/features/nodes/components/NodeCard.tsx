@@ -13,7 +13,6 @@ import {
 import DnsIcon from '@mui/icons-material/Dns';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link } from 'react-router-dom';
 import {
     formatDateTime,
@@ -169,25 +168,6 @@ export function NodeCard({ node, isDeleting, onEdit, onDelete }: NodeCardProps) 
                                 >
                                     Сервисы узла
                                 </Button>
-                            </span>
-                        </Tooltip>
-
-                        <Tooltip title="Открыть узел">
-                            <span>
-                                <IconButton
-                                    component={Link}
-                                    to={`/nodes/${node.id}`}
-                                    color="primary"
-                                    disabled={isDeleting}
-                                    sx={{
-                                        width: 42,
-                                        height: 42,
-                                        border: 1,
-                                        borderColor: 'primary.main',
-                                    }}
-                                >
-                                    <VisibilityIcon />
-                                </IconButton>
                             </span>
                         </Tooltip>
 
