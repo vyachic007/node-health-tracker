@@ -41,3 +41,8 @@ app:
   telegram:
     api-url: ${TELEGRAM_API_URL:https://api.telegram.org}
     bot-token: ${TELEGRAM_BOT_TOKEN:}
+
+  vk:
+    api-url: ${VK_API_URL:https://api.vk.com/method}
+    access-token: ${VK_ACCESS_TOKEN:}
+    api-version: ${VK_API_VERSION:5.199}

@@ -522,4 +522,34 @@ public final class Messages {
 
         Это автоматическое уведомление Node Health Tracker.
         """;
+
+    public static final String VK_ACCESS_TOKEN_NOT_CONFIGURED =
+            "VK access token is not configured";
+
+    public static final String VK_DESTINATION_NOT_CONFIGURED =
+            "VK peer id is not configured";
+
+    public static final String VK_INCIDENT_OPENED_TITLE =
+            "🚨 Открыт инцидент";
+
+    public static final String VK_INCIDENT_RESOLVED_TITLE =
+            "✅ Инцидент закрыт";
+
+    public static final String VK_NOTIFICATION_TEXT = """
+        %s
+
+        Сервис: %s
+        Тип проверки: %s
+        Проверяемый адрес: %s
+        Порт: %s
+        Путь: %s
+
+        ID сервиса: %d
+        ID инцидента: %d
+
+        Причина: %s
+        Время события: %s
+
+        Node Health Tracker
+        """;
 }
