@@ -68,7 +68,7 @@ export function AdminDashboardPage() {
                         <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
                             <CardContent>
                                 <Stack spacing={1}>
-                                    <Typography color="text.secondary" fontWeight={700}>
+                                    <Typography color="text.secondary" sx={{ fontWeight: 700 }}>
                                         {card.title}
                                     </Typography>
                                     <Typography variant="h4">{card.value}</Typography>

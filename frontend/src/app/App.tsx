@@ -1,16 +1,19 @@
 import { CircularProgress, Stack } from '@mui/material';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { JSX } from 'react';
 import { AppProviders } from './providers/AppProviders';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { PasswordResetPage } from '../features/auth/pages/PasswordResetPage';
 import { useAuth } from '../features/auth/store/AuthContext';
+import { NodesPage } from '../features/nodes/pages/NodesPage';
+import { ServicesPage } from '../features/services/pages/ServicesPage';
+import { ServiceDetailsPage } from '../features/services/pages/ServiceDetailsPage';
 import { AppLayout } from '../layouts/AppLayout';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
-import {JSX} from "react";
 
 interface ProtectedRouteProps {
     children: JSX.Element;
@@ -22,7 +25,13 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
 
     if (isLoading) {
         return (
-            <Stack alignItems="center" justifyContent="center" sx={{ minHeight: '100vh' }}>
+            <Stack
+                sx={{
+                    minHeight: '100vh',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
                 <CircularProgress />
             </Stack>
         );
@@ -56,32 +65,17 @@ function AppRoutes() {
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
 
-                    <Route
-                        path="/nodes"
-                        element={
-                            <PlaceholderPage
-                                title="Узлы"
-                                description="Список сетевых узлов пользователя, их состояние и агрегированное здоровье."
-                            />
-                        }
-                    />
+                    <Route path="/nodes" element={<NodesPage />} />
 
-                    <Route
-                        path="/services"
-                        element={
-                            <PlaceholderPage
-                                title="Сервисы"
-                                description="Список HTTP, HTTPS, TCP, DNS, SSL и HEARTBEAT проверок."
-                            />
-                        }
-                    />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/services/:serviceId" element={<ServiceDetailsPage />} />
 
                     <Route
                         path="/incidents"
                         element={
                             <PlaceholderPage
                                 title="Инциденты"
-                                description="Открытые и закрытые инциденты с severity, timeline и рекомендациями."
+                                description="Открытые и закрытые инциденты с критичностью, историей событий и рекомендациями."
                             />
                         }
                     />
@@ -91,7 +85,7 @@ function AppRoutes() {
                         element={
                             <PlaceholderPage
                                 title="Уведомления"
-                                description="Настройки EMAIL, TELEGRAM и VK уведомлений."
+                                description="Настройки email, Telegram и VK-уведомлений."
                             />
                         }
                     />
@@ -132,7 +126,7 @@ function AppRoutes() {
                         element={
                             <ProtectedRoute adminOnly>
                                 <PlaceholderPage
-                                    title="Admin аудит"
+                                    title="Админский аудит"
                                     description="Глобальный журнал действий по всей платформе."
                                 />
                             </ProtectedRoute>

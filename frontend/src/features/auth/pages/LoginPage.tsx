@@ -64,7 +64,7 @@ export function LoginPage() {
                 >
                     <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
                         <Stack spacing={3}>
-                            <Stack spacing={1} alignItems="center">
+                            <Stack spacing={1} sx={{ alignItems: 'center' }}>
                                 <Box
                                     sx={{
                                         width: 64,
@@ -81,11 +81,11 @@ export function LoginPage() {
                                     <MonitorHeartIcon fontSize="large" />
                                 </Box>
 
-                                <Typography variant="h4" textAlign="center">
+                                <Typography variant="h4" sx={{ textAlign: 'center' }}>
                                     Node Health Tracker
                                 </Typography>
 
-                                <Typography color="text.secondary" textAlign="center">
+                                <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
                                     Диагностический мониторинг сервисов, инцидентов и уведомлений
                                 </Typography>
                             </Stack>
@@ -120,7 +120,7 @@ export function LoginPage() {
                                         {isSubmitting ? 'Выполняется вход...' : 'Войти'}
                                     </Button>
 
-                                    <Typography variant="body2" textAlign="center">
+                                    <Typography variant="body2" sx={{ textAlign: 'center' }}>
                                         <Link href="/password-reset" underline="hover">
                                             Забыли пароль?
                                         </Link>

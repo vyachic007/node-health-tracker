@@ -23,6 +23,7 @@ import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HistoryIcon from '@mui/icons-material/History';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -36,7 +37,7 @@ import { useAuth } from '../features/auth/store/AuthContext';
 const drawerWidth = 280;
 
 const userNavigation = [
-    { label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
+    { label: 'Панель мониторинга', path: '/dashboard', icon: <DashboardIcon /> },
     { label: 'Узлы', path: '/nodes', icon: <HubIcon /> },
     { label: 'Сервисы', path: '/services', icon: <DnsIcon /> },
     { label: 'Инциденты', path: '/incidents', icon: <ReportProblemIcon /> },
@@ -45,9 +46,9 @@ const userNavigation = [
 ];
 
 const adminNavigation = [
-    { label: 'Admin dashboard', path: '/admin/dashboard', icon: <AdminPanelSettingsIcon /> },
-    { label: 'Пользователи', path: '/admin/users', icon: <AdminPanelSettingsIcon /> },
-    { label: 'Admin аудит', path: '/admin/audit', icon: <HistoryIcon /> },
+    { label: 'Панель администратора', path: '/admin/dashboard', icon: <AdminPanelSettingsIcon /> },
+    { label: 'Пользователи', path: '/admin/users', icon: <GroupIcon /> },
+    { label: 'Админский аудит', path: '/admin/audit', icon: <HistoryIcon /> },
 ];
 
 export function AppLayout() {
@@ -69,7 +70,7 @@ export function AppLayout() {
     const drawer = (
         <Stack sx={{ height: '100%' }}>
             <Stack spacing={1.5} sx={{ p: 2.5 }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                     <Avatar
                         variant="rounded"
                         sx={{
@@ -83,9 +84,9 @@ export function AppLayout() {
                     </Avatar>
 
                     <Box>
-                        <Typography fontWeight={900}>Node Health</Typography>
+                        <Typography sx={{ fontWeight: 900 }}>Node Health</Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Diagnostic monitoring
+                            Диагностический мониторинг
                         </Typography>
                     </Box>
                 </Stack>
@@ -104,7 +105,9 @@ export function AppLayout() {
 
                 <List disablePadding>
                     {userNavigation.map((item) => {
-                        const selected = location.pathname === item.path;
+                        const selected =
+                            location.pathname === item.path ||
+                            (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
 
                         return (
                             <ListItemButton
@@ -134,7 +137,9 @@ export function AppLayout() {
 
                         <List disablePadding>
                             {adminNavigation.map((item) => {
-                                const selected = location.pathname === item.path;
+                                const selected =
+                                    location.pathname === item.path ||
+                                    location.pathname.startsWith(item.path);
 
                                 return (
                                     <ListItemButton
@@ -159,11 +164,16 @@ export function AppLayout() {
 
             <Box sx={{ p: 2 }}>
                 <Stack spacing={1}>
-                    <Typography variant="body2" fontWeight={800}>
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>
                         {user?.username}
                     </Typography>
+
                     <Typography variant="caption" color="text.secondary">
                         {user?.email}
+                    </Typography>
+
+                    <Typography variant="caption" color="text.secondary">
+                        Роль: {user?.role === 'ROLE_ADMIN' ? 'Администратор' : 'Пользователь'}
                     </Typography>
 
                     <ListItemButton onClick={handleLogout} sx={{ borderRadius: 3 }}>
@@ -199,15 +209,16 @@ export function AppLayout() {
                     )}
 
                     <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" fontWeight={900}>
+                        <Typography variant="h6" sx={{ fontWeight: 900 }}>
                             Node Health Tracker
                         </Typography>
+
                         <Typography variant="caption" color="text.secondary">
-                            Диагностика, инциденты, уведомления и health score
+                            Диагностика сервисов, инциденты, уведомления и оценка состояния
                         </Typography>
                     </Box>
 
-                    <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>
+                    <Tooltip title={mode === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}>
                         <IconButton onClick={toggleMode}>
                             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
                         </IconButton>

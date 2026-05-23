@@ -114,8 +114,8 @@ export function DashboardPage() {
                         <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
                             <CardContent>
                                 <Stack spacing={2}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                        <Typography color="text.secondary" fontWeight={700}>
+                                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography color="text.secondary" sx={{ fontWeight: 700 }}>
                                             {card.title}
                                         </Typography>
 
@@ -137,7 +137,7 @@ export function DashboardPage() {
             <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
                 <CardContent>
                     <Stack spacing={2}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box>
                                 <Typography variant="h6">Состояние мониторинга</Typography>
                                 <Typography color="text.secondary">
