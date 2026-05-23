@@ -5,6 +5,7 @@ import { AppProviders } from './providers/AppProviders';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { PasswordResetPage } from '../features/auth/pages/PasswordResetPage';
 import { useAuth } from '../features/auth/store/AuthContext';
+import { IncidentsPage } from '../features/incidents/pages/IncidentsPage';
 import { NodesPage } from '../features/nodes/pages/NodesPage';
 import { ServicesPage } from '../features/services/pages/ServicesPage';
 import { ServiceDetailsPage } from '../features/services/pages/ServiceDetailsPage';
@@ -70,15 +71,7 @@ function AppRoutes() {
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/services/:serviceId" element={<ServiceDetailsPage />} />
 
-                    <Route
-                        path="/incidents"
-                        element={
-                            <PlaceholderPage
-                                title="Инциденты"
-                                description="Открытые и закрытые инциденты с критичностью, историей событий и рекомендациями."
-                            />
-                        }
-                    />
+                    <Route path="/incidents" element={<IncidentsPage />} />
 
                     <Route
                         path="/notifications"
