@@ -22,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { servicesApi } from '../api/servicesApi';
 import { CreateServiceDialog } from '../components/CreateServiceDialog';
 import { EditServiceDialog } from '../components/EditServiceDialog';
@@ -41,12 +42,16 @@ function filterServices(services: NetworkService[], filter: ServiceFilter) {
     switch (filter) {
         case 'UP':
             return services.filter((service) => service.lastStatus === 'UP');
+
         case 'DOWN':
             return services.filter((service) => service.lastStatus === 'DOWN');
+
         case 'INCIDENTS':
             return services.filter((service) => service.hasOpenIncident);
+
         case 'NOT_CHECKED':
             return services.filter((service) => !service.lastStatus);
+
         case 'ALL':
         default:
             return services;
@@ -79,9 +84,26 @@ function sortServices(services: NetworkService[], sort: ServiceSort) {
     }
 }
 
+function getSelectedNodeId(searchParams: URLSearchParams) {
+    const nodeIdParam = searchParams.get('nodeId');
+
+    if (!nodeIdParam) {
+        return null;
+    }
+
+    const parsedNodeId = Number(nodeIdParam);
+
+    return Number.isFinite(parsedNodeId) && parsedNodeId > 0
+        ? parsedNodeId
+        : null;
+}
+
 export function ServicesPage() {
     const queryClient = useQueryClient();
     const { enqueueSnackbar } = useSnackbar();
+    const [searchParams] = useSearchParams();
+
+    const selectedNodeId = getSelectedNodeId(searchParams);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [checkingServiceId, setCheckingServiceId] = useState<number | null>(null);
@@ -103,19 +125,27 @@ export function ServicesPage() {
         queryFn: servicesApi.getMyServices,
     });
 
+    const nodeServices = useMemo(() => {
+        if (!selectedNodeId) {
+            return services;
+        }
+
+        return services.filter((service) => service.nodeId === selectedNodeId);
+    }, [services, selectedNodeId]);
+
     const visibleServices = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
 
         const searched = normalizedSearch
-            ? services.filter((service) => {
+            ? nodeServices.filter((service) => {
                 const target = `${service.name} ${service.targetHost} ${service.port ?? ''} ${service.path ?? ''}`.toLowerCase();
 
                 return target.includes(normalizedSearch);
             })
-            : services;
+            : nodeServices;
 
         return sortServices(filterServices(searched, filter), sort);
-    }, [services, filter, sort, search]);
+    }, [nodeServices, filter, sort, search]);
 
     const createServiceMutation = useMutation({
         mutationFn: servicesApi.createService,
@@ -214,7 +244,9 @@ export function ServicesPage() {
                 await servicesApi.runCheck(service.id);
             }
 
-            enqueueSnackbar('Проверка всех выбранных сервисов выполнена', { variant: 'success' });
+            enqueueSnackbar('Проверка всех выбранных сервисов выполнена', {
+                variant: 'success',
+            });
 
             await queryClient.invalidateQueries({ queryKey: ['services', 'my'] });
             await queryClient.invalidateQueries({ queryKey: ['dashboard', 'my'] });
@@ -252,9 +284,14 @@ export function ServicesPage() {
                 }}
             >
                 <Box>
-                    <Typography variant="h4">Сервисы</Typography>
+                    <Typography variant="h4">
+                        {selectedNodeId ? `Сервисы узла №${selectedNodeId}` : 'Сервисы'}
+                    </Typography>
+
                     <Typography color="text.secondary">
-                        Управление проверками HTTP, HTTPS, TCP, DNS, SSL, Heartbeat и Ping.
+                        {selectedNodeId
+                            ? 'Показаны только сервисы, которые относятся к выбранному сетевому узлу.'
+                            : 'Управление проверками HTTP, HTTPS, TCP, DNS, SSL, Heartbeat и Ping.'}
                     </Typography>
                 </Box>
 
@@ -278,9 +315,9 @@ export function ServicesPage() {
                 </Stack>
             </Stack>
 
-            <ServicesSummaryCards services={services} />
+            <ServicesSummaryCards services={nodeServices} />
 
-            <ServicesStatusChart services={services} />
+            <ServicesStatusChart services={nodeServices} />
 
             <Stack
                 direction={{ xs: 'column', lg: 'row' }}
@@ -297,6 +334,7 @@ export function ServicesPage() {
 
                 <FormControl fullWidth>
                     <InputLabel>Фильтр</InputLabel>
+
                     <Select
                         label="Фильтр"
                         value={filter}
@@ -312,12 +350,15 @@ export function ServicesPage() {
 
                 <FormControl fullWidth>
                     <InputLabel>Сортировка</InputLabel>
+
                     <Select
                         label="Сортировка"
                         value={sort}
                         onChange={(event) => setSort(event.target.value as ServiceSort)}
                     >
-                        <MenuItem value="LAST_CHECKED_DESC">Сначала последние проверки</MenuItem>
+                        <MenuItem value="LAST_CHECKED_DESC">
+                            Сначала последние проверки
+                        </MenuItem>
                         <MenuItem value="HEALTH_ASC">Сначала проблемные</MenuItem>
                         <MenuItem value="HEALTH_DESC">Сначала стабильные</MenuItem>
                         <MenuItem value="NAME_ASC">По названию</MenuItem>
@@ -326,7 +367,9 @@ export function ServicesPage() {
             </Stack>
 
             <Typography color="text.secondary">
-                Показано сервисов: {visibleServices.length} из {services.length}
+                {selectedNodeId
+                    ? `Показано сервисов выбранного узла: ${visibleServices.length} из ${nodeServices.length}`
+                    : `Показано сервисов: ${visibleServices.length} из ${services.length}`}
             </Typography>
 
             <Grid container spacing={2}>
@@ -350,7 +393,13 @@ export function ServicesPage() {
                 </Alert>
             )}
 
-            {services.length > 0 && visibleServices.length === 0 && (
+            {services.length > 0 && nodeServices.length === 0 && selectedNodeId && (
+                <Alert severity="info">
+                    У выбранного узла пока нет сервисов.
+                </Alert>
+            )}
+
+            {nodeServices.length > 0 && visibleServices.length === 0 && (
                 <Alert severity="info">
                     По выбранным фильтрам сервисы не найдены.
                 </Alert>
@@ -359,6 +408,7 @@ export function ServicesPage() {
             <CreateServiceDialog
                 open={isCreateOpen}
                 isSubmitting={createServiceMutation.isPending}
+                initialNodeId={selectedNodeId}
                 onClose={() => setIsCreateOpen(false)}
                 onSubmit={handleCreateService}
             />

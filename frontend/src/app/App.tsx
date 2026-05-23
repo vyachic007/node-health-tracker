@@ -7,6 +7,7 @@ import { PasswordResetPage } from '../features/auth/pages/PasswordResetPage';
 import { useAuth } from '../features/auth/store/AuthContext';
 import { IncidentsPage } from '../features/incidents/pages/IncidentsPage';
 import { NodesPage } from '../features/nodes/pages/NodesPage';
+import { NotificationsPage } from '../features/notifications/pages/NotificationsPage';
 import { ServicesPage } from '../features/services/pages/ServicesPage';
 import { ServiceDetailsPage } from '../features/services/pages/ServiceDetailsPage';
 import { AppLayout } from '../layouts/AppLayout';
@@ -73,15 +74,7 @@ function AppRoutes() {
 
                     <Route path="/incidents" element={<IncidentsPage />} />
 
-                    <Route
-                        path="/notifications"
-                        element={
-                            <PlaceholderPage
-                                title="Уведомления"
-                                description="Настройки email, Telegram и VK-уведомлений."
-                            />
-                        }
-                    />
+                    <Route path="/notifications" element={<NotificationsPage />} />
 
                     <Route
                         path="/audit"

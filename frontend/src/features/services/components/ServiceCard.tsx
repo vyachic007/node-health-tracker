@@ -1,7 +1,6 @@
 import {
     Alert,
     Box,
-    Button,
     Card,
     CardContent,
     Chip,
@@ -222,17 +221,21 @@ export function ServiceCard({
                         </Tooltip>
 
                         <Tooltip title="Открыть подробную информацию">
-                            <span style={{ flex: 1 }}>
-                                <Button
+                            <span>
+                                <IconButton
                                     component={Link}
                                     to={`/services/${service.id}`}
-                                    variant="outlined"
-                                    startIcon={<InfoIcon />}
+                                    color="primary"
                                     disabled={isDeleting}
-                                    fullWidth
+                                    sx={{
+                                        width: 42,
+                                        height: 42,
+                                        border: 1,
+                                        borderColor: 'primary.main',
+                                    }}
                                 >
-                                    Подробнее
-                                </Button>
+                                    <InfoIcon />
+                                </IconButton>
                             </span>
                         </Tooltip>
 

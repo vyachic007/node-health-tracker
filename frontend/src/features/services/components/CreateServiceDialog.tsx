@@ -13,81 +13,139 @@ import {
     Stack,
     TextField,
 } from '@mui/material';
-import { useState, type FormEvent } from 'react';
-import type { CheckType, CreateNetworkServiceRequest } from '../model/serviceTypes';
-import { checkTypeLabels } from '../model/serviceLabels';
-
-const checkTypes: CheckType[] = ['HTTP', 'HTTPS', 'TCP', 'DNS', 'SSL', 'HEARTBEAT', 'PING'];
+import { useEffect, useState } from 'react';
+import { getCheckTypeLabel } from '../model/serviceLabels';
+import type {
+    CheckType,
+    CreateNetworkServiceRequest,
+} from '../model/serviceTypes';
 
 interface CreateServiceDialogProps {
     open: boolean;
     isSubmitting: boolean;
+    initialNodeId?: number | null;
     onClose: () => void;
     onSubmit: (payload: CreateNetworkServiceRequest) => void;
+}
+
+interface FormSubmitEvent {
+    preventDefault: () => void;
+}
+
+const DEFAULT_CHECK_TYPE: CheckType = 'HTTP';
+const DEFAULT_INTERVAL_SECONDS = '3600';
+
+function getDefaultPort(checkType: CheckType): number | null {
+    switch (checkType) {
+        case 'HTTP':
+            return 80;
+
+        case 'HTTPS':
+        case 'SSL':
+            return 443;
+
+        case 'DNS':
+            return 53;
+
+        case 'PING':
+        case 'HEARTBEAT':
+            return null;
+
+        case 'TCP':
+        default:
+            return null;
+    }
+}
+
+function getDefaultPath(checkType: CheckType): string {
+    switch (checkType) {
+        case 'HTTP':
+        case 'HTTPS':
+            return '/';
+
+        default:
+            return '';
+    }
 }
 
 export function CreateServiceDialog({
                                         open,
                                         isSubmitting,
+                                        initialNodeId = null,
                                         onClose,
                                         onSubmit,
                                     }: CreateServiceDialogProps) {
-    const [nodeId, setNodeId] = useState('7');
-    const [checkType, setCheckType] = useState<CheckType>('HTTP');
+    const [nodeId, setNodeId] = useState(initialNodeId?.toString() ?? '');
+    const [checkType, setCheckType] = useState<CheckType>(DEFAULT_CHECK_TYPE);
     const [name, setName] = useState('');
     const [targetHost, setTargetHost] = useState('');
-    const [port, setPort] = useState('80');
-    const [path, setPath] = useState('/');
-    const [intervalSeconds, setIntervalSeconds] = useState('3600');
+    const [port, setPort] = useState(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
+    const [path, setPath] = useState(getDefaultPath(DEFAULT_CHECK_TYPE));
+    const [intervalSeconds, setIntervalSeconds] = useState(DEFAULT_INTERVAL_SECONDS);
+
+    const isNodeIdLocked = initialNodeId !== null && initialNodeId !== undefined;
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        setNodeId(initialNodeId?.toString() ?? '');
+        setCheckType(DEFAULT_CHECK_TYPE);
+        setName('');
+        setTargetHost('');
+        setPort(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
+        setPath(getDefaultPath(DEFAULT_CHECK_TYPE));
+        setIntervalSeconds(DEFAULT_INTERVAL_SECONDS);
+    }, [open, initialNodeId]);
 
     const handleCheckTypeChange = (value: CheckType) => {
         setCheckType(value);
 
-        if (value === 'HTTP') {
-            setPort('80');
-            setPath('/');
-            return;
-        }
+        const defaultPort = getDefaultPort(value);
+        const defaultPath = getDefaultPath(value);
 
-        if (value === 'HTTPS') {
-            setPort('443');
-            setPath('/');
-            return;
-        }
-
-        if (value === 'SSL') {
-            setPort('443');
-            setPath('');
-            return;
-        }
-
-        if (value === 'DNS' || value === 'HEARTBEAT' || value === 'PING') {
-            setPort('');
-            setPath('');
-            return;
-        }
-
-        if (value === 'TCP') {
-            setPath('');
-        }
+        setPort(defaultPort?.toString() ?? '');
+        setPath(defaultPath);
     };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: FormSubmitEvent) => {
         event.preventDefault();
 
+        const parsedNodeId = Number(nodeId);
+        const parsedPort = port.trim() ? Number(port) : null;
+        const parsedIntervalSeconds = Number(intervalSeconds);
+
         onSubmit({
-            nodeId: Number(nodeId),
+            nodeId: parsedNodeId,
             checkType,
             name: name.trim(),
             targetHost: targetHost.trim(),
-            port: port.trim() ? Number(port) : null,
+            port: parsedPort,
             path: path.trim() || null,
-            intervalSeconds: Number(intervalSeconds),
+            intervalSeconds: parsedIntervalSeconds,
         });
     };
 
+    const handleClose = () => {
+        if (isSubmitting) {
+            return;
+        }
+
+        onClose();
+    };
+
+    const isSubmitDisabled =
+        isSubmitting ||
+        !nodeId.trim() ||
+        Number(nodeId) <= 0 ||
+        !name.trim() ||
+        !targetHost.trim() ||
+        !intervalSeconds.trim() ||
+        Number(intervalSeconds) <= 0;
+
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
             <Box component="form" onSubmit={handleSubmit}>
                 <DialogTitle>Добавить сервис для мониторинга</DialogTitle>
 
@@ -97,23 +155,36 @@ export function CreateServiceDialog({
                             label="ID узла"
                             value={nodeId}
                             onChange={(event) => setNodeId(event.target.value)}
-                            helperText="Пока укажи ID существующего узла. Позже заменим на выпадающий список узлов."
+                            helperText={
+                                isNodeIdLocked
+                                    ? 'ID выбранного узла подставлен автоматически.'
+                                    : 'Укажите ID существующего узла.'
+                            }
                             required
                             fullWidth
+                            disabled={isNodeIdLocked}
+                            type="number"
                         />
 
                         <FormControl fullWidth>
                             <InputLabel>Тип проверки</InputLabel>
+
                             <Select
                                 label="Тип проверки"
                                 value={checkType}
-                                onChange={(event) => handleCheckTypeChange(event.target.value as CheckType)}
+                                onChange={(event) =>
+                                    handleCheckTypeChange(event.target.value as CheckType)
+                                }
                             >
-                                {checkTypes.map((type) => (
-                                    <MenuItem key={type} value={type}>
-                                        {checkTypeLabels[type]}
-                                    </MenuItem>
-                                ))}
+                                <MenuItem value="HTTP">{getCheckTypeLabel('HTTP')}</MenuItem>
+                                <MenuItem value="HTTPS">{getCheckTypeLabel('HTTPS')}</MenuItem>
+                                <MenuItem value="TCP">{getCheckTypeLabel('TCP')}</MenuItem>
+                                <MenuItem value="DNS">{getCheckTypeLabel('DNS')}</MenuItem>
+                                <MenuItem value="SSL">{getCheckTypeLabel('SSL')}</MenuItem>
+                                <MenuItem value="PING">{getCheckTypeLabel('PING')}</MenuItem>
+                                <MenuItem value="HEARTBEAT">
+                                    {getCheckTypeLabel('HEARTBEAT')}
+                                </MenuItem>
                             </Select>
                         </FormControl>
 
@@ -121,7 +192,6 @@ export function CreateServiceDialog({
                             label="Название сервиса"
                             value={name}
                             onChange={(event) => setName(event.target.value)}
-                            placeholder="Например: Основной сайт"
                             required
                             fullWidth
                         />
@@ -130,28 +200,28 @@ export function CreateServiceDialog({
                             label="Проверяемый адрес"
                             value={targetHost}
                             onChange={(event) => setTargetHost(event.target.value)}
-                            placeholder="example.com или 127.0.0.1"
+                            placeholder="Например: rutube.ru"
                             required
                             fullWidth
                         />
 
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={6}>
                                 <TextField
                                     label="Порт"
                                     value={port}
                                     onChange={(event) => setPort(event.target.value)}
-                                    placeholder="80, 443, 5432..."
                                     fullWidth
+                                    type="number"
                                 />
                             </Grid>
 
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={6}>
                                 <TextField
                                     label="Путь"
                                     value={path}
                                     onChange={(event) => setPath(event.target.value)}
-                                    placeholder="/ или /api/health"
+                                    placeholder="/"
                                     fullWidth
                                 />
                             </Grid>
@@ -164,13 +234,21 @@ export function CreateServiceDialog({
                             helperText="Например: 60, 300, 3600"
                             required
                             fullWidth
+                            type="number"
                         />
                     </Stack>
                 </DialogContent>
 
                 <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button onClick={onClose}>Отмена</Button>
-                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                    <Button onClick={handleClose}>
+                        Отмена
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={isSubmitDisabled}
+                    >
                         {isSubmitting ? 'Добавление...' : 'Добавить'}
                     </Button>
                 </DialogActions>

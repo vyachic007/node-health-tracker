@@ -157,7 +157,7 @@ export function NodeCard({ node, isDeleting, onEdit, onDelete }: NodeCardProps) 
                     </Grid>
 
                     <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-                        <Tooltip title="Показать сервисы этого узла">
+                        <Tooltip title="Показать только сервисы этого узла">
                             <span style={{ flex: 1 }}>
                                 <Button
                                     component={Link}
