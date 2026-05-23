@@ -48,3 +48,6 @@ databaseChangeLog:
       file: db/changelog/changeset/v1.2.0/016_create_audit_logs_table.sql
   - include:
       file: db/changelog/changeset/v1.2.0/017_create_password_reset_tokens_table.sql
+  - include:
+      file: db/changelog/changeset/v1.3.0/018_create_telegram_binding_tokens_table.sql
+      relativeToChangelogFile: false
