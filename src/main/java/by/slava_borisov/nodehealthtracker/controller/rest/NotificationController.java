@@ -4,8 +4,9 @@ import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingCr
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingResponse;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationResponse;
-import by.slava_borisov.nodehealthtracker.model.entity.SentNotification;
+import by.slava_borisov.nodehealthtracker.dto.notification.TelegramBindLinkResponse;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
+import by.slava_borisov.nodehealthtracker.service.TelegramBindingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +19,17 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final TelegramBindingService telegramBindingService;
 
     @GetMapping("/settings")
     public List<NotificationSettingResponse> getCurrentUserNotificationSettings() {
-       return notificationService.getCurrentUserNotificationSettings();
+        return notificationService.getCurrentUserNotificationSettings();
     }
 
     @PostMapping("/settings")
     public NotificationSettingResponse createNotificationSetting(
             @Valid @RequestBody NotificationSettingCreateRequest request
-            ) {
+    ) {
         return notificationService.createNotificationSetting(request);
     }
 
@@ -47,5 +49,10 @@ public class NotificationController {
     @GetMapping("/sent")
     public List<SentNotificationResponse> getCurrentUserSentNotifications() {
         return notificationService.getCurrentUserSentNotifications();
+    }
+
+    @PostMapping("/telegram/bind-link")
+    public TelegramBindLinkResponse createTelegramBindLink() {
+        return telegramBindingService.createCurrentUserBindLink();
     }
 }
