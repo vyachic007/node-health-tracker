@@ -1,22 +1,37 @@
-import { format } from 'date-fns';
+function normalizeBackendDate(value: string): Date {
+    const hasTimezone =
+        value.endsWith('Z') ||
+        /[+-]\d{2}:\d{2}$/.test(value);
 
-export function formatDateTime(value: string | null): string {
+    if (hasTimezone) {
+        return new Date(value);
+    }
+
+    return new Date(`${value}Z`);
+}
+
+export function formatDateTime(value: string | null | undefined): string {
     if (!value) {
         return '—';
     }
 
-    return format(new Date(value), 'dd.MM.yyyy HH:mm:ss');
-}
+    const date = normalizeBackendDate(value);
 
-export function formatPercent(value: number | null): string {
-    if (value === null || value === undefined) {
+    if (Number.isNaN(date.getTime())) {
         return '—';
     }
 
-    return `${value.toFixed(2)}%`;
+    return new Intl.DateTimeFormat('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    }).format(date);
 }
 
-export function formatMilliseconds(value: number | null): string {
+export function formatMilliseconds(value: number | null | undefined): string {
     if (value === null || value === undefined) {
         return '—';
     }
@@ -24,24 +39,47 @@ export function formatMilliseconds(value: number | null): string {
     return `${value} мс`;
 }
 
-export function formatSeconds(value: number | null): string {
+export function formatPercent(value: number | null | undefined): string {
     if (value === null || value === undefined) {
         return '—';
     }
 
-    if (value < 60) {
-        return `${value} сек.`;
+    return `${value.toFixed(2)}%`;
+}
+
+export function formatSeconds(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+        return '—';
     }
 
-    const minutes = Math.floor(value / 60);
-    const seconds = value % 60;
+    const totalSeconds = Math.max(0, Math.floor(value));
 
-    if (minutes < 60) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        return `${hours} ч. ${minutes} мин. ${seconds} сек.`;
+    }
+
+    if (minutes > 0) {
         return `${minutes} мин. ${seconds} сек.`;
     }
 
-    const hours = Math.floor(minutes / 60);
-    const restMinutes = minutes % 60;
+    return `${seconds} сек.`;
+}
 
-    return `${hours} ч. ${restMinutes} мин.`;
+export function getSecondsUntil(value: string | null | undefined): number | null {
+    if (!value) {
+        return null;
+    }
+
+    const targetDate = normalizeBackendDate(value);
+    const diffMs = targetDate.getTime() - Date.now();
+
+    if (Number.isNaN(diffMs)) {
+        return null;
+    }
+
+    return Math.max(0, Math.floor(diffMs / 1000));
 }

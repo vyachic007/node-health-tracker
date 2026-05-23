@@ -15,13 +15,16 @@ import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
     formatDateTime,
     formatMilliseconds,
     formatPercent,
     formatSeconds,
+    getSecondsUntil,
 } from '../../../shared/lib/formatters';
+import { useNow } from '../../../shared/lib/useNow';
 import {
     failureLayerLabels,
     getCheckTypeLabel,
@@ -54,6 +57,16 @@ export function ServiceCard({
                                 onEdit,
                                 onDelete,
                             }: ServiceCardProps) {
+    const now = useNow();
+
+    const secondsUntilNextCheck = useMemo(() => {
+        if (service.nextCheckAt) {
+            return getSecondsUntil(service.nextCheckAt);
+        }
+
+        return service.secondsUntilNextCheck;
+    }, [service.nextCheckAt, service.secondsUntilNextCheck, now]);
+
     return (
         <Card
             elevation={0}
@@ -152,7 +165,7 @@ export function ServiceCard({
                             </Typography>
 
                             <Typography sx={{ fontWeight: 800 }}>
-                                {formatSeconds(service.secondsUntilNextCheck)}
+                                {formatSeconds(secondsUntilNextCheck)}
                             </Typography>
                         </Grid>
 

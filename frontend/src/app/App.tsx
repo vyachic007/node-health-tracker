@@ -5,6 +5,7 @@ import { AppProviders } from './providers/AppProviders';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { PasswordResetPage } from '../features/auth/pages/PasswordResetPage';
 import { useAuth } from '../features/auth/store/AuthContext';
+import { AuditPage } from '../features/audit/pages/AuditPage';
 import { IncidentsPage } from '../features/incidents/pages/IncidentsPage';
 import { NodesPage } from '../features/nodes/pages/NodesPage';
 import { NotificationsPage } from '../features/notifications/pages/NotificationsPage';
@@ -76,15 +77,7 @@ function AppRoutes() {
 
                     <Route path="/notifications" element={<NotificationsPage />} />
 
-                    <Route
-                        path="/audit"
-                        element={
-                            <PlaceholderPage
-                                title="Аудит"
-                                description="Журнал действий пользователя и системных событий."
-                            />
-                        }
-                    />
+                    <Route path="/audit" element={<AuditPage />} />
 
                     <Route
                         path="/admin/dashboard"
@@ -111,10 +104,7 @@ function AppRoutes() {
                         path="/admin/audit"
                         element={
                             <ProtectedRoute adminOnly>
-                                <PlaceholderPage
-                                    title="Админский аудит"
-                                    description="Глобальный журнал действий по всей платформе."
-                                />
+                                <AuditPage />
                             </ProtectedRoute>
                         }
                     />

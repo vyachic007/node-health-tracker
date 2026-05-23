@@ -81,6 +81,7 @@ export function IncidentsPage() {
     } = useQuery({
         queryKey: ['incidents', 'my'],
         queryFn: incidentsApi.getMyIncidents,
+        refetchInterval: 10000,
     });
 
     const visibleIncidents = useMemo(() => {

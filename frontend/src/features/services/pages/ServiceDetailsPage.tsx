@@ -17,6 +17,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import { useMemo } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -38,7 +39,9 @@ import {
     formatMilliseconds,
     formatPercent,
     formatSeconds,
+    getSecondsUntil,
 } from '../../../shared/lib/formatters';
+import { useNow } from '../../../shared/lib/useNow';
 
 export function ServiceDetailsPage() {
     const theme = useTheme();
@@ -46,6 +49,7 @@ export function ServiceDetailsPage() {
     const { enqueueSnackbar } = useSnackbar();
     const params = useParams();
 
+    const now = useNow();
     const serviceId = Number(params.serviceId);
 
     const {
@@ -56,6 +60,7 @@ export function ServiceDetailsPage() {
         queryKey: ['services', serviceId],
         queryFn: () => servicesApi.getService(serviceId),
         enabled: Number.isFinite(serviceId),
+        refetchInterval: 10000,
     });
 
     const {
@@ -65,16 +70,28 @@ export function ServiceDetailsPage() {
         queryKey: ['checks', serviceId, 'history'],
         queryFn: () => servicesApi.getCheckHistory(serviceId),
         enabled: Number.isFinite(serviceId),
+        refetchInterval: 10000,
     });
+
+    const secondsUntilNextCheck = useMemo(() => {
+        if (service?.nextCheckAt) {
+            return getSecondsUntil(service.nextCheckAt);
+        }
+
+        return service?.secondsUntilNextCheck ?? null;
+    }, [service?.nextCheckAt, service?.secondsUntilNextCheck, now]);
 
     const runCheckMutation = useMutation({
         mutationFn: servicesApi.runCheck,
         onSuccess: () => {
             enqueueSnackbar('Проверка выполнена', { variant: 'success' });
+
             queryClient.invalidateQueries({ queryKey: ['services', serviceId] });
             queryClient.invalidateQueries({ queryKey: ['checks', serviceId, 'history'] });
             queryClient.invalidateQueries({ queryKey: ['services', 'my'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard', 'my'] });
+            queryClient.invalidateQueries({ queryKey: ['incidents', 'my'] });
+            queryClient.invalidateQueries({ queryKey: ['notifications', 'sent'] });
         },
         onError: () => {
             enqueueSnackbar('Не удалось выполнить проверку', { variant: 'error' });
@@ -122,7 +139,9 @@ export function ServiceDetailsPage() {
                         Назад к сервисам
                     </Button>
 
-                    <Typography variant="h4">{service.name}</Typography>
+                    <Typography variant="h4">
+                        {service.name}
+                    </Typography>
 
                     <Typography color="text.secondary">
                         Детальная диагностика сервиса, история проверок и текущий результат.
@@ -146,8 +165,14 @@ export function ServiceDetailsPage() {
                             <Stack spacing={2}>
                                 <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
                                     <ServiceStatusChip status={service.lastStatus} />
+
                                     <HealthLevelChip level={service.healthLevel} />
-                                    <Chip label={getCheckTypeLabel(service.checkType)} variant="outlined" />
+
+                                    <Chip
+                                        label={getCheckTypeLabel(service.checkType)}
+                                        variant="outlined"
+                                    />
+
                                     {service.hasOpenIncident && (
                                         <Chip
                                             label={`Открытый инцидент №${service.openIncidentId}`}
@@ -160,7 +185,10 @@ export function ServiceDetailsPage() {
 
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Адрес проверки</Typography>
+                                        <Typography color="text.secondary">
+                                            Адрес проверки
+                                        </Typography>
+
                                         <Typography variant="h6">
                                             {service.targetHost}
                                             {service.port ? `:${service.port}` : ''}
@@ -169,31 +197,50 @@ export function ServiceDetailsPage() {
                                     </Grid>
 
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">ID узла</Typography>
-                                        <Typography variant="h6">{service.nodeId}</Typography>
-                                    </Grid>
+                                        <Typography color="text.secondary">
+                                            ID узла
+                                        </Typography>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Последняя проверка</Typography>
-                                        <Typography variant="h6">{formatDateTime(service.lastCheckedAt)}</Typography>
-                                    </Grid>
-
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Следующая проверка</Typography>
                                         <Typography variant="h6">
-                                            {formatSeconds(service.secondsUntilNextCheck)}
+                                            {service.nodeId}
                                         </Typography>
                                     </Grid>
 
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Доступность за 24 часа</Typography>
+                                        <Typography color="text.secondary">
+                                            Последняя проверка
+                                        </Typography>
+
+                                        <Typography variant="h6">
+                                            {formatDateTime(service.lastCheckedAt)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">
+                                            Следующая проверка
+                                        </Typography>
+
+                                        <Typography variant="h6">
+                                            {formatSeconds(secondsUntilNextCheck)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">
+                                            Доступность за 24 часа
+                                        </Typography>
+
                                         <Typography variant="h6">
                                             {formatPercent(service.availabilityPercent24h)}
                                         </Typography>
                                     </Grid>
 
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Среднее время ответа за 24 часа</Typography>
+                                        <Typography color="text.secondary">
+                                            Среднее время ответа за 24 часа
+                                        </Typography>
+
                                         <Typography variant="h6">
                                             {formatMilliseconds(service.averageResponseTimeMs24h)}
                                         </Typography>
@@ -220,7 +267,9 @@ export function ServiceDetailsPage() {
                     <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
                         <CardContent>
                             <Stack spacing={2}>
-                                <Typography variant="h6">Оценка состояния</Typography>
+                                <Typography variant="h6">
+                                    Оценка состояния
+                                </Typography>
 
                                 <Typography variant="h2">
                                     {service.healthScore}
@@ -243,7 +292,9 @@ export function ServiceDetailsPage() {
 
                                 <Typography>
                                     Текущий простой:{' '}
-                                    <strong>{formatSeconds(service.currentDowntimeSeconds)}</strong>
+                                    <strong>
+                                        {formatSeconds(service.currentDowntimeSeconds)}
+                                    </strong>
                                 </Typography>
                             </Stack>
                         </CardContent>
@@ -255,7 +306,10 @@ export function ServiceDetailsPage() {
                 <CardContent>
                     <Stack spacing={2}>
                         <Box>
-                            <Typography variant="h6">График времени ответа</Typography>
+                            <Typography variant="h6">
+                                График времени ответа
+                            </Typography>
+
                             <Typography color="text.secondary">
                                 Последние результаты проверок сервиса.
                             </Typography>
@@ -264,18 +318,26 @@ export function ServiceDetailsPage() {
                         {isHistoryLoading ? (
                             <LinearProgress />
                         ) : chartData.length === 0 ? (
-                            <Alert severity="info">История проверок пока отсутствует.</Alert>
+                            <Alert severity="info">
+                                История проверок пока отсутствует.
+                            </Alert>
                         ) : (
                             <div style={{ width: '100%', height: 320 }}>
                                 <ResponsiveContainer>
                                     <LineChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="4 4" stroke={theme.palette.divider} />
+                                        <CartesianGrid
+                                            strokeDasharray="4 4"
+                                            stroke={theme.palette.divider}
+                                        />
+
                                         <XAxis
                                             dataKey="time"
                                             stroke={theme.palette.text.secondary}
                                             tick={{ fontSize: 11 }}
                                         />
+
                                         <YAxis stroke={theme.palette.text.secondary} />
+
                                         <Tooltip
                                             contentStyle={{
                                                 background: theme.palette.background.paper,
@@ -283,6 +345,7 @@ export function ServiceDetailsPage() {
                                                 borderRadius: 12,
                                             }}
                                         />
+
                                         <Line
                                             type="monotone"
                                             dataKey="responseTimeMs"
@@ -302,41 +365,49 @@ export function ServiceDetailsPage() {
             <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
                 <CardContent>
                     <Stack spacing={2}>
-                        <Typography variant="h6">История проверок</Typography>
+                        <Typography variant="h6">
+                            История проверок
+                        </Typography>
 
-                        {history.slice(0, 10).map((item) => (
-                            <Stack
-                                key={item.id}
-                                direction={{ xs: 'column', md: 'row' }}
-                                spacing={2}
-                                sx={{
-                                    justifyContent: 'space-between',
-                                    borderBottom: 1,
-                                    borderColor: 'divider',
-                                    pb: 1.5,
-                                }}
-                            >
-                                <Box>
-                                    <Typography sx={{ fontWeight: 800 }}>
-                                        {item.status === 'UP' ? 'Работает' : 'Недоступен'}
-                                    </Typography>
+                        {history.length === 0 ? (
+                            <Alert severity="info">
+                                История проверок пока отсутствует.
+                            </Alert>
+                        ) : (
+                            history.slice(0, 10).map((item) => (
+                                <Stack
+                                    key={item.id}
+                                    direction={{ xs: 'column', md: 'row' }}
+                                    spacing={2}
+                                    sx={{
+                                        justifyContent: 'space-between',
+                                        borderBottom: 1,
+                                        borderColor: 'divider',
+                                        pb: 1.5,
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {item.status === 'UP' ? 'Работает' : 'Недоступен'}
+                                        </Typography>
 
-                                    <Typography color="text.secondary">
-                                        {formatDateTime(item.checkedAt)}
-                                    </Typography>
-                                </Box>
+                                        <Typography color="text.secondary">
+                                            {formatDateTime(item.checkedAt)}
+                                        </Typography>
+                                    </Box>
 
-                                <Box>
-                                    <Typography>
-                                        Ответ: {formatMilliseconds(item.responseTimeMs)}
-                                    </Typography>
+                                    <Box>
+                                        <Typography>
+                                            Ответ: {formatMilliseconds(item.responseTimeMs)}
+                                        </Typography>
 
-                                    <Typography color="text.secondary">
-                                        {item.diagnosticMessage}
-                                    </Typography>
-                                </Box>
-                            </Stack>
-                        ))}
+                                        <Typography color="text.secondary">
+                                            {item.diagnosticMessage}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            ))
+                        )}
                     </Stack>
                 </CardContent>
             </Card>
