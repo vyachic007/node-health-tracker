@@ -37,6 +37,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String requestPath = request.getServletPath();
+
+        return isPublicEndpoint(requestPath);
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -101,6 +108,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Messages.JWT_TOKEN_INVALID
             );
         }
+    }
+
+    private boolean isPublicEndpoint(String requestPath) {
+        return requestPath.equals("/api/auth/register")
+                || requestPath.equals("/api/auth/login")
+                || requestPath.equals("/api/auth/password-reset/request")
+                || requestPath.equals("/api/auth/password-reset/confirm")
+                || requestPath.equals("/api/vk/webhook")
+                || requestPath.startsWith("/api/heartbeat/");
     }
 
     private boolean isTokenIssuedBeforeCredentialsChange(String token, User user) {

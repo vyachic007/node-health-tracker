@@ -8,10 +8,18 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "app.vk")
+@ConfigurationProperties(prefix = "vk")
 public class VkProperties {
 
     private String apiUrl;
+
     private String accessToken;
+
     private String apiVersion;
+
+    private String groupId;
+
+    private String confirmationCode;
+
+    private String callbackSecret;
 }

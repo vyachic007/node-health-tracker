@@ -46,3 +46,6 @@ app:
     api-url: ${VK_API_URL:https://api.vk.com/method}
     access-token: ${VK_ACCESS_TOKEN:}
     api-version: ${VK_API_VERSION:5.199}
+    group-id: ${VK_GROUP_ID:}
+    confirmation-code: ${VK_CONFIRMATION_CODE:}
+    callback-secret: ${VK_CALLBACK_SECRET:}
