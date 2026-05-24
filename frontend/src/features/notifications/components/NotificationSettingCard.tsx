@@ -19,24 +19,31 @@ import EmailIcon from '@mui/icons-material/Email';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import ChatIcon from '@mui/icons-material/Chat';
 import LinkIcon from '@mui/icons-material/Link';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useEffect, useState } from 'react';
 import { notificationChannelLabels } from '../model/notificationLabels';
 import type {
     NotificationSetting,
     UpdateNotificationSettingRequest,
+    VkBindLinkResponse,
 } from '../model/notificationTypes';
+import { formatDateTime } from '../../../shared/lib/formatters';
 
 interface NotificationSettingCardProps {
     setting: NotificationSetting;
     isSaving: boolean;
     isDeleting: boolean;
     isCreatingTelegramLink: boolean;
+    isCreatingVkLink: boolean;
+    vkBindLink: VkBindLinkResponse | null;
     onSave: (settingId: number, payload: UpdateNotificationSettingRequest) => void;
     onDelete: (setting: NotificationSetting) => void;
     onConnectTelegram: () => void;
+    onConnectVk: (settingId: number) => void;
+    onCopyVkCommand: (command: string) => void;
 }
 
-const TELEGRAM_NOT_CONNECTED_VALUE = 'not_connected';
+const MESSENGER_NOT_CONNECTED_VALUE = 'not_connected';
 
 function getChannelIcon(channel: NotificationSetting['channel']) {
     switch (channel) {
@@ -71,17 +78,17 @@ function getDestinationHelperText(channel: NotificationSetting['channel']) {
         case 'TELEGRAM':
             return 'Telegram подключается через бота. Chat ID сохраняется автоматически после нажатия Start.';
         case 'VK':
-            return 'Укажите VK user ID или peer ID беседы, куда нужно отправлять уведомления.';
+            return 'VK подключается через сообщения сообщества. Peer ID сохраняется автоматически после отправки команды /start.';
         default:
             return '';
     }
 }
 
-function isTelegramConnected(destination: string | null | undefined) {
+function isMessengerConnected(destination: string | null | undefined) {
     return Boolean(
         destination &&
         destination.trim().length > 0 &&
-        destination !== TELEGRAM_NOT_CONNECTED_VALUE,
+        destination !== MESSENGER_NOT_CONNECTED_VALUE,
     );
 }
 
@@ -90,9 +97,13 @@ export function NotificationSettingCard({
                                             isSaving,
                                             isDeleting,
                                             isCreatingTelegramLink,
+                                            isCreatingVkLink,
+                                            vkBindLink,
                                             onSave,
                                             onDelete,
                                             onConnectTelegram,
+                                            onConnectVk,
+                                            onCopyVkCommand,
                                         }: NotificationSettingCardProps) {
     const [isEnabled, setIsEnabled] = useState(setting.isEnabled);
     const [destination, setDestination] = useState(setting.destination);
@@ -104,7 +115,9 @@ export function NotificationSettingCard({
     );
 
     const isTelegram = setting.channel === 'TELEGRAM';
-    const telegramConnected = isTelegramConnected(destination);
+    const isVk = setting.channel === 'VK';
+    const isMessenger = isTelegram || isVk;
+    const messengerConnected = isMessengerConnected(destination);
 
     useEffect(() => {
         setIsEnabled(setting.isEnabled);
@@ -114,15 +127,23 @@ export function NotificationSettingCard({
     }, [setting]);
 
     const handleSave = () => {
+        if (isMessenger && !messengerConnected) {
+            return;
+        }
+
         onSave(setting.id, {
-            isEnabled: isTelegram ? telegramConnected : isEnabled,
-            destination: isTelegram
-                ? destination
-                : destination.trim(),
+            isEnabled: isMessenger ? true : isEnabled,
+            destination: isMessenger ? destination : destination.trim(),
             notifyOnIncidentOpen,
             notifyOnIncidentResolved,
         });
     };
+
+    const isSaveDisabled =
+        isSaving ||
+        isDeleting ||
+        (!isMessenger && !destination.trim()) ||
+        (isMessenger && !messengerConnected);
 
     return (
         <Card
@@ -155,7 +176,7 @@ export function NotificationSettingCard({
                         />
                     </Stack>
 
-                    {!isTelegram && (
+                    {!isMessenger && (
                         <FormControlLabel
                             control={
                                 <Switch
@@ -167,10 +188,10 @@ export function NotificationSettingCard({
                         />
                     )}
 
-                    {isTelegram ? (
+                    {isTelegram && (
                         <Stack spacing={1.5}>
-                            <Alert severity={telegramConnected ? 'success' : 'info'}>
-                                {telegramConnected
+                            <Alert severity={messengerConnected ? 'success' : 'info'}>
+                                {messengerConnected
                                     ? `Telegram подключён. Получатель: ${destination}`
                                     : 'Telegram ещё не подключён. Нажмите кнопку ниже, откройте бота и нажмите Start.'}
                             </Alert>
@@ -184,16 +205,103 @@ export function NotificationSettingCard({
                             >
                                 {isCreatingTelegramLink
                                     ? 'Создание ссылки...'
-                                    : telegramConnected
+                                    : messengerConnected
                                         ? 'Переподключить Telegram'
                                         : 'Подключить Telegram'}
                             </Button>
 
                             <Typography variant="body2" color="text.secondary">
-                                После открытия Telegram нажмите Start. Backend сам получит chat ID и сохранит его в настройках.
+                                Backend сам получит chat ID и сохранит его в настройках.
                             </Typography>
                         </Stack>
-                    ) : (
+                    )}
+
+                    {isVk && (
+                        <Stack spacing={1.5}>
+                            <Alert severity={messengerConnected ? 'success' : 'info'}>
+                                {messengerConnected
+                                    ? `VK подключён. Получатель: ${destination}`
+                                    : 'VK ещё не подключён. Нажмите кнопку ниже, затем отправьте команду в сообщения сообщества.'}
+                            </Alert>
+
+                            <Button
+                                variant="outlined"
+                                startIcon={<LinkIcon />}
+                                onClick={() => onConnectVk(setting.id)}
+                                disabled={isCreatingVkLink || isDeleting}
+                                fullWidth
+                            >
+                                {isCreatingVkLink
+                                    ? 'Создание команды...'
+                                    : messengerConnected
+                                        ? 'Переподключить VK'
+                                        : 'Подключить VK'}
+                            </Button>
+
+                            {vkBindLink && (
+                                <Alert severity="success">
+                                    <Stack spacing={1.5}>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            Команда для подключения VK создана
+                                        </Typography>
+
+                                        <Typography>
+                                            Откройте сообщения сообщества Node Health Tracker и отправьте туда команду:
+                                        </Typography>
+
+                                        <Typography
+                                            component="code"
+                                            sx={{
+                                                display: 'block',
+                                                p: 1.5,
+                                                borderRadius: 2,
+                                                bgcolor: 'background.paper',
+                                                border: 1,
+                                                borderColor: 'divider',
+                                                wordBreak: 'break-all',
+                                                fontFamily: 'monospace',
+                                            }}
+                                        >
+                                            {vkBindLink.command}
+                                        </Typography>
+
+                                        <Stack
+                                            direction={{ xs: 'column', sm: 'row' }}
+                                            spacing={1}
+                                            sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
+                                        >
+                                            <Button
+                                                variant="contained"
+                                                href={vkBindLink.vkLink}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Открыть VK
+                                            </Button>
+
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<ContentCopyIcon />}
+                                                onClick={() => onCopyVkCommand(vkBindLink.command)}
+                                            >
+                                                Скопировать команду
+                                            </Button>
+                                        </Stack>
+
+                                        <Typography variant="body2" color="text.secondary">
+                                            Команда действует до {formatDateTime(vkBindLink.expiresAt)}.
+                                        </Typography>
+                                    </Stack>
+                                </Alert>
+                            )}
+
+                            <Typography variant="body2" color="text.secondary">
+                                Backend сам получит VK peer ID и сохранит его в настройках.
+                            </Typography>
+                        </Stack>
+                    )}
+
+                    {!isMessenger && (
                         <TextField
                             label={getDestinationLabel(setting.channel)}
                             value={destination}
@@ -230,16 +338,20 @@ export function NotificationSettingCard({
                     </Stack>
 
                     <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-                        <Tooltip title={isSaving ? 'Сохранение...' : 'Сохранить настройки событий'}>
+                        <Tooltip
+                            title={
+                                isMessenger && !messengerConnected
+                                    ? 'Сначала подключите мессенджер'
+                                    : isSaving
+                                        ? 'Сохранение...'
+                                        : 'Сохранить настройки событий'
+                            }
+                        >
                             <span>
                                 <IconButton
                                     color="primary"
                                     onClick={handleSave}
-                                    disabled={
-                                        isSaving ||
-                                        isDeleting ||
-                                        (!isTelegram && !destination.trim())
-                                    }
+                                    disabled={isSaveDisabled}
                                     sx={{
                                         width: 48,
                                         height: 48,

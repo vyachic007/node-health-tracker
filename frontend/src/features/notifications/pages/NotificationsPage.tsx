@@ -26,6 +26,7 @@ import type {
     CreateNotificationSettingRequest,
     NotificationSetting,
     UpdateNotificationSettingRequest,
+    VkBindLinkResponse,
 } from '../model/notificationTypes';
 
 export function NotificationsPage() {
@@ -36,6 +37,10 @@ export function NotificationsPage() {
     const [settingToDelete, setSettingToDelete] = useState<NotificationSetting | null>(null);
     const [savingSettingId, setSavingSettingId] = useState<number | null>(null);
     const [deletingSettingId, setDeletingSettingId] = useState<number | null>(null);
+    const [creatingVkLinkSettingId, setCreatingVkLinkSettingId] = useState<number | null>(null);
+    const [vkBindLinksBySettingId, setVkBindLinksBySettingId] = useState<
+        Record<number, VkBindLinkResponse>
+    >({});
 
     const {
         data: settings = [],
@@ -115,6 +120,20 @@ export function NotificationsPage() {
         mutationFn: notificationsApi.createTelegramBindLink,
     });
 
+    const createVkBindLinkMutation = useMutation({
+        mutationFn: notificationsApi.createVkBindLink,
+    });
+
+    const startTemporarySettingsRefresh = () => {
+        const refreshInterval = window.setInterval(() => {
+            queryClient.invalidateQueries({ queryKey: ['notifications', 'settings'] });
+        }, 3000);
+
+        window.setTimeout(() => {
+            window.clearInterval(refreshInterval);
+        }, 60000);
+    };
+
     const handleCreateSetting = (payload: CreateNotificationSettingRequest) => {
         createSettingMutation.mutate(payload);
     };
@@ -155,6 +174,8 @@ export function NotificationsPage() {
                     'Открываем Telegram. Нажмите Start в боте для завершения подключения.',
                     { variant: 'info' },
                 );
+
+                startTemporarySettingsRefresh();
             },
             onError: () => {
                 if (telegramWindow) {
@@ -166,6 +187,47 @@ export function NotificationsPage() {
                 });
             },
         });
+    };
+
+    const handleConnectVk = (settingId: number) => {
+        setCreatingVkLinkSettingId(settingId);
+
+        createVkBindLinkMutation.mutate(undefined, {
+            onSuccess: (response) => {
+                setVkBindLinksBySettingId((current) => ({
+                    ...current,
+                    [settingId]: response,
+                }));
+
+                enqueueSnackbar('Команда для подключения VK создана', {
+                    variant: 'success',
+                });
+
+                startTemporarySettingsRefresh();
+            },
+            onError: () => {
+                enqueueSnackbar('Не удалось создать команду подключения VK', {
+                    variant: 'error',
+                });
+            },
+            onSettled: () => {
+                setCreatingVkLinkSettingId(null);
+            },
+        });
+    };
+
+    const handleCopyVkCommand = async (command: string) => {
+        try {
+            await navigator.clipboard.writeText(command);
+
+            enqueueSnackbar('Команда VK скопирована', {
+                variant: 'success',
+            });
+        } catch {
+            enqueueSnackbar('Не удалось скопировать команду', {
+                variant: 'error',
+            });
+        }
     };
 
     const isLoading = isSettingsLoading || isSentLoading;
@@ -228,9 +290,16 @@ export function NotificationsPage() {
                                     setting.channel === 'TELEGRAM' &&
                                     createTelegramBindLinkMutation.isPending
                                 }
+                                isCreatingVkLink={
+                                    setting.channel === 'VK' &&
+                                    creatingVkLinkSettingId === setting.id
+                                }
+                                vkBindLink={vkBindLinksBySettingId[setting.id] ?? null}
                                 onSave={handleUpdateSetting}
                                 onDelete={(selectedSetting) => setSettingToDelete(selectedSetting)}
                                 onConnectTelegram={handleConnectTelegram}
+                                onConnectVk={handleConnectVk}
+                                onCopyVkCommand={handleCopyVkCommand}
                             />
                         </Grid>
                     ))}

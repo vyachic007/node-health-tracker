@@ -5,6 +5,7 @@ import type {
     SentNotification,
     TelegramBindLinkResponse,
     UpdateNotificationSettingRequest,
+    VkBindLinkResponse,
 } from '../model/notificationTypes';
 
 export const notificationsApi = {
@@ -49,6 +50,14 @@ export const notificationsApi = {
         );
 
         return response.data as TelegramBindLinkResponse;
+    },
+
+    async createVkBindLink(): Promise<VkBindLinkResponse> {
+        const response = await apiClient.post<VkBindLinkResponse>(
+            '/api/notifications/vk/bind-link',
+        );
+
+        return response.data as VkBindLinkResponse;
     },
 
     async getSentNotifications(): Promise<SentNotification[]> {

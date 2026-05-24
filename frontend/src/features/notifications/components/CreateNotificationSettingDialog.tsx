@@ -30,12 +30,18 @@ interface CreateNotificationSettingDialogProps {
     onSubmit: (payload: CreateNotificationSettingRequest) => void;
 }
 
+const MESSENGER_NOT_CONNECTED_VALUE = 'not_connected';
+
+function isMessengerChannel(channel: NotificationChannel) {
+    return channel === 'TELEGRAM' || channel === 'VK';
+}
+
 function getDestinationLabel(channel: NotificationChannel) {
     switch (channel) {
         case 'EMAIL':
             return 'Email получателя';
         case 'VK':
-            return 'VK user ID / peer ID';
+            return 'VK получатель';
         case 'TELEGRAM':
             return 'Telegram получатель';
         default:
@@ -48,9 +54,18 @@ function getDestinationPlaceholder(channel: NotificationChannel) {
         case 'EMAIL':
             return 'user@example.com';
         case 'VK':
-            return '587701632';
         case 'TELEGRAM':
+        default:
             return '';
+    }
+}
+
+function getMessengerHelpText(channel: NotificationChannel) {
+    switch (channel) {
+        case 'TELEGRAM':
+            return 'Для Telegram не нужно вручную вводить chat ID. После добавления канала появится карточка Telegram. В ней нажмите “Подключить Telegram”, откройте бота и нажмите Start.';
+        case 'VK':
+            return 'Для VK не нужно вручную вводить peer ID. После добавления канала появится карточка VK. В ней нажмите “Подключить VK”, скопируйте команду и отправьте её в сообщения сообщества.';
         default:
             return '';
     }
@@ -68,7 +83,7 @@ export function CreateNotificationSettingDialog({
     const [notifyOnIncidentOpen, setNotifyOnIncidentOpen] = useState(true);
     const [notifyOnIncidentResolved, setNotifyOnIncidentResolved] = useState(true);
 
-    const isTelegram = channel === 'TELEGRAM';
+    const isMessenger = isMessengerChannel(channel);
 
     const handleClose = () => {
         if (isSubmitting) {
@@ -81,8 +96,8 @@ export function CreateNotificationSettingDialog({
     const handleSubmit = () => {
         onSubmit({
             channel,
-            isEnabled: isTelegram ? false : isEnabled,
-            destination: isTelegram ? 'not_connected' : destination.trim(),
+            isEnabled: isMessenger ? false : isEnabled,
+            destination: isMessenger ? MESSENGER_NOT_CONNECTED_VALUE : destination.trim(),
             notifyOnIncidentOpen,
             notifyOnIncidentResolved,
         });
@@ -91,7 +106,7 @@ export function CreateNotificationSettingDialog({
     const handleChannelChange = (nextChannel: NotificationChannel) => {
         setChannel(nextChannel);
 
-        if (nextChannel === 'TELEGRAM') {
+        if (isMessengerChannel(nextChannel)) {
             setDestination('');
             setIsEnabled(false);
             return;
@@ -101,7 +116,7 @@ export function CreateNotificationSettingDialog({
     };
 
     const isSubmitDisabled =
-        isSubmitting || (!isTelegram && destination.trim().length === 0);
+        isSubmitting || (!isMessenger && destination.trim().length === 0);
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
@@ -133,9 +148,9 @@ export function CreateNotificationSettingDialog({
                         </Select>
                     </FormControl>
 
-                    {isTelegram ? (
+                    {isMessenger ? (
                         <Alert severity="info">
-                            Для Telegram не нужно вручную вводить chat ID. После добавления канала появится карточка Telegram. В ней нажмите “Подключить Telegram”, откройте бота и нажмите Start.
+                            {getMessengerHelpText(channel)}
                         </Alert>
                     ) : (
                         <TextField
@@ -148,7 +163,7 @@ export function CreateNotificationSettingDialog({
                         />
                     )}
 
-                    {!isTelegram && (
+                    {!isMessenger && (
                         <FormControlLabel
                             control={
                                 <Switch
@@ -160,9 +175,9 @@ export function CreateNotificationSettingDialog({
                         />
                     )}
 
-                    {isTelegram && (
+                    {isMessenger && (
                         <Typography variant="body2" color="text.secondary">
-                            Канал будет создан как неподключённый. Он включится автоматически после привязки Telegram через бота.
+                            Канал будет создан как неподключённый. Он включится автоматически после успешной привязки.
                         </Typography>
                     )}
 

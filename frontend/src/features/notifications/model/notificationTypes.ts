@@ -39,6 +39,14 @@ export interface TelegramBindLinkResponse {
     expiresAt: string;
 }
 
+export interface VkBindLinkResponse {
+    bindToken: string;
+    vkGroupId: string;
+    vkLink: string;
+    command: string;
+    expiresAt: string;
+}
+
 export interface SentNotification {
     id: number;
     userId: number;
