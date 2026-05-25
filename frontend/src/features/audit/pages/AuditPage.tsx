@@ -23,77 +23,10 @@ import type {
     AuditEventType,
     AuditSeverity,
 } from '../model/auditTypes';
+import { useAuth } from '../../auth/store/AuthContext';
 
 type AuditSeverityFilter = 'ALL' | AuditSeverity;
 type AuditEventTypeFilter = 'ALL' | AuditEventType;
-
-const demoAuditEvents: AuditEvent[] = [
-    {
-        id: 1,
-        eventType: 'USER_LOGIN',
-        severity: 'SUCCESS',
-        username: 'demo_user',
-        userId: 1,
-        entityType: 'USER',
-        entityId: 1,
-        message: 'Пользователь demo_user выполнил вход в систему.',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Demo browser',
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: 2,
-        eventType: 'SERVICE_CREATED',
-        severity: 'SUCCESS',
-        username: 'demo_user',
-        userId: 1,
-        entityType: 'SERVICE',
-        entityId: 2,
-        message: 'Создан сервис мониторинга RuTube HTTPS.',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Demo browser',
-        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    },
-    {
-        id: 3,
-        eventType: 'INCIDENT_OPENED',
-        severity: 'WARNING',
-        username: 'SYSTEM',
-        userId: null,
-        entityType: 'INCIDENT',
-        entityId: 1,
-        message: 'Открыт инцидент по сервису Broken HTTP Service.',
-        ipAddress: null,
-        userAgent: null,
-        createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    },
-    {
-        id: 4,
-        eventType: 'NOTIFICATION_SENT',
-        severity: 'SUCCESS',
-        username: 'SYSTEM',
-        userId: null,
-        entityType: 'NOTIFICATION',
-        entityId: 1,
-        message: 'Telegram-уведомление об открытии инцидента успешно отправлено.',
-        ipAddress: null,
-        userAgent: null,
-        createdAt: new Date(Date.now() - 1000 * 60 * 11).toISOString(),
-    },
-    {
-        id: 5,
-        eventType: 'NOTIFICATION_FAILED',
-        severity: 'ERROR',
-        username: 'SYSTEM',
-        userId: null,
-        entityType: 'NOTIFICATION',
-        entityId: 2,
-        message: 'Ошибка отправки уведомления: Telegram API вернул ошибку авторизации.',
-        ipAddress: null,
-        userAgent: null,
-        createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-    },
-];
 
 function filterEvents(
     events: AuditEvent[],
@@ -130,25 +63,60 @@ function filterEvents(
     });
 }
 
+function getEventTypeLabel(eventType: string) {
+    switch (eventType) {
+        case 'NODE_CREATED':
+            return 'Узел создан';
+        case 'NODE_UPDATED':
+            return 'Узел обновлён';
+        case 'NODE_DELETED':
+            return 'Узел удалён';
+
+        case 'SERVICE_CREATED':
+            return 'Сервис создан';
+        case 'SERVICE_UPDATED':
+            return 'Сервис обновлён';
+        case 'SERVICE_DELETED':
+            return 'Сервис удалён';
+
+        case 'CHECK_STARTED':
+            return 'Проверка запущена';
+
+        case 'INCIDENT_OPENED':
+            return 'Инцидент открыт';
+        case 'INCIDENT_RESOLVED':
+            return 'Инцидент закрыт';
+
+        case 'USER_BLOCKED':
+            return 'Пользователь заблокирован';
+        case 'USER_UNBLOCKED':
+            return 'Пользователь разблокирован';
+        case 'USER_ROLE_UPDATED':
+            return 'Роль пользователя изменена';
+
+        default:
+            return eventType;
+    }
+}
+
 export function AuditPage() {
+    const { isAdmin } = useAuth();
+
     const [search, setSearch] = useState('');
     const [severityFilter, setSeverityFilter] = useState<AuditSeverityFilter>('ALL');
     const [eventTypeFilter, setEventTypeFilter] = useState<AuditEventTypeFilter>('ALL');
 
     const {
-        data: apiEvents = [],
+        data: events = [],
         isLoading,
         isError,
         refetch,
         isFetching,
     } = useQuery({
-        queryKey: ['audit', 'events'],
-        queryFn: auditApi.getEvents,
+        queryKey: ['audit', 'events', isAdmin],
+        queryFn: () => auditApi.getEvents(isAdmin),
         retry: false,
     });
-
-    const isDemoMode = isError;
-    const events = isDemoMode ? demoAuditEvents : apiEvents;
 
     const sortedEvents = useMemo(() => {
         return [...events].sort((a, b) => {
@@ -192,7 +160,7 @@ export function AuditPage() {
                     </Typography>
 
                     <Typography color="text.secondary">
-                        Журнал действий пользователя, изменений узлов, сервисов, инцидентов и уведомлений.
+                        Журнал действий пользователя, изменений узлов, сервисов и инцидентов.
                     </Typography>
                 </Box>
 
@@ -206,9 +174,19 @@ export function AuditPage() {
                 </Button>
             </Stack>
 
-            {isDemoMode && (
-                <Alert severity="warning">
-                    Backend endpoint /api/audit/events пока не реализован. Сейчас показаны демонстрационные события для проверки интерфейса.
+            {isAdmin ? (
+                <Alert severity="info">
+                    Вы просматриваете общий журнал аудита по всем пользователям и системным событиям.
+                </Alert>
+            ) : (
+                <Alert severity="info">
+                    Вы просматриваете только свои действия. Системные события и действия других пользователей доступны администратору.
+                </Alert>
+            )}
+
+            {isError && (
+                <Alert severity="error">
+                    Не удалось загрузить журнал аудита. Проверьте backend endpoint и права доступа.
                 </Alert>
             )}
 
@@ -220,7 +198,7 @@ export function AuditPage() {
                         label="Поиск"
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Сообщение, пользователь, объект, IP"
+                        placeholder="Сообщение, пользователь, объект, тип события"
                         fullWidth
                     />
                 </Grid>
@@ -260,7 +238,7 @@ export function AuditPage() {
 
                             {eventTypes.map((eventType) => (
                                 <MenuItem key={eventType} value={eventType}>
-                                    {eventType}
+                                    {getEventTypeLabel(eventType)}
                                 </MenuItem>
                             ))}
                         </Select>
