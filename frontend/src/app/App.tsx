@@ -12,12 +12,12 @@ import { NodesPage } from '../features/nodes/pages/NodesPage';
 import { NotificationsPage } from '../features/notifications/pages/NotificationsPage';
 import { ServicesPage } from '../features/services/pages/ServicesPage';
 import { ServiceDetailsPage } from '../features/services/pages/ServiceDetailsPage';
+import { AdminUsersPage } from '../features/admin-users/pages/AdminUsersPage';
 import { AppLayout } from '../layouts/AppLayout';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 interface ProtectedRouteProps {
     children: JSX.Element;
@@ -94,10 +94,7 @@ function AppRoutes() {
                         path="/admin/users"
                         element={
                             <ProtectedRoute adminOnly>
-                                <PlaceholderPage
-                                    title="Пользователи"
-                                    description="Администрирование пользователей, статусов и ролей."
-                                />
+                                <AdminUsersPage />
                             </ProtectedRoute>
                         }
                     />
