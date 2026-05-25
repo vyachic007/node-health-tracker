@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { AppProviders } from './providers/AppProviders';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { PasswordResetPage } from '../features/auth/pages/PasswordResetPage';
+import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { useAuth } from '../features/auth/store/AuthContext';
 import { AuditPage } from '../features/audit/pages/AuditPage';
 import { IncidentsPage } from '../features/incidents/pages/IncidentsPage';
@@ -56,6 +57,7 @@ function AppRoutes() {
         <BrowserRouter>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/password-reset" element={<PasswordResetPage />} />
 
                 <Route

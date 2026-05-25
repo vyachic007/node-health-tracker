@@ -1,15 +1,15 @@
-import type { AxiosResponse } from 'axios';
 import { apiClient } from '../../../shared/api/apiClient';
 import type {
     CurrentUser,
     LoginRequest,
     LoginResponse,
     PasswordResetRequest,
+    RegisterRequest,
 } from '../model/authTypes';
 
 export const authApi = {
     async login(payload: LoginRequest): Promise<LoginResponse> {
-        const response: AxiosResponse<LoginResponse> = await apiClient.post(
+        const response = await apiClient.post<LoginResponse>(
             '/api/auth/login',
             payload,
         );
@@ -17,8 +17,17 @@ export const authApi = {
         return response.data;
     },
 
+    async register(payload: RegisterRequest): Promise<LoginResponse> {
+        const response = await apiClient.post<LoginResponse>(
+            '/api/auth/register',
+            payload,
+        );
+
+        return response.data;
+    },
+
     async me(): Promise<CurrentUser> {
-        const response: AxiosResponse<CurrentUser> = await apiClient.get('/api/auth/me');
+        const response = await apiClient.get<CurrentUser>('/api/auth/me');
 
         return response.data;
     },

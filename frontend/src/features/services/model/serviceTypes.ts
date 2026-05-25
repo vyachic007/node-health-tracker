@@ -67,6 +67,7 @@ export interface CreateNetworkServiceRequest {
 }
 
 export interface UpdateNetworkServiceRequest {
+    checkType: CheckType;
     name: string;
     targetHost: string;
     port: number | null;

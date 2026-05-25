@@ -1,4 +1,3 @@
-import type { AxiosResponse } from 'axios';
 import { apiClient } from '../../../shared/api/apiClient';
 import type {
     CheckResult,
@@ -9,20 +8,23 @@ import type {
 
 export const servicesApi = {
     async getMyServices(): Promise<NetworkService[]> {
-        const response: AxiosResponse<NetworkService[]> = await apiClient.get('/api/services/my');
+        const response = await apiClient.get<NetworkService[]>('/api/services/my');
+
         return response.data;
     },
 
     async getService(serviceId: number): Promise<NetworkService> {
-        const response: AxiosResponse<NetworkService> = await apiClient.get(
+        const response = await apiClient.get<NetworkService>(
             `/api/services/${serviceId}`,
         );
 
         return response.data;
     },
 
-    async createService(payload: CreateNetworkServiceRequest): Promise<NetworkService> {
-        const response: AxiosResponse<NetworkService> = await apiClient.post(
+    async createService(
+        payload: CreateNetworkServiceRequest,
+    ): Promise<NetworkService> {
+        const response = await apiClient.post<NetworkService>(
             '/api/services',
             payload,
         );
@@ -34,7 +36,7 @@ export const servicesApi = {
         serviceId: number,
         payload: UpdateNetworkServiceRequest,
     ): Promise<NetworkService> {
-        const response: AxiosResponse<NetworkService> = await apiClient.put(
+        const response = await apiClient.put<NetworkService>(
             `/api/services/${serviceId}`,
             payload,
         );
@@ -46,8 +48,24 @@ export const servicesApi = {
         await apiClient.delete(`/api/services/${serviceId}`);
     },
 
+    async enableService(serviceId: number): Promise<NetworkService> {
+        const response = await apiClient.post<NetworkService>(
+            `/api/services/${serviceId}/enable`,
+        );
+
+        return response.data;
+    },
+
+    async disableService(serviceId: number): Promise<NetworkService> {
+        const response = await apiClient.post<NetworkService>(
+            `/api/services/${serviceId}/disable`,
+        );
+
+        return response.data;
+    },
+
     async runCheck(serviceId: number): Promise<CheckResult> {
-        const response: AxiosResponse<CheckResult> = await apiClient.post(
+        const response = await apiClient.post<CheckResult>(
             `/api/checks/services/${serviceId}/run`,
         );
 
@@ -55,7 +73,7 @@ export const servicesApi = {
     },
 
     async getCheckHistory(serviceId: number): Promise<CheckResult[]> {
-        const response: AxiosResponse<CheckResult[]> = await apiClient.get(
+        const response = await apiClient.get<CheckResult[]>(
             `/api/checks/services/${serviceId}/history`,
         );
 

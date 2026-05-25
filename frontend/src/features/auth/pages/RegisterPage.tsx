@@ -14,32 +14,53 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import { authApi } from '../api/authApi';
 import { useAuth } from '../store/AuthContext';
 
-export function LoginPage() {
+export function RegisterPage() {
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
     const { login } = useAuth();
 
-    const [username, setUsername] = useState('demo_user');
-    const [password, setPassword] = useState('12345678');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [repeatPassword, setRepeatPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
         setError(null);
+
+        const trimmedUsername = username.trim();
+        const trimmedEmail = email.trim();
+
+        if (password !== repeatPassword) {
+            setError('Пароли не совпадают.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
-            await login({
-                username: username.trim(),
+            await authApi.register({
+                username: trimmedUsername,
+                email: trimmedEmail,
                 password,
             });
 
-            enqueueSnackbar('Вход выполнен успешно', { variant: 'success' });
+            await login({
+                username: trimmedUsername,
+                password,
+            });
+
+            enqueueSnackbar('Регистрация выполнена успешно', {
+                variant: 'success',
+            });
+
             navigate('/dashboard', { replace: true });
         } catch {
-            setError('Не удалось войти. Проверьте логин и пароль.');
+            setError('Не удалось зарегистрироваться. Проверьте данные или попробуйте другой логин/email.');
         } finally {
             setIsSubmitting(false);
         }
@@ -48,7 +69,9 @@ export function LoginPage() {
     const isSubmitDisabled =
         isSubmitting ||
         username.trim().length === 0 ||
-        password.trim().length === 0;
+        email.trim().length === 0 ||
+        password.trim().length < 8 ||
+        repeatPassword.trim().length < 8;
 
     return (
         <Box
@@ -89,11 +112,11 @@ export function LoginPage() {
                                 </Box>
 
                                 <Typography variant="h4" sx={{ textAlign: 'center' }}>
-                                    Node Health Tracker
+                                    Регистрация
                                 </Typography>
 
                                 <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                                    Диагностический мониторинг сервисов, инцидентов и уведомлений
+                                    Создайте аккаунт для работы с мониторингом сервисов
                                 </Typography>
                             </Stack>
 
@@ -104,6 +127,16 @@ export function LoginPage() {
                                     label="Логин"
                                     value={username}
                                     onChange={(event) => setUsername(event.target.value)}
+                                    helperText="Будет использоваться для входа в систему"
+                                    fullWidth
+                                    required
+                                />
+
+                                <TextField
+                                    label="Email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
                                     fullWidth
                                     required
                                 />
@@ -113,6 +146,16 @@ export function LoginPage() {
                                     type="password"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
+                                    helperText="Минимум 8 символов"
+                                    fullWidth
+                                    required
+                                />
+
+                                <TextField
+                                    label="Повторите пароль"
+                                    type="password"
+                                    value={repeatPassword}
+                                    onChange={(event) => setRepeatPassword(event.target.value)}
                                     fullWidth
                                     required
                                 />
@@ -124,32 +167,20 @@ export function LoginPage() {
                                     onClick={handleSubmit}
                                     disabled={isSubmitDisabled}
                                 >
-                                    {isSubmitting ? 'Выполняется вход...' : 'Войти'}
+                                    {isSubmitting ? 'Создание аккаунта...' : 'Зарегистрироваться'}
                                 </Button>
 
-                                <Stack spacing={1} sx={{ alignItems: 'center' }}>
-                                    <Typography variant="body2">
-                                        <Link
-                                            component={RouterLink}
-                                            to="/password-reset"
-                                            underline="hover"
-                                        >
-                                            Забыли пароль?
-                                        </Link>
-                                    </Typography>
-
-                                    <Typography variant="body2" color="text.secondary">
-                                        Нет аккаунта?{' '}
-                                        <Link
-                                            component={RouterLink}
-                                            to="/register"
-                                            underline="hover"
-                                            sx={{ fontWeight: 700 }}
-                                        >
-                                            Зарегистрироваться
-                                        </Link>
-                                    </Typography>
-                                </Stack>
+                                <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                                    Уже есть аккаунт?{' '}
+                                    <Link
+                                        component={RouterLink}
+                                        to="/login"
+                                        underline="hover"
+                                        sx={{ fontWeight: 700 }}
+                                    >
+                                        Войти
+                                    </Link>
+                                </Typography>
                             </Stack>
                         </Stack>
                     </CardContent>

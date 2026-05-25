@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     Dialog,
@@ -12,9 +13,9 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { useEffect, useState, type FormEvent } from 'react';
-import type { NetworkService, UpdateNetworkServiceRequest } from '../model/serviceTypes';
+import { useEffect, useState } from 'react';
 import { getCheckTypeLabel } from '../model/serviceLabels';
+import type { NetworkService, UpdateNetworkServiceRequest } from '../model/serviceTypes';
 
 interface EditServiceDialogProps {
     open: boolean;
@@ -51,14 +52,13 @@ export function EditServiceDialog({
         setIsEnabled(service.isEnabled);
     }, [service]);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
+    const handleSubmit = () => {
         if (!service) {
             return;
         }
 
         onSubmit(service.id, {
+            checkType: service.checkType,
             name: name.trim(),
             targetHost: targetHost.trim(),
             port: port.trim() ? Number(port) : null,
@@ -68,9 +68,21 @@ export function EditServiceDialog({
         });
     };
 
+    const isFormInvalid =
+        !name.trim() ||
+        !targetHost.trim() ||
+        !intervalSeconds.trim() ||
+        Number(intervalSeconds) <= 0 ||
+        (port.trim().length > 0 && Number(port) <= 0);
+
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <Box component="form" onSubmit={handleSubmit}>
+        <Dialog
+            open={open}
+            onClose={isSubmitting ? undefined : onClose}
+            fullWidth
+            maxWidth="sm"
+        >
+            <Box>
                 <DialogTitle>Редактировать сервис</DialogTitle>
 
                 <DialogContent>
@@ -84,6 +96,10 @@ export function EditServiceDialog({
                                 <Typography sx={{ fontWeight: 800 }}>
                                     {getCheckTypeLabel(service.checkType)}
                                 </Typography>
+
+                                <Alert severity="info" sx={{ mt: 1.5 }}>
+                                    Тип проверки при редактировании не меняется. Остальные параметры можно обновить.
+                                </Alert>
                             </Box>
                         )}
 
@@ -107,6 +123,7 @@ export function EditServiceDialog({
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     label="Порт"
+                                    type="number"
                                     value={port}
                                     onChange={(event) => setPort(event.target.value)}
                                     placeholder="80, 443, 5432..."
@@ -127,6 +144,7 @@ export function EditServiceDialog({
 
                         <TextField
                             label="Интервал проверки, секунд"
+                            type="number"
                             value={intervalSeconds}
                             onChange={(event) => setIntervalSeconds(event.target.value)}
                             helperText="Например: 60 — раз в минуту, 300 — раз в 5 минут, 3600 — раз в час"
@@ -147,11 +165,16 @@ export function EditServiceDialog({
                 </DialogContent>
 
                 <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button onClick={onClose}>
+                    <Button onClick={onClose} disabled={isSubmitting}>
                         Отмена
                     </Button>
 
-                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                    <Button
+                        type="button"
+                        variant="contained"
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || isFormInvalid}
+                    >
                         {isSubmitting ? 'Сохранение...' : 'Сохранить'}
                     </Button>
                 </DialogActions>
