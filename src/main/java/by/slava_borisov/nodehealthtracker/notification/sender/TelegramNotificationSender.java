@@ -5,6 +5,7 @@ import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.model.entity.UserNotificationSetting;
 import by.slava_borisov.nodehealthtracker.model.enums.NotificationChannel;
 import by.slava_borisov.nodehealthtracker.notification.dto.NotificationMessage;
+import by.slava_borisov.nodehealthtracker.util.DateTimeUtils;
 import by.slava_borisov.nodehealthtracker.util.Messages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +93,7 @@ public class TelegramNotificationSender implements NotificationSender {
                 message.serviceId(),
                 message.incidentId(),
                 message.reason(),
-                message.eventTime()
+                DateTimeUtils.formatMoscowDateTime(message.eventTime())
         );
     }
 
