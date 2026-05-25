@@ -4,7 +4,7 @@ import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingCr
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingResponse;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationResponse;
-import by.slava_borisov.nodehealthtracker.model.entity.SentNotification;
+import by.slava_borisov.nodehealthtracker.dto.notification.VkBindLinkResponse;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +21,13 @@ public class NotificationController {
 
     @GetMapping("/settings")
     public List<NotificationSettingResponse> getCurrentUserNotificationSettings() {
-       return notificationService.getCurrentUserNotificationSettings();
+        return notificationService.getCurrentUserNotificationSettings();
     }
 
     @PostMapping("/settings")
     public NotificationSettingResponse createNotificationSetting(
             @Valid @RequestBody NotificationSettingCreateRequest request
-            ) {
+    ) {
         return notificationService.createNotificationSetting(request);
     }
 
@@ -47,5 +47,10 @@ public class NotificationController {
     @GetMapping("/sent")
     public List<SentNotificationResponse> getCurrentUserSentNotifications() {
         return notificationService.getCurrentUserSentNotifications();
+    }
+
+    @PostMapping("/vk/bind-link")
+    public VkBindLinkResponse createVkBindLink() {
+        return notificationService.createVkBindLink();
     }
 }

@@ -4,6 +4,7 @@ import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingCr
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingResponse;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationResponse;
+import by.slava_borisov.nodehealthtracker.dto.notification.VkBindLinkResponse;
 import by.slava_borisov.nodehealthtracker.model.entity.Incident;
 
 import java.util.List;
@@ -19,6 +20,10 @@ public interface NotificationService {
     List<NotificationSettingResponse> getCurrentUserNotificationSettings();
 
     List<SentNotificationResponse> getCurrentUserSentNotifications();
+
+    VkBindLinkResponse createVkBindLink();
+
+    void connectVkByBindToken(String bindToken, String vkPeerId);
 
     void notifyIncidentOpened(Incident incident);
 

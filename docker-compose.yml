@@ -27,6 +27,9 @@ services:
   app:
     build: .
     container_name: network-services-app
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
       db:
         condition: service_healthy
@@ -47,14 +50,19 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH}
       MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS}
+      MAIL_SMTP_SSL: ${MAIL_SMTP_SSL}
       MAIL_FROM: ${MAIL_FROM}
 
       TELEGRAM_API_URL: ${TELEGRAM_API_URL}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
 
       VK_API_URL: ${VK_API_URL}
       VK_ACCESS_TOKEN: ${VK_ACCESS_TOKEN}
       VK_API_VERSION: ${VK_API_VERSION}
+      VK_GROUP_ID: ${VK_GROUP_ID}
+      VK_CONFIRMATION_CODE: ${VK_CONFIRMATION_CODE}
+      VK_CALLBACK_SECRET: ${VK_CALLBACK_SECRET}
 
       PASSWORD_RESET_LOG_TOKEN: ${PASSWORD_RESET_LOG_TOKEN}
     ports:

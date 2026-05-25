@@ -14,12 +14,22 @@ spring:
     port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
+    protocol: smtp
     properties:
       mail:
+        transport:
+          protocol: smtp
         smtp:
           auth: ${MAIL_SMTP_AUTH:false}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS:false}
+            required: ${MAIL_SMTP_STARTTLS:false}
+          ssl:
+            enable: ${MAIL_SMTP_SSL:false}
+            trust: ${MAIL_HOST:localhost}
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
 
 server:
   port: ${APP_PORT:8081}
@@ -46,3 +56,6 @@ app:
     api-url: ${VK_API_URL:https://api.vk.com/method}
     access-token: ${VK_ACCESS_TOKEN:}
     api-version: ${VK_API_VERSION:5.199}
+    group-id: ${VK_GROUP_ID:}
+    confirmation-code: ${VK_CONFIRMATION_CODE:}
+    callback-secret: ${VK_CALLBACK_SECRET:}

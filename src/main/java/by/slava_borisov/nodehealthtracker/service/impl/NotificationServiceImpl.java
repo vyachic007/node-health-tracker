@@ -1,9 +1,11 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
+import by.slava_borisov.nodehealthtracker.config.VkProperties;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingCreateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingResponse;
 import by.slava_borisov.nodehealthtracker.dto.notification.NotificationSettingUpdateRequest;
 import by.slava_borisov.nodehealthtracker.dto.notification.SentNotificationResponse;
+import by.slava_borisov.nodehealthtracker.dto.notification.VkBindLinkResponse;
 import by.slava_borisov.nodehealthtracker.exception.AccessDeniedException;
 import by.slava_borisov.nodehealthtracker.exception.InvalidOperationException;
 import by.slava_borisov.nodehealthtracker.exception.ResourceNotFoundException;
@@ -18,6 +20,7 @@ import by.slava_borisov.nodehealthtracker.notification.dto.NotificationMessage;
 import by.slava_borisov.nodehealthtracker.notification.sender.NotificationSender;
 import by.slava_borisov.nodehealthtracker.repository.SentNotificationRepository;
 import by.slava_borisov.nodehealthtracker.repository.UserNotificationSettingRepository;
+import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.CurrentUserService;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
@@ -27,24 +30,36 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    private static final int VK_BIND_TOKEN_BYTES = 32;
+    private static final int VK_BIND_TOKEN_TTL_MINUTES = 15;
+
     private final UserNotificationSettingRepository userNotificationSettingRepository;
     private final SentNotificationRepository sentNotificationRepository;
+    private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final List<NotificationSender> notificationSenders;
+    private final VkProperties vkProperties;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     private final Map<NotificationChannel, NotificationSender> senderByChannel =
             new EnumMap<>(NotificationChannel.class);
+
+    private final Map<String, VkBindTokenInfo> vkBindTokens = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initSenders() {
@@ -210,6 +225,91 @@ public class NotificationServiceImpl implements NotificationService {
                 .stream()
                 .map(this::toSentNotificationResponse)
                 .toList();
+    }
+
+    @Override
+    public VkBindLinkResponse createVkBindLink() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        validateVkBindConfiguration();
+        cleanupExpiredVkBindTokens();
+
+        String bindToken = generateVkBindToken();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(VK_BIND_TOKEN_TTL_MINUTES);
+
+        vkBindTokens.put(
+                bindToken,
+                new VkBindTokenInfo(currentUser.getId(), expiresAt)
+        );
+
+        String vkGroupId = vkProperties.getGroupId().trim();
+        String vkLink = "https://vk.com/im?sel=-" + vkGroupId;
+        String command = "/start " + bindToken;
+
+        log.info(
+                "Создана ссылка привязки VK: userId={}, username={}, vkGroupId={}, expiresAt={}",
+                currentUser.getId(),
+                currentUser.getUsername(),
+                vkGroupId,
+                expiresAt
+        );
+
+        return new VkBindLinkResponse(
+                bindToken,
+                vkGroupId,
+                vkLink,
+                command,
+                expiresAt
+        );
+    }
+
+    @Override
+    @Transactional
+    public void connectVkByBindToken(String bindToken, String vkPeerId) {
+        cleanupExpiredVkBindTokens();
+
+        VkBindTokenInfo tokenInfo = vkBindTokens.remove(bindToken);
+
+        if (tokenInfo == null) {
+            log.warn("Попытка привязки VK по неизвестному или просроченному токену");
+            throw new InvalidOperationException("Ссылка подключения VK устарела или недействительна.");
+        }
+
+        if (tokenInfo.expiresAt().isBefore(LocalDateTime.now())) {
+            log.warn(
+                    "Попытка привязки VK по просроченному токену: userId={}",
+                    tokenInfo.userId()
+            );
+
+            throw new InvalidOperationException("Ссылка подключения VK устарела.");
+        }
+
+        User user = userRepository.findById(tokenInfo.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден."));
+
+        UserNotificationSetting setting = userNotificationSettingRepository
+                .findByUserIdAndChannel(user.getId(), NotificationChannel.VK)
+                .orElseGet(() -> {
+                    UserNotificationSetting newSetting = new UserNotificationSetting();
+                    newSetting.setUser(user);
+                    newSetting.setChannel(NotificationChannel.VK);
+                    return newSetting;
+                });
+
+        setting.setDestination(vkPeerId);
+        setting.setIsEnabled(true);
+        setting.setNotifyOnIncidentOpen(true);
+        setting.setNotifyOnIncidentResolved(true);
+
+        UserNotificationSetting savedSetting = userNotificationSettingRepository.save(setting);
+
+        log.info(
+                "VK подключён к уведомлениям пользователя: settingId={}, userId={}, username={}, peerId={}",
+                savedSetting.getId(),
+                user.getId(),
+                user.getUsername(),
+                vkPeerId
+        );
     }
 
     @Override
@@ -433,5 +533,33 @@ public class NotificationServiceImpl implements NotificationService {
 
             throw new AccessDeniedException(Messages.ACCESS_DENIED);
         }
+    }
+
+    private void validateVkBindConfiguration() {
+        if (vkProperties.getGroupId() == null || vkProperties.getGroupId().isBlank()) {
+            throw new InvalidOperationException("VK_GROUP_ID не настроен.");
+        }
+    }
+
+    private String generateVkBindToken() {
+        byte[] bytes = new byte[VK_BIND_TOKEN_BYTES];
+        secureRandom.nextBytes(bytes);
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
+    }
+
+    private void cleanupExpiredVkBindTokens() {
+        LocalDateTime now = LocalDateTime.now();
+
+        vkBindTokens.entrySet()
+                .removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
+    }
+
+    private record VkBindTokenInfo(
+            Long userId,
+            LocalDateTime expiresAt
+    ) {
     }
 }

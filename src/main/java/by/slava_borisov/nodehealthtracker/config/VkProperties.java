@@ -12,6 +12,14 @@ import org.springframework.stereotype.Component;
 public class VkProperties {
 
     private String apiUrl;
+
     private String accessToken;
+
     private String apiVersion;
+
+    private String groupId;
+
+    private String confirmationCode;
+
+    private String callbackSecret;
 }
