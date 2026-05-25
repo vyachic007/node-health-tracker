@@ -3,6 +3,7 @@ package by.slava_borisov.nodehealthtracker.dto.service;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record ServiceUpdateRequest(
@@ -24,7 +25,16 @@ public record ServiceUpdateRequest(
         String path,
 
         @NotNull
+        @Positive
         Integer intervalSeconds,
+
+        @NotNull
+        @Positive
+        Integer responseTimeThresholdMs,
+
+        @NotNull
+        @Positive
+        Integer degradationThreshold,
 
         @NotNull
         Boolean isEnabled

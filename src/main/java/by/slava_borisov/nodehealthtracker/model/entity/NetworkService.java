@@ -61,6 +61,15 @@ public class NetworkService {
     @Column(name = "is_enabled", nullable = false)
     private Boolean isEnabled;
 
+    @Column(name = "response_time_threshold_ms", nullable = false)
+    private Integer responseTimeThresholdMs;
+
+    @Column(name = "degradation_threshold", nullable = false)
+    private Integer degradationThreshold;
+
+    @Column(name = "consecutive_degradations", nullable = false)
+    private Integer consecutiveDegradations;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

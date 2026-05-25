@@ -55,6 +55,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional
     public ServiceResponse createService(ServiceCreateRequest request) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -71,21 +72,31 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkNode node = findNodeById(request.nodeId());
+
         validateNodeOwner(node);
 
         LocalDateTime now = LocalDateTime.now();
 
         NetworkService networkService = networkServiceMapper.toEntity(request);
+
         networkService.setNode(node);
         networkService.setIsEnabled(true);
+
         networkService.setFailureThreshold(2);
         networkService.setRecoveryThreshold(2);
+
         networkService.setConsecutiveFailures(0);
         networkService.setConsecutiveSuccesses(0);
+
+        networkService.setResponseTimeThresholdMs(1000);
+        networkService.setDegradationThreshold(3);
+        networkService.setConsecutiveDegradations(0);
+
         networkService.setCreatedAt(now);
         networkService.setUpdatedAt(now);
 
         if (networkService.getCheckType() == CheckType.HEARTBEAT) {
+
             networkService.setHeartbeatToken(generateHeartbeatToken());
 
             log.info(
@@ -95,7 +106,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
             );
         }
 
-        NetworkService savedService = networkServiceRepository.save(networkService);
+        NetworkService savedService =
+                networkServiceRepository.save(networkService);
 
         auditLogService.log(
                 AuditActionType.SERVICE_CREATED,
@@ -119,7 +131,9 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
     @Override
     @Transactional
-    public ServiceResponse updateService(Long serviceId, ServiceUpdateRequest request) {
+    public ServiceResponse updateService(Long serviceId,
+                                         ServiceUpdateRequest request) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -136,13 +150,19 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkService networkService = findServiceById(serviceId);
+
         validateServiceOwner(networkService);
 
-        networkServiceMapper.updateEntityFromDto(request, networkService);
+        networkServiceMapper.updateEntityFromDto(
+                request,
+                networkService
+        );
+
         networkService.setUpdatedAt(LocalDateTime.now());
 
         if (networkService.getCheckType() == CheckType.HEARTBEAT
                 && networkService.getHeartbeatToken() == null) {
+
             networkService.setHeartbeatToken(generateHeartbeatToken());
 
             log.info(
@@ -153,6 +173,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         }
 
         if (networkService.getCheckType() != CheckType.HEARTBEAT) {
+
             networkService.setHeartbeatToken(null);
             networkService.setLastHeartbeatAt(null);
 
@@ -164,7 +185,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
             );
         }
 
-        NetworkService savedService = networkServiceRepository.save(networkService);
+        NetworkService savedService =
+                networkServiceRepository.save(networkService);
 
         auditLogService.log(
                 AuditActionType.SERVICE_UPDATED,
@@ -173,22 +195,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 savedService.getId()
         );
 
-        log.info(
-                "Сервис успешно обновлён: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}",
-                savedService.getId(),
-                savedService.getNode().getId(),
-                currentUser.getId(),
-                savedService.getName(),
-                savedService.getCheckType(),
-                savedService.getIsEnabled()
-        );
-
         return buildServiceResponse(savedService);
     }
 
     @Override
     @Transactional
     public void deleteService(Long serviceId) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -199,6 +212,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkService networkService = findServiceById(serviceId);
+
         validateServiceOwner(networkService);
 
         auditLogService.log(
@@ -222,6 +236,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceById(Long serviceId) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -232,6 +247,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkService networkService = findServiceById(serviceId);
+
         validateServiceOwner(networkService);
 
         return buildServiceResponse(networkService);
@@ -240,6 +256,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByNodeId(Long nodeId) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -250,26 +267,20 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkNode node = findNodeById(nodeId);
+
         validateNodeOwner(node);
 
-        List<ServiceResponse> services = networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
+        return networkServiceRepository
+                .findAllByNodeIdOrderByCreatedAtDesc(nodeId)
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
-
-        log.info(
-                "Список сервисов узла сформирован: nodeId={}, userId={}, servicesCount={}",
-                nodeId,
-                currentUser.getId(),
-                services.size()
-        );
-
-        return services;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getCurrentUserServices() {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -278,23 +289,17 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 currentUser.getUsername()
         );
 
-        List<ServiceResponse> services = networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
+        return networkServiceRepository
+                .findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
-
-        log.info(
-                "Список сервисов текущего пользователя сформирован: userId={}, servicesCount={}",
-                currentUser.getId(),
-                services.size()
-        );
-
-        return services;
     }
 
     @Override
     @Transactional
     public ServiceResponse enableService(Long serviceId) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -305,12 +310,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkService networkService = findServiceById(serviceId);
+
         validateServiceOwner(networkService);
 
         networkService.setIsEnabled(true);
         networkService.setUpdatedAt(LocalDateTime.now());
 
-        NetworkService savedService = networkServiceRepository.save(networkService);
+        NetworkService savedService =
+                networkServiceRepository.save(networkService);
 
         auditLogService.log(
                 AuditActionType.SERVICE_UPDATED,
@@ -333,6 +340,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     @Override
     @Transactional
     public ServiceResponse disableService(Long serviceId) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
@@ -343,12 +351,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         NetworkService networkService = findServiceById(serviceId);
+
         validateServiceOwner(networkService);
 
         networkService.setIsEnabled(false);
         networkService.setUpdatedAt(LocalDateTime.now());
 
-        NetworkService savedService = networkServiceRepository.save(networkService);
+        NetworkService savedService =
+                networkServiceRepository.save(networkService);
 
         auditLogService.log(
                 AuditActionType.SERVICE_UPDATED,
@@ -369,36 +379,55 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     }
 
     private ServiceResponse buildServiceResponse(NetworkService networkService) {
-        Optional<CheckResult> latestCheckResult = checkResultRepository
-                .findTopByServiceIdOrderByCheckedAtDesc(networkService.getId());
 
-        Optional<Incident> openIncident = incidentRepository.findByServiceIdAndStatus(
-                networkService.getId(),
-                IncidentStatus.OPEN
-        );
+        Optional<CheckResult> latestCheckResult =
+                checkResultRepository
+                        .findTopByServiceIdOrderByCheckedAtDesc(
+                                networkService.getId()
+                        );
 
-        LocalDateTime nextCheckAt = calculateNextCheckAt(networkService);
-        Long secondsUntilNextCheck = calculateSecondsUntilNextCheck(nextCheckAt);
-        Long currentDowntimeSeconds = calculateCurrentDowntimeSeconds(openIncident);
-
-        LocalDateTime last24Hours = LocalDateTime.now().minusHours(24);
-
-        Double availabilityPercent24h = calculateAvailabilityPercent24h(
-                networkService.getId(),
-                last24Hours
-        );
-
-        Double averageResponseTimeMs24h = roundToTwoDecimals(
-                checkResultRepository.findAverageResponseTimeByServiceIdAndStatusAfter(
+        Optional<Incident> openIncident =
+                incidentRepository.findByServiceIdAndStatus(
                         networkService.getId(),
-                        ServiceStatus.UP,
-                        last24Hours
-                )
-        );
+                        IncidentStatus.OPEN
+                );
 
-        ServiceHealthScoreResponse healthScoreResponse = serviceHealthScoreService.calculateHealthScore(
-                networkService.getId()
-        );
+        LocalDateTime nextCheckAt =
+                calculateNextCheckAt(networkService);
+
+        Long secondsUntilNextCheck =
+                calculateSecondsUntilNextCheck(nextCheckAt);
+
+        Long currentDowntimeSeconds =
+                calculateCurrentDowntimeSeconds(openIncident);
+
+        LocalDateTime last24Hours =
+                LocalDateTime.now().minusHours(24);
+
+        Double availabilityPercent24h =
+                calculateAvailabilityPercent24h(
+                        networkService.getId(),
+                        last24Hours
+                );
+
+        Double averageResponseTimeMs24h =
+                roundToTwoDecimals(
+                        checkResultRepository
+                                .findAverageResponseTimeByServiceIdAndStatusAfter(
+                                        networkService.getId(),
+                                        ServiceStatus.UP,
+                                        last24Hours
+                                )
+                );
+
+        ServiceHealthScoreResponse healthScoreResponse =
+                serviceHealthScoreService.calculateHealthScore(
+                        networkService.getId()
+                );
+
+        boolean degraded =
+                networkService.getConsecutiveDegradations()
+                        >= networkService.getDegradationThreshold();
 
         return new ServiceResponse(
                 networkService.getId(),
@@ -435,15 +464,22 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 healthScoreResponse.healthLevel(),
                 healthScoreResponse.recurrenceLevel(),
 
+                networkService.getResponseTimeThresholdMs(),
+                networkService.getDegradationThreshold(),
+                networkService.getConsecutiveDegradations(),
+                degraded,
+
                 networkService.getCreatedAt(),
                 networkService.getUpdatedAt()
         );
     }
 
     private LocalDateTime calculateNextCheckAt(NetworkService networkService) {
+
         if (!Boolean.TRUE.equals(networkService.getIsEnabled())
                 || networkService.getLastCheckedAt() == null
                 || networkService.getIntervalSeconds() == null) {
+
             return null;
         }
 
@@ -452,44 +488,62 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     }
 
     private Long calculateSecondsUntilNextCheck(LocalDateTime nextCheckAt) {
+
         if (nextCheckAt == null) {
             return null;
         }
 
-        long seconds = Duration.between(LocalDateTime.now(), nextCheckAt).getSeconds();
+        long seconds =
+                Duration.between(
+                        LocalDateTime.now(),
+                        nextCheckAt
+                ).getSeconds();
 
         return Math.max(seconds, 0);
     }
 
     private Long calculateCurrentDowntimeSeconds(Optional<Incident> openIncident) {
+
         return openIncident
                 .map(Incident::getOpenedAt)
-                .map(openedAt -> Duration.between(openedAt, LocalDateTime.now()).getSeconds())
+                .map(openedAt ->
+                        Duration.between(
+                                openedAt,
+                                LocalDateTime.now()
+                        ).getSeconds()
+                )
                 .orElse(0L);
     }
 
-    private Double calculateAvailabilityPercent24h(Long serviceId, LocalDateTime checkedAtAfter) {
-        long totalChecks = checkResultRepository.countByServiceIdAndCheckedAtAfter(
-                serviceId,
-                checkedAtAfter
-        );
+    private Double calculateAvailabilityPercent24h(Long serviceId,
+                                                   LocalDateTime checkedAtAfter) {
+
+        long totalChecks =
+                checkResultRepository.countByServiceIdAndCheckedAtAfter(
+                        serviceId,
+                        checkedAtAfter
+                );
 
         if (totalChecks == 0) {
             return null;
         }
 
-        long successfulChecks = checkResultRepository.countByServiceIdAndStatusAndCheckedAtAfter(
-                serviceId,
-                ServiceStatus.UP,
-                checkedAtAfter
-        );
+        long successfulChecks =
+                checkResultRepository
+                        .countByServiceIdAndStatusAndCheckedAtAfter(
+                                serviceId,
+                                ServiceStatus.UP,
+                                checkedAtAfter
+                        );
 
-        double availability = successfulChecks * 100.0 / totalChecks;
+        double availability =
+                successfulChecks * 100.0 / totalChecks;
 
         return roundToTwoDecimals(availability);
     }
 
     private Double roundToTwoDecimals(Double value) {
+
         if (value == null) {
             return null;
         }
@@ -498,13 +552,23 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     }
 
     private NetworkService findServiceById(Long serviceId) {
+
         return networkServiceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                Messages.NETWORK_SERVICE_NOT_FOUND
+                        )
+                );
     }
 
     private NetworkNode findNodeById(Long nodeId) {
+
         return networkNodeRepository.findById(nodeId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_NODE_NOT_FOUND));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                Messages.NETWORK_NODE_NOT_FOUND
+                        )
+                );
     }
 
     private void validateServiceOwner(NetworkService networkService) {
@@ -512,9 +576,11 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
     }
 
     private void validateNodeOwner(NetworkNode networkNode) {
+
         User currentUser = currentUserService.getCurrentUser();
 
         if (!networkNode.getOwner().getId().equals(currentUser.getId())) {
+
             log.warn(
                     "Отказано в доступе к узлу/сервису: nodeId={}, ownerId={}, currentUserId={}, currentUsername={}",
                     networkNode.getId(),
@@ -523,7 +589,9 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                     currentUser.getUsername()
             );
 
-            throw new AccessDeniedException(Messages.NETWORK_NODE_ACCESS_DENIED);
+            throw new AccessDeniedException(
+                    Messages.NETWORK_NODE_ACCESS_DENIED
+            );
         }
     }
 
