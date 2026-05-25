@@ -31,6 +31,7 @@ import {
 } from '../model/serviceLabels';
 import type { NetworkService } from '../model/serviceTypes';
 import { HealthLevelChip } from './HealthLevelChip';
+import { ServiceDegradationAlert } from './ServiceDegradationAlert';
 import { ServiceStatusChip } from './ServiceStatusChip';
 
 interface ServiceCardProps {
@@ -110,6 +111,15 @@ export function ServiceCard({
 
                         <HealthLevelChip level={service.healthLevel} />
 
+                        {service.degraded && (
+                            <Chip
+                                icon={<WarningAmberIcon />}
+                                label="Деградация"
+                                color="warning"
+                                size="small"
+                            />
+                        )}
+
                         {!service.isEnabled && (
                             <Chip
                                 label="Отключён"
@@ -131,7 +141,7 @@ export function ServiceCard({
                     <Grid container spacing={2}>
                         <Grid size={6}>
                             <Typography variant="caption" color="text.secondary">
-                                Оценка здоровья
+                                Оценка состояния
                             </Typography>
 
                             <Typography variant="h5">
@@ -189,6 +199,26 @@ export function ServiceCard({
                             </Typography>
                         </Grid>
 
+                        <Grid size={6}>
+                            <Typography variant="caption" color="text.secondary">
+                                Порог медленного ответа
+                            </Typography>
+
+                            <Typography sx={{ fontWeight: 800 }}>
+                                {formatMilliseconds(service.responseTimeThresholdMs)}
+                            </Typography>
+                        </Grid>
+
+                        <Grid size={6}>
+                            <Typography variant="caption" color="text.secondary">
+                                Медленных проверок подряд
+                            </Typography>
+
+                            <Typography sx={{ fontWeight: 800 }}>
+                                {service.consecutiveDegradations} из {service.degradationThreshold}
+                            </Typography>
+                        </Grid>
+
                         <Grid size={12}>
                             <Typography variant="caption" color="text.secondary">
                                 Уровень сбоя
@@ -201,6 +231,15 @@ export function ServiceCard({
                             </Typography>
                         </Grid>
                     </Grid>
+
+                    <ServiceDegradationAlert
+                        lastStatus={service.lastStatus}
+                        lastResponseTimeMs={service.lastResponseTimeMs}
+                        responseTimeThresholdMs={service.responseTimeThresholdMs}
+                        degradationThreshold={service.degradationThreshold}
+                        consecutiveDegradations={service.consecutiveDegradations}
+                        degraded={service.degraded}
+                    />
 
                     {service.lastDiagnosticMessage && (
                         <Alert severity={service.lastStatus === 'DOWN' ? 'error' : 'success'}>

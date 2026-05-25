@@ -36,22 +36,33 @@ export interface NetworkService {
     path: string | null;
     intervalSeconds: number;
     isEnabled: boolean;
+
     lastStatus: ServiceStatus | null;
     lastResponseTimeMs: number | null;
     lastHttpStatusCode: number | null;
     lastFailureLayer: FailureLayer | null;
     lastDiagnosticMessage: string | null;
     lastRecommendation: string | null;
+
     nextCheckAt: string | null;
     secondsUntilNextCheck: number | null;
+
     hasOpenIncident: boolean;
     openIncidentId: number | null;
     currentDowntimeSeconds: number;
+
     availabilityPercent24h: number | null;
     averageResponseTimeMs24h: number | null;
+
     healthScore: number;
     healthLevel: HealthLevel;
     recurrenceLevel: RecurrenceLevel;
+
+    responseTimeThresholdMs: number;
+    degradationThreshold: number;
+    consecutiveDegradations: number;
+    degraded: boolean;
+
     createdAt: string;
     updatedAt: string;
 }
@@ -64,6 +75,9 @@ export interface CreateNetworkServiceRequest {
     port: number | null;
     path: string | null;
     intervalSeconds: number;
+
+    responseTimeThresholdMs: number;
+    degradationThreshold: number;
 }
 
 export interface UpdateNetworkServiceRequest {
@@ -74,6 +88,9 @@ export interface UpdateNetworkServiceRequest {
     path: string | null;
     intervalSeconds: number;
     isEnabled: boolean;
+
+    responseTimeThresholdMs: number;
+    degradationThreshold: number;
 }
 
 export interface CheckResult {

@@ -37,6 +37,8 @@ export function EditServiceDialog({
     const [port, setPort] = useState('');
     const [path, setPath] = useState('');
     const [intervalSeconds, setIntervalSeconds] = useState('');
+    const [responseTimeThresholdMs, setResponseTimeThresholdMs] = useState('');
+    const [degradationThreshold, setDegradationThreshold] = useState('');
     const [isEnabled, setIsEnabled] = useState(true);
 
     useEffect(() => {
@@ -49,6 +51,8 @@ export function EditServiceDialog({
         setPort(service.port === null ? '' : String(service.port));
         setPath(service.path ?? '');
         setIntervalSeconds(String(service.intervalSeconds));
+        setResponseTimeThresholdMs(String(service.responseTimeThresholdMs));
+        setDegradationThreshold(String(service.degradationThreshold));
         setIsEnabled(service.isEnabled);
     }, [service]);
 
@@ -65,6 +69,8 @@ export function EditServiceDialog({
             path: path.trim() || null,
             intervalSeconds: Number(intervalSeconds),
             isEnabled,
+            responseTimeThresholdMs: Number(responseTimeThresholdMs),
+            degradationThreshold: Number(degradationThreshold),
         });
     };
 
@@ -73,6 +79,10 @@ export function EditServiceDialog({
         !targetHost.trim() ||
         !intervalSeconds.trim() ||
         Number(intervalSeconds) <= 0 ||
+        !responseTimeThresholdMs.trim() ||
+        Number(responseTimeThresholdMs) <= 0 ||
+        !degradationThreshold.trim() ||
+        Number(degradationThreshold) <= 0 ||
         (port.trim().length > 0 && Number(port) <= 0);
 
     return (
@@ -151,6 +161,36 @@ export function EditServiceDialog({
                             required
                             fullWidth
                         />
+
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    label="Порог медленного ответа, мс"
+                                    type="number"
+                                    value={responseTimeThresholdMs}
+                                    onChange={(event) =>
+                                        setResponseTimeThresholdMs(event.target.value)
+                                    }
+                                    helperText="Если ответ дольше этого значения, проверка считается медленной"
+                                    required
+                                    fullWidth
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    label="Порог деградации"
+                                    type="number"
+                                    value={degradationThreshold}
+                                    onChange={(event) =>
+                                        setDegradationThreshold(event.target.value)
+                                    }
+                                    helperText="Сколько медленных проверок подряд нужно для подтверждения деградации"
+                                    required
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
 
                         <FormControlLabel
                             control={

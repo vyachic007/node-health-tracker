@@ -34,6 +34,8 @@ interface FormSubmitEvent {
 
 const DEFAULT_CHECK_TYPE: CheckType = 'HTTP';
 const DEFAULT_INTERVAL_SECONDS = '3600';
+const DEFAULT_RESPONSE_TIME_THRESHOLD_MS = '1000';
+const DEFAULT_DEGRADATION_THRESHOLD = '3';
 
 function getDefaultPort(checkType: CheckType): number | null {
     switch (checkType) {
@@ -82,6 +84,12 @@ export function CreateServiceDialog({
     const [port, setPort] = useState(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
     const [path, setPath] = useState(getDefaultPath(DEFAULT_CHECK_TYPE));
     const [intervalSeconds, setIntervalSeconds] = useState(DEFAULT_INTERVAL_SECONDS);
+    const [responseTimeThresholdMs, setResponseTimeThresholdMs] = useState(
+        DEFAULT_RESPONSE_TIME_THRESHOLD_MS,
+    );
+    const [degradationThreshold, setDegradationThreshold] = useState(
+        DEFAULT_DEGRADATION_THRESHOLD,
+    );
 
     const isNodeIdLocked = initialNodeId !== null && initialNodeId !== undefined;
 
@@ -97,6 +105,8 @@ export function CreateServiceDialog({
         setPort(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
         setPath(getDefaultPath(DEFAULT_CHECK_TYPE));
         setIntervalSeconds(DEFAULT_INTERVAL_SECONDS);
+        setResponseTimeThresholdMs(DEFAULT_RESPONSE_TIME_THRESHOLD_MS);
+        setDegradationThreshold(DEFAULT_DEGRADATION_THRESHOLD);
     }, [open, initialNodeId]);
 
     const handleCheckTypeChange = (value: CheckType) => {
@@ -115,6 +125,8 @@ export function CreateServiceDialog({
         const parsedNodeId = Number(nodeId);
         const parsedPort = port.trim() ? Number(port) : null;
         const parsedIntervalSeconds = Number(intervalSeconds);
+        const parsedResponseTimeThresholdMs = Number(responseTimeThresholdMs);
+        const parsedDegradationThreshold = Number(degradationThreshold);
 
         onSubmit({
             nodeId: parsedNodeId,
@@ -124,6 +136,8 @@ export function CreateServiceDialog({
             port: parsedPort,
             path: path.trim() || null,
             intervalSeconds: parsedIntervalSeconds,
+            responseTimeThresholdMs: parsedResponseTimeThresholdMs,
+            degradationThreshold: parsedDegradationThreshold,
         });
     };
 
@@ -142,7 +156,11 @@ export function CreateServiceDialog({
         !name.trim() ||
         !targetHost.trim() ||
         !intervalSeconds.trim() ||
-        Number(intervalSeconds) <= 0;
+        Number(intervalSeconds) <= 0 ||
+        !responseTimeThresholdMs.trim() ||
+        Number(responseTimeThresholdMs) <= 0 ||
+        !degradationThreshold.trim() ||
+        Number(degradationThreshold) <= 0;
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
@@ -236,6 +254,36 @@ export function CreateServiceDialog({
                             fullWidth
                             type="number"
                         />
+
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    label="Порог медленного ответа, мс"
+                                    value={responseTimeThresholdMs}
+                                    onChange={(event) =>
+                                        setResponseTimeThresholdMs(event.target.value)
+                                    }
+                                    helperText="Например: 1000 означает 1 секунду"
+                                    required
+                                    fullWidth
+                                    type="number"
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    label="Порог деградации"
+                                    value={degradationThreshold}
+                                    onChange={(event) =>
+                                        setDegradationThreshold(event.target.value)
+                                    }
+                                    helperText="Сколько медленных проверок подряд нужно для подтверждения"
+                                    required
+                                    fullWidth
+                                    type="number"
+                                />
+                            </Grid>
+                        </Grid>
                     </Stack>
                 </DialogContent>
 

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -22,6 +23,7 @@ import {
     CartesianGrid,
     Line,
     LineChart,
+    ReferenceLine,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -29,6 +31,7 @@ import {
 } from 'recharts';
 import { servicesApi } from '../api/servicesApi';
 import { HealthLevelChip } from '../components/HealthLevelChip';
+import { ServiceDegradationAlert } from '../components/ServiceDegradationAlert';
 import { ServiceStatusChip } from '../components/ServiceStatusChip';
 import {
     failureLayerLabels,
@@ -144,7 +147,7 @@ export function ServiceDetailsPage() {
                     </Typography>
 
                     <Typography color="text.secondary">
-                        Детальная диагностика сервиса, история проверок и текущий результат.
+                        Детальная диагностика сервиса, история проверок, деградация и текущий результат.
                     </Typography>
                 </Box>
 
@@ -172,6 +175,14 @@ export function ServiceDetailsPage() {
                                         label={getCheckTypeLabel(service.checkType)}
                                         variant="outlined"
                                     />
+
+                                    {service.degraded && (
+                                        <Chip
+                                            icon={<WarningAmberIcon />}
+                                            label="Деградация"
+                                            color="warning"
+                                        />
+                                    )}
 
                                     {service.hasOpenIncident && (
                                         <Chip
@@ -245,7 +256,36 @@ export function ServiceDetailsPage() {
                                             {formatMilliseconds(service.averageResponseTimeMs24h)}
                                         </Typography>
                                     </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">
+                                            Порог медленного ответа
+                                        </Typography>
+
+                                        <Typography variant="h6">
+                                            {formatMilliseconds(service.responseTimeThresholdMs)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">
+                                            Медленных проверок подряд
+                                        </Typography>
+
+                                        <Typography variant="h6">
+                                            {service.consecutiveDegradations} из {service.degradationThreshold}
+                                        </Typography>
+                                    </Grid>
                                 </Grid>
+
+                                <ServiceDegradationAlert
+                                    lastStatus={service.lastStatus}
+                                    lastResponseTimeMs={service.lastResponseTimeMs}
+                                    responseTimeThresholdMs={service.responseTimeThresholdMs}
+                                    degradationThreshold={service.degradationThreshold}
+                                    consecutiveDegradations={service.consecutiveDegradations}
+                                    degraded={service.degraded}
+                                />
 
                                 {service.lastDiagnosticMessage && (
                                     <Alert severity={service.lastStatus === 'DOWN' ? 'error' : 'success'}>
@@ -296,6 +336,27 @@ export function ServiceDetailsPage() {
                                         {formatSeconds(service.currentDowntimeSeconds)}
                                     </strong>
                                 </Typography>
+
+                                <Typography>
+                                    Деградация:{' '}
+                                    <strong>
+                                        {service.degraded ? 'Подтверждена' : 'Не подтверждена'}
+                                    </strong>
+                                </Typography>
+
+                                <Typography>
+                                    Порог ответа:{' '}
+                                    <strong>
+                                        {formatMilliseconds(service.responseTimeThresholdMs)}
+                                    </strong>
+                                </Typography>
+
+                                <Typography>
+                                    Порог подтверждения:{' '}
+                                    <strong>
+                                        {service.degradationThreshold} проверок подряд
+                                    </strong>
+                                </Typography>
                             </Stack>
                         </CardContent>
                     </Card>
@@ -311,7 +372,7 @@ export function ServiceDetailsPage() {
                             </Typography>
 
                             <Typography color="text.secondary">
-                                Последние результаты проверок сервиса.
+                                Последние результаты проверок сервиса. Пунктирная линия показывает порог медленного ответа.
                             </Typography>
                         </Box>
 
@@ -346,6 +407,13 @@ export function ServiceDetailsPage() {
                                             }}
                                         />
 
+                                        <ReferenceLine
+                                            y={service.responseTimeThresholdMs}
+                                            stroke={theme.palette.warning.main}
+                                            strokeDasharray="6 6"
+                                            label="Порог деградации"
+                                        />
+
                                         <Line
                                             type="monotone"
                                             dataKey="responseTimeMs"
@@ -374,39 +442,56 @@ export function ServiceDetailsPage() {
                                 История проверок пока отсутствует.
                             </Alert>
                         ) : (
-                            history.slice(0, 10).map((item) => (
-                                <Stack
-                                    key={item.id}
-                                    direction={{ xs: 'column', md: 'row' }}
-                                    spacing={2}
-                                    sx={{
-                                        justifyContent: 'space-between',
-                                        borderBottom: 1,
-                                        borderColor: 'divider',
-                                        pb: 1.5,
-                                    }}
-                                >
-                                    <Box>
-                                        <Typography sx={{ fontWeight: 800 }}>
-                                            {item.status === 'UP' ? 'Работает' : 'Недоступен'}
-                                        </Typography>
+                            history.slice(0, 10).map((item) => {
+                                const isSlow =
+                                    item.status === 'UP'
+                                    && item.responseTimeMs !== null
+                                    && item.responseTimeMs > service.responseTimeThresholdMs;
 
-                                        <Typography color="text.secondary">
-                                            {formatDateTime(item.checkedAt)}
-                                        </Typography>
-                                    </Box>
+                                return (
+                                    <Stack
+                                        key={item.id}
+                                        direction={{ xs: 'column', md: 'row' }}
+                                        spacing={2}
+                                        sx={{
+                                            justifyContent: 'space-between',
+                                            borderBottom: 1,
+                                            borderColor: 'divider',
+                                            pb: 1.5,
+                                        }}
+                                    >
+                                        <Box>
+                                            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                                                <Typography sx={{ fontWeight: 800 }}>
+                                                    {item.status === 'UP' ? 'Работает' : 'Недоступен'}
+                                                </Typography>
 
-                                    <Box>
-                                        <Typography>
-                                            Ответ: {formatMilliseconds(item.responseTimeMs)}
-                                        </Typography>
+                                                {isSlow && (
+                                                    <Chip
+                                                        label="Медленный ответ"
+                                                        color="warning"
+                                                        size="small"
+                                                    />
+                                                )}
+                                            </Stack>
 
-                                        <Typography color="text.secondary">
-                                            {item.diagnosticMessage}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                            ))
+                                            <Typography color="text.secondary">
+                                                {formatDateTime(item.checkedAt)}
+                                            </Typography>
+                                        </Box>
+
+                                        <Box>
+                                            <Typography>
+                                                Ответ: {formatMilliseconds(item.responseTimeMs)}
+                                            </Typography>
+
+                                            <Typography color="text.secondary">
+                                                {item.diagnosticMessage}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                );
+                            })
                         )}
                     </Stack>
                 </CardContent>
