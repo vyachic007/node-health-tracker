@@ -1,10 +1,6 @@
 package by.slava_borisov.nodehealthtracker.dto.service;
 
-import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
-import by.slava_borisov.nodehealthtracker.model.enums.FailureLayer;
-import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
-import by.slava_borisov.nodehealthtracker.model.enums.RecurrenceLevel;
-import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
+import by.slava_borisov.nodehealthtracker.model.enums.*;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +29,18 @@ public record ServiceResponse(
         Integer intervalSeconds,
 
         Boolean isEnabled,
+
+        Integer responseTimeThresholdMs,
+
+        Integer degradationThreshold,
+
+        Integer consecutiveDegradations,
+
+        Boolean notifyEmail,
+
+        Boolean notifyTelegram,
+
+        Boolean notifyVk,
 
         ServiceStatus lastStatus,
 
@@ -65,14 +73,6 @@ public record ServiceResponse(
         HealthLevel healthLevel,
 
         RecurrenceLevel recurrenceLevel,
-
-        Integer responseTimeThresholdMs,
-
-        Integer degradationThreshold,
-
-        Integer consecutiveDegradations,
-
-        Boolean degraded,
 
         LocalDateTime createdAt,
 

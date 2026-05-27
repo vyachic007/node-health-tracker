@@ -53,3 +53,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/v1.3.0/018_add_degradation_fields_to_network_services.sql
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changeset/v1.3.0/019_add_notification_preferences_to_network_services.sql
+      relativeToChangelogFile: false

@@ -347,8 +347,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .findAllByUserIdAndIsEnabledTrue(user.getId());
 
         log.info(
-                "Найдены включённые настройки уведомлений: incidentId={}, userId={}, event={}, enabledSettingsCount={}",
+                "Найдены включённые настройки уведомлений: incidentId={}, serviceId={}, userId={}, event={}, enabledSettingsCount={}",
                 incident.getId(),
+                incident.getService().getId(),
                 user.getId(),
                 event,
                 enabledSettings.size()
@@ -356,11 +357,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         List<UserNotificationSetting> suitableSettings = enabledSettings.stream()
                 .filter(setting -> shouldNotify(setting, event))
+                .filter(setting -> isServiceNotificationAllowed(incident, setting.getChannel()))
                 .toList();
 
         log.info(
-                "Отобраны подходящие настройки уведомлений: incidentId={}, userId={}, event={}, suitableSettingsCount={}",
+                "Отобраны подходящие настройки уведомлений с учётом настроек сервиса: incidentId={}, serviceId={}, userId={}, event={}, suitableSettingsCount={}",
                 incident.getId(),
+                incident.getService().getId(),
                 user.getId(),
                 event,
                 suitableSettings.size()
@@ -374,6 +377,26 @@ public class NotificationServiceImpl implements NotificationService {
             case INCIDENT_OPENED -> Boolean.TRUE.equals(setting.getNotifyOnIncidentOpen());
             case INCIDENT_RESOLVED -> Boolean.TRUE.equals(setting.getNotifyOnIncidentResolved());
         };
+    }
+
+    private boolean isServiceNotificationAllowed(Incident incident, NotificationChannel channel) {
+        boolean allowed = switch (channel) {
+            case EMAIL -> !Boolean.FALSE.equals(incident.getService().getNotifyEmail());
+            case TELEGRAM -> !Boolean.FALSE.equals(incident.getService().getNotifyTelegram());
+            case VK -> !Boolean.FALSE.equals(incident.getService().getNotifyVk());
+        };
+
+        if (!allowed) {
+            log.info(
+                    "Уведомление пропущено: канал отключён для сервиса. incidentId={}, serviceId={}, serviceName={}, channel={}",
+                    incident.getId(),
+                    incident.getService().getId(),
+                    incident.getService().getName(),
+                    channel
+            );
+        }
+
+        return allowed;
     }
 
     private void sendAndSaveNotification(

@@ -58,7 +58,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
-                "Создание сервиса: userId={}, username={}, nodeId={}, name={}, checkType={}, targetHost={}, port={}, path={}, intervalSeconds={}, responseTimeThresholdMs={}, degradationThreshold={}",
+                "Создание сервиса: userId={}, username={}, nodeId={}, name={}, checkType={}, targetHost={}, port={}, path={}, intervalSeconds={}",
                 currentUser.getId(),
                 currentUser.getUsername(),
                 request.nodeId(),
@@ -67,9 +67,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 request.targetHost(),
                 request.port(),
                 request.path(),
-                request.intervalSeconds(),
-                request.responseTimeThresholdMs(),
-                request.degradationThreshold()
+                request.intervalSeconds()
         );
 
         NetworkNode node = findNodeById(request.nodeId());
@@ -78,20 +76,12 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         LocalDateTime now = LocalDateTime.now();
 
         NetworkService networkService = networkServiceMapper.toEntity(request);
-
         networkService.setNode(node);
         networkService.setIsEnabled(true);
-
         networkService.setFailureThreshold(2);
         networkService.setRecoveryThreshold(2);
-
         networkService.setConsecutiveFailures(0);
         networkService.setConsecutiveSuccesses(0);
-
-        networkService.setResponseTimeThresholdMs(request.responseTimeThresholdMs());
-        networkService.setDegradationThreshold(request.degradationThreshold());
-        networkService.setConsecutiveDegradations(0);
-
         networkService.setCreatedAt(now);
         networkService.setUpdatedAt(now);
 
@@ -115,15 +105,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         log.info(
-                "Сервис успешно создан: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}, responseTimeThresholdMs={}, degradationThreshold={}",
+                "Сервис успешно создан: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}",
                 savedService.getId(),
                 savedService.getNode().getId(),
                 currentUser.getId(),
                 savedService.getName(),
                 savedService.getCheckType(),
-                savedService.getIsEnabled(),
-                savedService.getResponseTimeThresholdMs(),
-                savedService.getDegradationThreshold()
+                savedService.getIsEnabled()
         );
 
         return buildServiceResponse(savedService);
@@ -135,7 +123,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
-                "Обновление сервиса: serviceId={}, userId={}, username={}, newName={}, newCheckType={}, newTargetHost={}, newPort={}, newPath={}, newIntervalSeconds={}, responseTimeThresholdMs={}, degradationThreshold={}, isEnabled={}",
+                "Обновление сервиса: serviceId={}, userId={}, username={}, newName={}, newCheckType={}, newTargetHost={}, newPort={}, newPath={}, newIntervalSeconds={}",
                 serviceId,
                 currentUser.getId(),
                 currentUser.getUsername(),
@@ -144,19 +132,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 request.targetHost(),
                 request.port(),
                 request.path(),
-                request.intervalSeconds(),
-                request.responseTimeThresholdMs(),
-                request.degradationThreshold(),
-                request.isEnabled()
+                request.intervalSeconds()
         );
 
         NetworkService networkService = findServiceById(serviceId);
         validateServiceOwner(networkService);
 
         networkServiceMapper.updateEntityFromDto(request, networkService);
-
-        networkService.setResponseTimeThresholdMs(request.responseTimeThresholdMs());
-        networkService.setDegradationThreshold(request.degradationThreshold());
         networkService.setUpdatedAt(LocalDateTime.now());
 
         if (networkService.getCheckType() == CheckType.HEARTBEAT
@@ -192,15 +174,13 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         );
 
         log.info(
-                "Сервис успешно обновлён: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}, responseTimeThresholdMs={}, degradationThreshold={}",
+                "Сервис успешно обновлён: serviceId={}, nodeId={}, userId={}, name={}, checkType={}, isEnabled={}",
                 savedService.getId(),
                 savedService.getNode().getId(),
                 currentUser.getId(),
                 savedService.getName(),
                 savedService.getCheckType(),
-                savedService.getIsEnabled(),
-                savedService.getResponseTimeThresholdMs(),
-                savedService.getDegradationThreshold()
+                savedService.getIsEnabled()
         );
 
         return buildServiceResponse(savedService);
@@ -272,8 +252,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         NetworkNode node = findNodeById(nodeId);
         validateNodeOwner(node);
 
-        List<ServiceResponse> services = networkServiceRepository
-                .findAllByNodeIdOrderByCreatedAtDesc(nodeId)
+        List<ServiceResponse> services = networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
@@ -299,8 +278,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 currentUser.getUsername()
         );
 
-        List<ServiceResponse> services = networkServiceRepository
-                .findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
+        List<ServiceResponse> services = networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
@@ -421,15 +399,6 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         ServiceHealthScoreResponse healthScoreResponse =
                 serviceHealthScoreService.calculateHealthScore(networkService.getId());
 
-        Integer responseTimeThresholdMs = networkService.getResponseTimeThresholdMs();
-        Integer degradationThreshold = networkService.getDegradationThreshold();
-        Integer consecutiveDegradations = networkService.getConsecutiveDegradations();
-
-        boolean degraded = responseTimeThresholdMs != null
-                && degradationThreshold != null
-                && consecutiveDegradations != null
-                && consecutiveDegradations >= degradationThreshold;
-
         return new ServiceResponse(
                 networkService.getId(),
                 networkService.getNode().getId(),
@@ -443,6 +412,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 networkService.getPath(),
                 networkService.getIntervalSeconds(),
                 networkService.getIsEnabled(),
+
+                networkService.getResponseTimeThresholdMs(),
+                networkService.getDegradationThreshold(),
+                networkService.getConsecutiveDegradations(),
+
+                networkService.getNotifyEmail(),
+                networkService.getNotifyTelegram(),
+                networkService.getNotifyVk(),
 
                 latestCheckResult.map(CheckResult::getStatus).orElse(null),
                 latestCheckResult.map(CheckResult::getResponseTimeMs).orElse(null),
@@ -464,11 +441,6 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 healthScoreResponse.healthScore(),
                 healthScoreResponse.healthLevel(),
                 healthScoreResponse.recurrenceLevel(),
-
-                responseTimeThresholdMs,
-                degradationThreshold,
-                consecutiveDegradations,
-                degraded,
 
                 networkService.getCreatedAt(),
                 networkService.getUpdatedAt()

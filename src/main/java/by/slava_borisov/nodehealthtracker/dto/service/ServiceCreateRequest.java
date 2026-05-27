@@ -3,7 +3,6 @@ package by.slava_borisov.nodehealthtracker.dto.service;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record ServiceCreateRequest(
@@ -28,15 +27,16 @@ public record ServiceCreateRequest(
         String path,
 
         @NotNull
-        @Positive
         Integer intervalSeconds,
 
-        @NotNull
-        @Positive
         Integer responseTimeThresholdMs,
 
-        @NotNull
-        @Positive
-        Integer degradationThreshold
+        Integer degradationThreshold,
+
+        Boolean notifyEmail,
+
+        Boolean notifyTelegram,
+
+        Boolean notifyVk
 ) {
 }
