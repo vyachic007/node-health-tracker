@@ -384,7 +384,7 @@ export function ServicesPage() {
                 sx={{
                     border: 1,
                     borderColor: 'divider',
-                    borderRadius: 3,
+                    borderRadius: 1.5,
                     overflowX: 'auto',
                 }}
             >
