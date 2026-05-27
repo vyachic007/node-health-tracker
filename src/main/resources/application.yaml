@@ -51,6 +51,8 @@ app:
   telegram:
     api-url: ${TELEGRAM_API_URL:https://api.telegram.org}
     bot-token: ${TELEGRAM_BOT_TOKEN:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:your_bot_username}
+    binding-token-expiration-minutes: ${TELEGRAM_BINDING_TOKEN_EXPIRATION_MINUTES:15}
 
   vk:
     api-url: ${VK_API_URL:https://api.vk.com/method}

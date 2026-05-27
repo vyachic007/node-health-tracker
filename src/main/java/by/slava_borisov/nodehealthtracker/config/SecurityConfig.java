@@ -25,7 +25,8 @@ public class SecurityConfig {
             "/api/auth/login",
             "/api/auth/password-reset/request",
             "/api/auth/password-reset/confirm",
-            "/api/heartbeat/**"
+            "/api/heartbeat/**",
+            "/api/telegram/webhook"
     };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
