@@ -35,6 +35,7 @@ public record ServiceResponse(
         Integer degradationThreshold,
 
         Integer consecutiveDegradations,
+        Boolean degraded,
 
         Boolean notifyEmail,
 

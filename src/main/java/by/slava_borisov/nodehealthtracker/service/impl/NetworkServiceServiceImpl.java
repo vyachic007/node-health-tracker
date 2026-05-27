@@ -1,5 +1,6 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
+import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceCreateRequest;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceResponse;
@@ -416,6 +417,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 networkService.getResponseTimeThresholdMs(),
                 networkService.getDegradationThreshold(),
                 networkService.getConsecutiveDegradations(),
+                healthScoreResponse.healthLevel() == HealthLevel.DEGRADED,
 
                 networkService.getNotifyEmail(),
                 networkService.getNotifyTelegram(),
