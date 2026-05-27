@@ -46,6 +46,7 @@ public interface NetworkServiceMapper {
     @Mapping(target = "recoveryThreshold", ignore = true)
     @Mapping(target = "consecutiveFailures", ignore = true)
     @Mapping(target = "consecutiveSuccesses", ignore = true)
+    @Mapping(target = "consecutiveDegradations", ignore = true)
     NetworkService toEntity(ServiceCreateRequest serviceCreateRequest);
 
     @Mapping(target = "id", ignore = true)
@@ -59,6 +60,7 @@ public interface NetworkServiceMapper {
     @Mapping(target = "recoveryThreshold", ignore = true)
     @Mapping(target = "consecutiveFailures", ignore = true)
     @Mapping(target = "consecutiveSuccesses", ignore = true)
+    @Mapping(target = "consecutiveDegradations", ignore = true)
     void updateEntityFromDto(
             ServiceUpdateRequest serviceUpdateRequest,
             @MappingTarget NetworkService networkService

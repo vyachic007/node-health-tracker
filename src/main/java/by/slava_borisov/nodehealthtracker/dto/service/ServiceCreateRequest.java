@@ -27,6 +27,10 @@ public record ServiceCreateRequest(
         String path,
 
         @NotNull
-        Integer intervalSeconds
+        Integer intervalSeconds,
+
+        Integer responseTimeThresholdMs,
+
+        Integer degradationThreshold
 ) {
 }

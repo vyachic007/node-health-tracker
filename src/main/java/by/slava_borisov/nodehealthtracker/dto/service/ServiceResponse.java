@@ -30,6 +30,12 @@ public record ServiceResponse(
 
         Boolean isEnabled,
 
+        Integer responseTimeThresholdMs,
+
+        Integer degradationThreshold,
+
+        Integer consecutiveDegradations,
+
         ServiceStatus lastStatus,
 
         Integer lastResponseTimeMs,

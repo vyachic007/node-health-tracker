@@ -99,12 +99,34 @@ public class VkNotificationSender implements NotificationSender {
                 message.serviceId(),
                 message.incidentId(),
                 message.reason(),
-                message.eventTime()
+                formatEventDate(message),
+                formatEventTime(message)
         );
     }
 
     private long generateRandomId() {
         return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+    }
+
+
+    private String formatEventDate(NotificationMessage message) {
+        if (message.eventTime() == null) {
+            return "-";
+        }
+
+        return message.eventTime().format(
+                java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")
+        );
+    }
+
+    private String formatEventTime(NotificationMessage message) {
+        if (message.eventTime() == null) {
+            return "-";
+        }
+
+        return message.eventTime().format(
+                java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
+        );
     }
 
     private String formatNullable(Object value) {

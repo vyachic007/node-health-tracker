@@ -488,7 +488,8 @@ public final class Messages {
         ID инцидента: %d
 
         Причина: %s
-        Время события: %s
+        Дата события: %s
+        Время события: %s МСК
 
         Node Health Tracker
         """;
@@ -518,7 +519,8 @@ public final class Messages {
         ID инцидента: %d
 
         Причина: %s
-        Время события: %s
+        Дата события: %s
+        Время события: %s МСК
 
         Это автоматическое уведомление Node Health Tracker.
         """;
@@ -548,7 +550,8 @@ public final class Messages {
         ID инцидента: %d
 
         Причина: %s
-        Время события: %s
+        Дата события: %s
+        Время события: %s МСК
 
         Node Health Tracker
         """;

@@ -413,6 +413,9 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 networkService.getPath(),
                 networkService.getIntervalSeconds(),
                 networkService.getIsEnabled(),
+                networkService.getResponseTimeThresholdMs(),
+                networkService.getDegradationThreshold(),
+                networkService.getConsecutiveDegradations(),
 
                 latestCheckResult.map(CheckResult::getStatus).orElse(null),
                 latestCheckResult.map(CheckResult::getResponseTimeMs).orElse(null),

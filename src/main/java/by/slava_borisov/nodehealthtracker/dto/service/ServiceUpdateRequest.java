@@ -27,6 +27,10 @@ public record ServiceUpdateRequest(
         Integer intervalSeconds,
 
         @NotNull
-        Boolean isEnabled
+        Boolean isEnabled,
+
+        Integer responseTimeThresholdMs,
+
+        Integer degradationThreshold
 ) {
 }
