@@ -1,5 +1,6 @@
 import {
     Alert,
+    Avatar,
     Box,
     Button,
     Card,
@@ -15,10 +16,17 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SpeedIcon from '@mui/icons-material/Speed';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import EmailIcon from '@mui/icons-material/Email';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import ChatIcon from '@mui/icons-material/Chat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -37,6 +45,7 @@ import {
     failureLayerLabels,
     getCheckTypeLabel,
 } from '../model/serviceLabels';
+import type { NetworkService } from '../model/serviceTypes';
 import {
     formatDateTime,
     formatMilliseconds,
@@ -44,6 +53,112 @@ import {
     formatSeconds,
     getSecondsUntil,
 } from '../../../shared/lib/formatters';
+
+function getServiceTarget(service: NetworkService): string {
+    const port = service.port ? `:${service.port}` : '';
+    const path = service.path ?? '';
+
+    return `${service.targetHost}${port}${path}`;
+}
+
+
+function normalizeServiceHost(targetHost: string): string {
+    return targetHost
+        .replace(/^https?:\/\//, '')
+        .split('/')[0]
+        .split(':')[0]
+        .trim()
+        .toLowerCase();
+}
+
+function getServiceLogoUrl(service: NetworkService): string | null {
+    const host = normalizeServiceHost(service.targetHost);
+    const source = `${service.name} ${host}`.toLowerCase();
+
+    if (source.includes('rutube')) {
+        return 'https://www.google.com/s2/favicons?domain=rutube.ru&sz=64';
+    }
+
+    if (source.includes('gmail') || source.includes('google') || source.includes('smtp')) {
+        return 'https://www.google.com/s2/favicons?domain=gmail.com&sz=64';
+    }
+
+    if (host.includes('.')) {
+        return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    }
+
+    return null;
+}
+
+function getServiceLogo(service: NetworkService): string {
+    const source = `${service.name} ${service.targetHost} ${service.checkType}`.toLowerCase();
+
+    if (source.includes('rutube')) {
+        return 'RT';
+    }
+
+    if (source.includes('gmail') || source.includes('mail') || source.includes('smtp')) {
+        return 'GM';
+    }
+
+    if (source.includes('postgres') || source.includes('database') || source.includes('db')) {
+        return 'DB';
+    }
+
+    if (source.includes('ssl')) {
+        return 'SSL';
+    }
+
+    if (service.checkType === 'PING') {
+        return 'PING';
+    }
+
+    if (service.checkType === 'TCP') {
+        return 'TCP';
+    }
+
+    if (service.checkType === 'DNS') {
+        return 'DNS';
+    }
+
+    if (service.checkType === 'HEARTBEAT') {
+        return 'HB';
+    }
+
+    return 'WEB';
+}
+
+function getLogoColor(service: NetworkService) {
+    if (service.lastStatus === 'DOWN') {
+        return 'error.main';
+    }
+
+    if (service.degraded) {
+        return 'warning.main';
+    }
+
+    return 'primary.main';
+}
+
+function formatDatePart(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+
+    return formatDateTime(value).split(',')[0] ?? formatDateTime(value);
+}
+
+function formatTimePart(value: string | null): string {
+    if (!value) {
+        return '';
+    }
+
+    return formatDateTime(value).split(',')[1]?.trim() ?? '';
+}
+
+function getHistoryStatusLabel(status: 'UP' | 'DOWN') {
+    return status === 'UP' ? 'Работает' : 'Недоступен';
+}
 
 export function ServiceDetailsPage() {
     const theme = useTheme();
@@ -121,6 +236,17 @@ export function ServiceDetailsPage() {
         },
     });
 
+    const chartData = useMemo(() => {
+        return [...history]
+            .reverse()
+            .slice(-30)
+            .map((item) => ({
+                time: formatDateTime(item.checkedAt),
+                responseTimeMs: item.responseTimeMs ?? 0,
+                status: item.status === 'UP' ? 'Работает' : 'Недоступен',
+            }));
+    }, [history]);
+
     if (!Number.isFinite(serviceId)) {
         return <Alert severity="error">Некорректный ID сервиса.</Alert>;
     }
@@ -133,14 +259,22 @@ export function ServiceDetailsPage() {
         return <Alert severity="error">Не удалось загрузить сервис.</Alert>;
     }
 
-    const chartData = [...history]
-        .reverse()
-        .slice(-30)
-        .map((item) => ({
-            time: formatDateTime(item.checkedAt),
-            responseTimeMs: item.responseTimeMs ?? 0,
-            status: item.status === 'UP' ? 'Работает' : 'Недоступен',
-        }));
+    const logo = getServiceLogo(service);
+    const logoUrl = getServiceLogoUrl(service);
+    const hasEnabledNotification =
+        service.notifyEmail || service.notifyTelegram || service.notifyVk;
+
+    const responseTimes = history
+        .map((item) => item.responseTimeMs)
+        .filter((value): value is number => value !== null);
+
+    const minResponseTime = responseTimes.length > 0
+        ? Math.min(...responseTimes)
+        : null;
+
+    const maxResponseTime = responseTimes.length > 0
+        ? Math.max(...responseTimes)
+        : null;
 
     return (
         <Stack spacing={3}>
@@ -149,163 +283,313 @@ export function ServiceDetailsPage() {
                 spacing={2}
                 sx={{
                     justifyContent: 'space-between',
-                    alignItems: { xs: 'stretch', md: 'flex-start' },
+                    alignItems: { xs: 'stretch', md: 'center' },
                 }}
             >
-                <Box>
-                    <Button
-                        component={Link}
-                        to="/services"
-                        startIcon={<ArrowBackIcon />}
-                        sx={{ mb: 1 }}
-                    >
-                        Назад к сервисам
-                    </Button>
-
-                    <Typography variant="h4">
-                        {service.name}
-                    </Typography>
-
-                    <Typography color="text.secondary">
-                        Детальная диагностика сервиса, история проверок, контроль деградации и текущий результат.
-                    </Typography>
-                </Box>
+                <Button
+                    component={Link}
+                    to="/services"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+                >
+                    Назад к сервисам
+                </Button>
 
                 <Button
                     variant="contained"
                     startIcon={<PlayArrowIcon />}
                     onClick={() => runCheckMutation.mutate(service.id)}
                     disabled={runCheckMutation.isPending}
+                    sx={{ minWidth: 190 }}
                 >
                     {runCheckMutation.isPending ? 'Проверка...' : 'Проверить сейчас'}
                 </Button>
             </Stack>
 
-            <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 8 }}>
-                    <Card
-                        elevation={0}
-                        sx={{
-                            border: 1,
-                            borderColor: service.degraded ? 'warning.main' : 'divider',
-                            height: '100%',
-                        }}
-                    >
-                        <CardContent>
-                            <Stack spacing={2}>
-                                <Stack
-                                    direction="row"
-                                    spacing={1}
-                                    useFlexGap
-                                    sx={{ flexWrap: 'wrap' }}
+            <Card
+                elevation={0}
+                sx={{
+                    border: 1,
+                    borderColor: service.hasOpenIncident
+                        ? 'error.main'
+                        : service.degraded
+                            ? 'warning.main'
+                            : 'divider',
+                    overflow: 'hidden',
+                }}
+            >
+                <CardContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 3 }}>
+                        <Stack
+                            direction={{ xs: 'column', md: 'row' }}
+                            spacing={3}
+                            sx={{
+                                justifyContent: 'space-between',
+                                alignItems: { xs: 'flex-start', md: 'center' },
+                            }}
+                        >
+                            <Stack direction="row" spacing={2} sx={{ alignItems: 'center', minWidth: 0 }}>
+                                <Avatar
+                                    src={logoUrl ?? undefined}
+                                    variant="rounded"
+                                    sx={{
+                                        width: 72,
+                                        height: 72,
+                                        fontSize: 24,
+                                        fontWeight: 900,
+                                        bgcolor: getLogoColor(service),
+                                    }}
                                 >
-                                    <ServiceStatusChip status={service.lastStatus} />
+                                    {logo}
+                                </Avatar>
 
-                                    <HealthLevelChip level={service.healthLevel} />
-
-                                    <Chip
-                                        label={getCheckTypeLabel(service.checkType)}
-                                        variant="outlined"
-                                    />
-
-                                    {service.degraded && (
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        useFlexGap
+                                        sx={{ flexWrap: 'wrap', mb: 1 }}
+                                    >
                                         <Chip
-                                            icon={<WarningAmberIcon />}
-                                            label="Деградация"
-                                            color="warning"
+                                            label={getCheckTypeLabel(service.checkType)}
+                                            variant="outlined"
+                                            size="small"
                                         />
-                                    )}
 
-                                    {service.hasOpenIncident && (
-                                        <Chip
-                                            label={`Открытый инцидент №${service.openIncidentId}`}
-                                            color="error"
-                                        />
-                                    )}
-                                </Stack>
+                                        <ServiceStatusChip status={service.lastStatus} />
 
-                                <Divider />
+                                        <HealthLevelChip level={service.healthLevel} />
 
-                                <Grid container spacing={2}>
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Адрес проверки
-                                        </Typography>
+                                        {service.degraded && (
+                                            <Chip
+                                                icon={<WarningAmberIcon />}
+                                                label="Деградация"
+                                                color="warning"
+                                                size="small"
+                                            />
+                                        )}
 
-                                        <Typography variant="h6">
-                                            {service.targetHost}
-                                            {service.port ? `:${service.port}` : ''}
-                                            {service.path ?? ''}
-                                        </Typography>
-                                    </Grid>
+                                        {service.hasOpenIncident && (
+                                            <Chip
+                                                icon={<WarningAmberIcon />}
+                                                label="Открыт инцидент"
+                                                color="error"
+                                                size="small"
+                                                variant="outlined"
+                                            />
+                                        )}
+                                    </Stack>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            ID узла
-                                        </Typography>
+                                    <Typography variant="h4" noWrap>
+                                        {service.name}
+                                    </Typography>
 
-                                        <Typography variant="h6">
-                                            {service.nodeId}
-                                        </Typography>
-                                    </Grid>
+                                    <Typography color="text.secondary" noWrap>
+                                        {getServiceTarget(service)}
+                                    </Typography>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Последняя проверка
-                                        </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                        Детальная диагностика, история проверок, деградация и текущий результат.
+                                    </Typography>
+                                </Box>
+                            </Stack>
 
-                                        <Typography variant="h6">
-                                            {formatDateTime(service.lastCheckedAt)}
-                                        </Typography>
-                                    </Grid>
+                            <Box sx={{ minWidth: 180 }}>
+                                <Typography variant="h2" sx={{ lineHeight: 1, textAlign: { xs: 'left', md: 'right' } }}>
+                                    {service.healthScore}
+                                    <Typography component="span" variant="h6" color="text.secondary">
+                                        /100
+                                    </Typography>
+                                </Typography>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Следующая проверка
-                                        </Typography>
+                                <Typography color="text.secondary" sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+                                    оценка состояния
+                                </Typography>
 
-                                        <Typography variant="h6">
-                                            {formatSeconds(secondsUntilNextCheck)}
-                                        </Typography>
-                                    </Grid>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={service.healthScore}
+                                    color={
+                                        service.healthScore >= 80
+                                            ? 'success'
+                                            : service.healthScore >= 50
+                                                ? 'warning'
+                                                : 'error'
+                                    }
+                                    sx={{
+                                        mt: 1.5,
+                                        height: 7,
+                                        borderRadius: 999,
+                                    }}
+                                />
+                            </Box>
+                        </Stack>
+                    </Box>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
+                    <Divider />
+
+                    <Grid container>
+                        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+                            <Box sx={{ p: 2.5 }}>
+                                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                                    <CheckCircleIcon color="success" />
+
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
                                             Доступность за 24 часа
                                         </Typography>
 
                                         <Typography variant="h6">
                                             {formatPercent(service.availabilityPercent24h)}
                                         </Typography>
-                                    </Grid>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Grid>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Среднее время ответа за 24 часа
+                        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+                            <Box sx={{ p: 2.5 }}>
+                                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                                    <SpeedIcon color="primary" />
+
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Средний ответ
                                         </Typography>
 
                                         <Typography variant="h6">
                                             {formatMilliseconds(service.averageResponseTimeMs24h)}
                                         </Typography>
-                                    </Grid>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Grid>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Порог медленного ответа
+                        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+                            <Box sx={{ p: 2.5 }}>
+                                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                                    <AccessTimeIcon color="primary" />
+
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Следующая проверка
                                         </Typography>
 
                                         <Typography variant="h6">
+                                            {formatSeconds(secondsUntilNextCheck)}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+                            <Box sx={{ p: 2.5 }}>
+                                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                                    <CalendarMonthIcon color="primary" />
+
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Последняя проверка
+                                        </Typography>
+
+                                        <Typography variant="h6">
+                                            {formatDatePart(service.lastCheckedAt)}
+                                        </Typography>
+
+                                        <Typography variant="body2" color="text.secondary">
+                                            {formatTimePart(service.lastCheckedAt)}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+                            <Box sx={{ p: 2.5 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Уведомления
+                                </Typography>
+
+                                <Stack direction="row" spacing={1} sx={{ mt: 0.75 }}>
+                                    {service.notifyEmail && <EmailIcon color="success" fontSize="small" />}
+                                    {service.notifyTelegram && <TelegramIcon color="success" fontSize="small" />}
+                                    {service.notifyVk && <ChatIcon color="success" fontSize="small" />}
+                                    {!hasEnabledNotification && (
+                                        <Typography variant="body2" color="text.secondary">
+                                            отключены
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            </Card>
+
+            <Grid container spacing={2}>
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
+                        <CardContent>
+                            <Stack spacing={2}>
+                                <Typography variant="h6">
+                                    Основные показатели
+                                </Typography>
+
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">ID узла</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>{service.nodeId}</Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Тип проверки</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {getCheckTypeLabel(service.checkType)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Интервал проверки</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {formatSeconds(service.intervalSeconds)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Порог медленного ответа</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
                                             {formatMilliseconds(service.responseTimeThresholdMs)}
                                         </Typography>
                                     </Grid>
 
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">
-                                            Медленных проверок подряд
-                                        </Typography>
-
-                                        <Typography variant="h6">
+                                        <Typography color="text.secondary">Медленных проверок подряд</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
                                             {service.consecutiveDegradations} из {service.degradationThreshold}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Текущий простой</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {formatSeconds(service.currentDowntimeSeconds)}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Уровень сбоя</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {service.lastFailureLayer
+                                                ? failureLayerLabels[service.lastFailureLayer]
+                                                : 'Не определён'}
+                                        </Typography>
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography color="text.secondary">Открытый инцидент</Typography>
+                                        <Typography sx={{ fontWeight: 800 }}>
+                                            {service.hasOpenIncident ? 'Да' : 'Нет'}
                                         </Typography>
                                     </Grid>
                                 </Grid>
@@ -335,42 +619,10 @@ export function ServiceDetailsPage() {
                     </Card>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
                         <CardContent>
                             <Stack spacing={2}>
-                                <Typography variant="h6">
-                                    Оценка состояния
-                                </Typography>
-
-                                <Typography variant="h2">
-                                    {service.healthScore}
-                                </Typography>
-
-                                <Typography color="text.secondary">
-                                    из 100
-                                </Typography>
-
-                                <Divider />
-
-                                <Typography>
-                                    Уровень сбоя:{' '}
-                                    <strong>
-                                        {service.lastFailureLayer
-                                            ? failureLayerLabels[service.lastFailureLayer]
-                                            : 'Не определён'}
-                                    </strong>
-                                </Typography>
-
-                                <Typography>
-                                    Текущий простой:{' '}
-                                    <strong>
-                                        {formatSeconds(service.currentDowntimeSeconds)}
-                                    </strong>
-                                </Typography>
-
-                                <Divider />
-
                                 <Typography variant="h6">
                                     Контроль деградации
                                 </Typography>
@@ -380,6 +632,8 @@ export function ServiceDetailsPage() {
                                         ? 'Деградация подтверждена: сервис доступен, но несколько проверок подряд отвечает медленно.'
                                         : 'Деградация не подтверждена: сервис отвечает в пределах порога или медленных проверок подряд пока недостаточно.'}
                                 </Alert>
+
+                                <Divider />
 
                                 <Typography>
                                     Порог ответа:{' '}
@@ -411,72 +665,141 @@ export function ServiceDetailsPage() {
                 </Grid>
             </Grid>
 
-            <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Box>
-                            <Typography variant="h6">
-                                График времени ответа
-                            </Typography>
+            <Grid container spacing={2}>
+                <Grid size={{ xs: 12, xl: 9 }}>
+                    <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+                        <CardContent>
+                            <Stack spacing={2}>
+                                <Stack
+                                    direction={{ xs: 'column', md: 'row' }}
+                                    spacing={2}
+                                    sx={{
+                                        justifyContent: 'space-between',
+                                        alignItems: { xs: 'flex-start', md: 'center' },
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography variant="h6">
+                                            График времени ответа
+                                        </Typography>
 
-                            <Typography color="text.secondary">
-                                Последние результаты проверок сервиса. Пунктирная линия показывает порог медленного ответа.
-                            </Typography>
-                        </Box>
+                                        <Typography color="text.secondary">
+                                            Последние результаты проверок. Пунктирная линия показывает порог медленного ответа.
+                                        </Typography>
+                                    </Box>
 
-                        {isHistoryLoading ? (
-                            <LinearProgress />
-                        ) : chartData.length === 0 ? (
-                            <Alert severity="info">
-                                История проверок пока отсутствует.
-                            </Alert>
-                        ) : (
-                            <div style={{ width: '100%', height: 320 }}>
-                                <ResponsiveContainer>
-                                    <LineChart data={chartData}>
-                                        <CartesianGrid
-                                            strokeDasharray="4 4"
-                                            stroke={theme.palette.divider}
+                                    <Stack direction="row" spacing={1}>
+                                        <Chip
+                                            label={`Минимум: ${formatMilliseconds(minResponseTime)}`}
+                                            variant="outlined"
                                         />
 
-                                        <XAxis
-                                            dataKey="time"
-                                            stroke={theme.palette.text.secondary}
-                                            tick={{ fontSize: 11 }}
+                                        <Chip
+                                            label={`Максимум: ${formatMilliseconds(maxResponseTime)}`}
+                                            variant="outlined"
                                         />
+                                    </Stack>
+                                </Stack>
 
-                                        <YAxis stroke={theme.palette.text.secondary} />
+                                {isHistoryLoading ? (
+                                    <LinearProgress />
+                                ) : chartData.length === 0 ? (
+                                    <Alert severity="info">
+                                        История проверок пока отсутствует.
+                                    </Alert>
+                                ) : (
+                                    <div style={{ width: '100%', height: 330 }}>
+                                        <ResponsiveContainer>
+                                            <LineChart data={chartData}>
+                                                <CartesianGrid
+                                                    strokeDasharray="4 4"
+                                                    stroke={theme.palette.divider}
+                                                />
 
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: theme.palette.background.paper,
-                                                border: `1px solid ${theme.palette.divider}`,
-                                                borderRadius: 12,
-                                            }}
-                                        />
+                                                <XAxis
+                                                    dataKey="time"
+                                                    stroke={theme.palette.text.secondary}
+                                                    tick={{ fontSize: 11 }}
+                                                />
 
-                                        <ReferenceLine
-                                            y={service.responseTimeThresholdMs}
-                                            stroke={theme.palette.warning.main}
-                                            strokeDasharray="6 6"
-                                            label="Порог деградации"
-                                        />
+                                                <YAxis stroke={theme.palette.text.secondary} />
 
-                                        <Line
-                                            type="monotone"
-                                            dataKey="responseTimeMs"
-                                            name="Время ответа, мс"
-                                            stroke={theme.palette.primary.main}
-                                            strokeWidth={3}
-                                            dot={false}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </Stack>
-                </CardContent>
-            </Card>
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        background: theme.palette.background.paper,
+                                                        border: `1px solid ${theme.palette.divider}`,
+                                                        borderRadius: 12,
+                                                    }}
+                                                />
+
+                                                <ReferenceLine
+                                                    y={service.responseTimeThresholdMs}
+                                                    stroke={theme.palette.warning.main}
+                                                    strokeDasharray="6 6"
+                                                    label="Порог деградации"
+                                                />
+
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="responseTimeMs"
+                                                    name="Время ответа, мс"
+                                                    stroke={theme.palette.primary.main}
+                                                    strokeWidth={3}
+                                                    dot={false}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                )}
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, xl: 3 }}>
+                    <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
+                        <CardContent>
+                            <Stack spacing={2}>
+                                <Typography variant="h6">
+                                    Параметры мониторинга
+                                </Typography>
+
+                                <Divider />
+
+                                <Typography>
+                                    Тип: <strong>{getCheckTypeLabel(service.checkType)}</strong>
+                                </Typography>
+
+                                <Typography>
+                                    Адрес: <strong>{getServiceTarget(service)}</strong>
+                                </Typography>
+
+                                <Typography>
+                                    Интервал: <strong>{formatSeconds(service.intervalSeconds)}</strong>
+                                </Typography>
+
+                                <Typography>
+                                    Порог ответа: <strong>{formatMilliseconds(service.responseTimeThresholdMs)}</strong>
+                                </Typography>
+
+                                <Typography>
+                                    Порог деградации: <strong>{service.degradationThreshold}</strong>
+                                </Typography>
+
+                                <Divider />
+
+                                <Typography>
+                                    Создан: <strong>{formatDateTime(service.createdAt)}</strong>
+                                </Typography>
+
+                                <Typography>
+                                    Обновлён: <strong>{formatDateTime(service.updatedAt)}</strong>
+                                </Typography>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
 
             <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
                 <CardContent>
@@ -511,7 +834,7 @@ export function ServiceDetailsPage() {
                                         <Box>
                                             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                                                 <Typography sx={{ fontWeight: 800 }}>
-                                                    {item.status === 'UP' ? 'Работает' : 'Недоступен'}
+                                                    {getHistoryStatusLabel(item.status)}
                                                 </Typography>
 
                                                 {isSlow && (
@@ -528,9 +851,9 @@ export function ServiceDetailsPage() {
                                             </Typography>
                                         </Box>
 
-                                        <Box>
+                                        <Box sx={{ minWidth: { xs: 'auto', md: 240 } }}>
                                             <Typography>
-                                                Ответ: {formatMilliseconds(item.responseTimeMs)}
+                                                Ответ: <strong>{formatMilliseconds(item.responseTimeMs)}</strong>
                                             </Typography>
 
                                             <Typography color="text.secondary">

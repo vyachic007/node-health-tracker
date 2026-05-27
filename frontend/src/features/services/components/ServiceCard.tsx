@@ -22,10 +22,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { useEffect, useMemo, useState } from 'react';
-import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    formatDateTime,
     formatMilliseconds,
     formatPercent,
     formatSeconds,
@@ -50,7 +48,16 @@ function getServiceTarget(service: NetworkService): string {
     return `${service.targetHost}${port}${path}`;
 }
 
-function getServiceLogo(service: NetworkService): string {
+function normalizeHost(rawHost: string): string {
+    return rawHost
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .split('/')[0]
+        .split(':')[0]
+        .trim();
+}
+
+function getServiceLogoText(service: NetworkService): string {
     const source = `${service.name} ${service.targetHost} ${service.checkType}`.toLowerCase();
 
     if (source.includes('rutube')) {
@@ -86,6 +93,16 @@ function getServiceLogo(service: NetworkService): string {
     }
 
     return 'WEB';
+}
+
+function getServiceLogoUrl(service: NetworkService): string | undefined {
+    const host = normalizeHost(service.targetHost);
+
+    if (!host || host.includes('.local')) {
+        return undefined;
+    }
+
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
 }
 
 function getStatusIcon(service: NetworkService) {
@@ -136,22 +153,6 @@ function getStatusColor(service: NetworkService): 'success' | 'warning' | 'error
     return 'error';
 }
 
-function getLogoColor(service: NetworkService): 'primary.main' | 'success.main' | 'warning.main' | 'error.main' | 'grey.500' {
-    if (!service.lastStatus || !service.isEnabled) {
-        return 'grey.500';
-    }
-
-    if (service.lastStatus === 'DOWN') {
-        return 'error.main';
-    }
-
-    if (service.degraded) {
-        return 'warning.main';
-    }
-
-    return 'primary.main';
-}
-
 function getAvailabilityProgress(value: number | null): number {
     if (value === null || value === undefined || Number.isNaN(value)) {
         return 0;
@@ -176,6 +177,33 @@ function getAvailabilityColor(value: number | null): 'success' | 'warning' | 'er
     return 'error';
 }
 
+function getLastCheckDateTime(value: string | null): { date: string; time: string } {
+    if (!value) {
+        return {
+            date: '—',
+            time: '',
+        };
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return {
+            date: value,
+            time: '',
+        };
+    }
+
+    return {
+        date: date.toLocaleDateString('ru-RU'),
+        time: date.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        }),
+    };
+}
+
 export function ServiceCard({
                                 service,
                                 isChecking,
@@ -187,7 +215,12 @@ export function ServiceCard({
     const [secondsUntilNextCheck, setSecondsUntilNextCheck] = useState<number | null>(null);
     const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
 
-    const logo = useMemo(() => getServiceLogo(service), [service]);
+    const logoText = useMemo(() => getServiceLogoText(service), [service]);
+    const logoUrl = useMemo(() => getServiceLogoUrl(service), [service]);
+    const lastCheck = useMemo(
+        () => getLastCheckDateTime(service.lastCheckedAt),
+        [service.lastCheckedAt],
+    );
 
     const availabilityProgress = getAvailabilityProgress(service.availabilityPercent24h);
     const availabilityColor = getAvailabilityColor(service.availabilityPercent24h);
@@ -220,7 +253,7 @@ export function ServiceCard({
         return () => window.clearInterval(timerId);
     }, []);
 
-    const handleMenuOpen = (event: MouseEvent<HTMLElement>) => {
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setMenuAnchorEl(event.currentTarget);
     };
 
@@ -244,7 +277,7 @@ export function ServiceCard({
             sx={{
                 '& td': {
                     borderBottomColor: 'divider',
-                    py: 1.55,
+                    py: 1.45,
                 },
                 ...(service.hasOpenIncident && {
                     '& td:first-of-type': {
@@ -258,18 +291,27 @@ export function ServiceCard({
             }}
         >
             <TableCell>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 280 }}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 260 }}>
                     <Avatar
                         variant="rounded"
+                        src={logoUrl}
                         sx={{
                             width: 38,
                             height: 38,
                             fontSize: 12,
                             fontWeight: 900,
-                            bgcolor: getLogoColor(service),
+                            bgcolor: service.lastStatus === 'DOWN' ? 'error.main' : 'primary.main',
+                            color: 'common.white',
+                            border: logoUrl ? 1 : 0,
+                            borderColor: 'divider',
+                            '& img': {
+                                objectFit: 'contain',
+                                p: 0.55,
+                                bgcolor: 'common.white',
+                            },
                         }}
                     >
-                        {logo}
+                        {logoText}
                     </Avatar>
 
                     <Box sx={{ minWidth: 0 }}>
@@ -284,7 +326,7 @@ export function ServiceCard({
                 </Stack>
             </TableCell>
 
-            <TableCell>
+            <TableCell sx={{ width: 120 }}>
                 <Chip
                     label={getCheckTypeLabel(service.checkType)}
                     size="small"
@@ -292,8 +334,8 @@ export function ServiceCard({
                 />
             </TableCell>
 
-            <TableCell>
-                <Stack spacing={0.7} sx={{ alignItems: 'flex-start' }}>
+            <TableCell sx={{ width: 180 }}>
+                <Stack spacing={0.75} sx={{ alignItems: 'flex-start' }}>
                     <Chip
                         icon={getStatusIcon(service)}
                         label={getStatusLabel(service)}
@@ -313,7 +355,7 @@ export function ServiceCard({
                 </Stack>
             </TableCell>
 
-            <TableCell sx={{ minWidth: 170 }}>
+            <TableCell sx={{ width: 165 }}>
                 <Stack spacing={0.75}>
                     <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                         <Typography variant="body2" sx={{ fontWeight: 800 }}>
@@ -321,7 +363,7 @@ export function ServiceCard({
                         </Typography>
 
                         <Typography variant="caption" color="text.secondary">
-                            24 часа
+                            24ч
                         </Typography>
                     </Stack>
 
@@ -338,27 +380,31 @@ export function ServiceCard({
                 </Stack>
             </TableCell>
 
-            <TableCell>
-                <Typography sx={{ fontWeight: 800 }}>
+            <TableCell sx={{ width: 105 }}>
+                <Typography sx={{ fontWeight: 900 }}>
                     {formatMilliseconds(service.lastResponseTimeMs)}
                 </Typography>
 
                 {service.degraded && (
                     <Typography variant="caption" color="warning.main">
-                        медленно: {service.consecutiveDegradations}/{service.degradationThreshold}
+                        медленно
                     </Typography>
                 )}
             </TableCell>
 
-            <TableCell>
-                <Typography sx={{ fontWeight: 800 }}>
+            <TableCell sx={{ width: 110 }}>
+                <Typography sx={{ fontWeight: 900 }}>
                     {formatSeconds(secondsUntilNextCheck)}
                 </Typography>
             </TableCell>
 
-            <TableCell>
-                <Typography sx={{ fontWeight: 800 }} noWrap>
-                    {formatDateTime(service.lastCheckedAt)}
+            <TableCell sx={{ width: 150 }}>
+                <Typography sx={{ fontWeight: 900 }} noWrap>
+                    {lastCheck.date}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" noWrap>
+                    {lastCheck.time}
                 </Typography>
 
                 <Typography variant="caption" color="text.secondary">
@@ -366,8 +412,8 @@ export function ServiceCard({
                 </Typography>
             </TableCell>
 
-            <TableCell align="right">
-                <Stack direction="row" spacing={0.75} sx={{ justifyContent: 'flex-end' }}>
+            <TableCell align="right" sx={{ width: 115 }}>
+                <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                     <Tooltip title={isChecking ? 'Проверка выполняется' : 'Проверить сейчас'}>
                         <span>
                             <IconButton
@@ -399,7 +445,7 @@ export function ServiceCard({
                         </span>
                     </Tooltip>
 
-                    <Tooltip title="Действия">
+                    <Tooltip title="Редактировать или удалить">
                         <span>
                             <IconButton
                                 size="small"

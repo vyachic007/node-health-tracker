@@ -405,9 +405,9 @@ export function ServicesPage() {
                             <TableCell>Состояние</TableCell>
                             <TableCell>Доступность</TableCell>
                             <TableCell>Ответ</TableCell>
-                            <TableCell>Следующая проверка</TableCell>
+                            <TableCell>След. проверка</TableCell>
                             <TableCell>Последняя проверка</TableCell>
-                            <TableCell align="right">Действия</TableCell>
+                            <TableCell align="right"></TableCell>
                         </TableRow>
                     </TableHead>
 
