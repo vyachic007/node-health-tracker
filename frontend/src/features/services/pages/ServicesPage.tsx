@@ -7,12 +7,18 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     InputLabel,
     LinearProgress,
     MenuItem,
+    Paper,
     Select,
     Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
     TextField,
     Typography,
 } from '@mui/material';
@@ -291,7 +297,7 @@ export function ServicesPage() {
                     <Typography color="text.secondary">
                         {selectedNodeId
                             ? 'Показаны только сервисы, которые относятся к выбранному сетевому узлу.'
-                            : 'Управление проверками HTTP, HTTPS, TCP, DNS, SSL, Heartbeat и Ping.'}
+                            : 'Компактный список проверок с состоянием, доступностью и быстрыми действиями.'}
                     </Typography>
                 </Box>
 
@@ -372,20 +378,54 @@ export function ServicesPage() {
                     : `Показано сервисов: ${visibleServices.length} из ${services.length}`}
             </Typography>
 
-            <Grid container spacing={2}>
-                {visibleServices.map((service) => (
-                    <Grid key={service.id} size={{ xs: 12, md: 6, xl: 4 }}>
-                        <ServiceCard
-                            service={service}
-                            isChecking={checkingServiceId === service.id || isCheckingAll}
-                            isDeleting={deletingServiceId === service.id}
-                            onRunCheck={(serviceId) => runCheckMutation.mutate(serviceId)}
-                            onEdit={(selectedService) => setServiceToEdit(selectedService)}
-                            onDelete={(selectedService) => setServiceToDelete(selectedService)}
-                        />
-                    </Grid>
-                ))}
-            </Grid>
+            <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 3,
+                    overflowX: 'auto',
+                }}
+            >
+                <Table sx={{ minWidth: 1180 }}>
+                    <TableHead>
+                        <TableRow
+                            sx={{
+                                '& th': {
+                                    color: 'text.secondary',
+                                    fontWeight: 800,
+                                    backgroundColor: 'action.hover',
+                                    borderBottomColor: 'divider',
+                                },
+                            }}
+                        >
+                            <TableCell>Сервис</TableCell>
+                            <TableCell>Тип</TableCell>
+                            <TableCell>Состояние</TableCell>
+                            <TableCell>Доступность</TableCell>
+                            <TableCell>Ответ</TableCell>
+                            <TableCell>Следующая проверка</TableCell>
+                            <TableCell>Последняя проверка</TableCell>
+                            <TableCell align="right">Действия</TableCell>
+                        </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                        {visibleServices.map((service) => (
+                            <ServiceCard
+                                key={service.id}
+                                service={service}
+                                isChecking={checkingServiceId === service.id || isCheckingAll}
+                                isDeleting={deletingServiceId === service.id}
+                                onRunCheck={(serviceId) => runCheckMutation.mutate(serviceId)}
+                                onEdit={(selectedService) => setServiceToEdit(selectedService)}
+                                onDelete={(selectedService) => setServiceToDelete(selectedService)}
+                            />
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {services.length === 0 && (
                 <Alert severity="info">
