@@ -396,9 +396,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 )
         );
 
-        ServiceHealthScoreResponse healthScoreResponse = serviceHealthScoreService.calculateHealthScore(
-                networkService.getId()
-        );
+        ServiceHealthScoreResponse healthScoreResponse =
+                serviceHealthScoreService.calculateHealthScore(networkService.getId());
 
         return new ServiceResponse(
                 networkService.getId(),
@@ -413,9 +412,14 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 networkService.getPath(),
                 networkService.getIntervalSeconds(),
                 networkService.getIsEnabled(),
+
                 networkService.getResponseTimeThresholdMs(),
                 networkService.getDegradationThreshold(),
                 networkService.getConsecutiveDegradations(),
+
+                networkService.getNotifyEmail(),
+                networkService.getNotifyTelegram(),
+                networkService.getNotifyVk(),
 
                 latestCheckResult.map(CheckResult::getStatus).orElse(null),
                 latestCheckResult.map(CheckResult::getResponseTimeMs).orElse(null),

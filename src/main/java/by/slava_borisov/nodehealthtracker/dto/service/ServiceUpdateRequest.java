@@ -31,6 +31,12 @@ public record ServiceUpdateRequest(
 
         Integer responseTimeThresholdMs,
 
-        Integer degradationThreshold
+        Integer degradationThreshold,
+
+        Boolean notifyEmail,
+
+        Boolean notifyTelegram,
+
+        Boolean notifyVk
 ) {
 }

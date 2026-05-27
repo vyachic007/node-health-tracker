@@ -70,6 +70,15 @@ public class NetworkService {
     @Column(name = "consecutive_degradations", nullable = false)
     private Integer consecutiveDegradations;
 
+    @Column(name = "notify_email", nullable = false)
+    private Boolean notifyEmail;
+
+    @Column(name = "notify_telegram", nullable = false)
+    private Boolean notifyTelegram;
+
+    @Column(name = "notify_vk", nullable = false)
+    private Boolean notifyVk;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

@@ -36,6 +36,12 @@ public record ServiceResponse(
 
         Integer consecutiveDegradations,
 
+        Boolean notifyEmail,
+
+        Boolean notifyTelegram,
+
+        Boolean notifyVk,
+
         ServiceStatus lastStatus,
 
         Integer lastResponseTimeMs,
