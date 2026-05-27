@@ -15,7 +15,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     formatDateTime,
@@ -24,7 +24,6 @@ import {
     formatSeconds,
     getSecondsUntil,
 } from '../../../shared/lib/formatters';
-import { useNow } from '../../../shared/lib/useNow';
 import {
     failureLayerLabels,
     getCheckTypeLabel,
@@ -58,15 +57,35 @@ export function ServiceCard({
                                 onEdit,
                                 onDelete,
                             }: ServiceCardProps) {
-    const now = useNow();
+    const [secondsUntilNextCheck, setSecondsUntilNextCheck] = useState<number | null>(null);
 
-    const secondsUntilNextCheck = useMemo(() => {
-        if (service.nextCheckAt) {
-            return getSecondsUntil(service.nextCheckAt);
+    useEffect(() => {
+        if (service.secondsUntilNextCheck !== null && service.secondsUntilNextCheck !== undefined) {
+            setSecondsUntilNextCheck(Math.max(service.secondsUntilNextCheck, 0));
+            return;
         }
 
-        return service.secondsUntilNextCheck;
-    }, [service.nextCheckAt, service.secondsUntilNextCheck, now]);
+        if (service.nextCheckAt) {
+            setSecondsUntilNextCheck(Math.max(getSecondsUntil(service.nextCheckAt) ?? 0, 0));
+            return;
+        }
+
+        setSecondsUntilNextCheck(null);
+    }, [service.id, service.secondsUntilNextCheck, service.nextCheckAt]);
+
+    useEffect(() => {
+        const timerId = window.setInterval(() => {
+            setSecondsUntilNextCheck((current) => {
+                if (current === null) {
+                    return null;
+                }
+
+                return Math.max(current - 1, 0);
+            });
+        }, 1000);
+
+        return () => window.clearInterval(timerId);
+    }, []);
 
     return (
         <Card

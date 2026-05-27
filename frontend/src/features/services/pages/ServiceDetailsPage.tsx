@@ -18,7 +18,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -44,7 +44,6 @@ import {
     formatSeconds,
     getSecondsUntil,
 } from '../../../shared/lib/formatters';
-import { useNow } from '../../../shared/lib/useNow';
 
 export function ServiceDetailsPage() {
     const theme = useTheme();
@@ -52,7 +51,6 @@ export function ServiceDetailsPage() {
     const { enqueueSnackbar } = useSnackbar();
     const params = useParams();
 
-    const now = useNow();
     const serviceId = Number(params.serviceId);
 
     const {
@@ -76,13 +74,35 @@ export function ServiceDetailsPage() {
         refetchInterval: 10000,
     });
 
-    const secondsUntilNextCheck = useMemo(() => {
-        if (service?.nextCheckAt) {
-            return getSecondsUntil(service.nextCheckAt);
+    const [secondsUntilNextCheck, setSecondsUntilNextCheck] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (service?.secondsUntilNextCheck !== null && service?.secondsUntilNextCheck !== undefined) {
+            setSecondsUntilNextCheck(Math.max(service.secondsUntilNextCheck, 0));
+            return;
         }
 
-        return service?.secondsUntilNextCheck ?? null;
-    }, [service?.nextCheckAt, service?.secondsUntilNextCheck, now]);
+        if (service?.nextCheckAt) {
+            setSecondsUntilNextCheck(Math.max(getSecondsUntil(service.nextCheckAt) ?? 0, 0));
+            return;
+        }
+
+        setSecondsUntilNextCheck(null);
+    }, [service?.id, service?.secondsUntilNextCheck, service?.nextCheckAt]);
+
+    useEffect(() => {
+        const timerId = window.setInterval(() => {
+            setSecondsUntilNextCheck((current) => {
+                if (current === null) {
+                    return null;
+                }
+
+                return Math.max(current - 1, 0);
+            });
+        }, 1000);
+
+        return () => window.clearInterval(timerId);
+    }, []);
 
     const runCheckMutation = useMutation({
         mutationFn: servicesApi.runCheck,
