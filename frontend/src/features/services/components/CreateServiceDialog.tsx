@@ -2,17 +2,20 @@ import {
     Alert,
     Box,
     Button,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     Grid,
     InputLabel,
     MenuItem,
     Select,
     Stack,
     TextField,
+    Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { getCheckTypeLabel } from '../model/serviceLabels';
@@ -91,6 +94,9 @@ export function CreateServiceDialog({
     const [degradationThreshold, setDegradationThreshold] = useState(
         DEFAULT_DEGRADATION_THRESHOLD,
     );
+    const [notifyEmail, setNotifyEmail] = useState(true);
+    const [notifyTelegram, setNotifyTelegram] = useState(true);
+    const [notifyVk, setNotifyVk] = useState(true);
 
     const isNodeIdLocked = initialNodeId !== null && initialNodeId !== undefined;
 
@@ -108,6 +114,9 @@ export function CreateServiceDialog({
         setIntervalSeconds(DEFAULT_INTERVAL_SECONDS);
         setResponseTimeThresholdMs(DEFAULT_RESPONSE_TIME_THRESHOLD_MS);
         setDegradationThreshold(DEFAULT_DEGRADATION_THRESHOLD);
+        setNotifyEmail(true);
+        setNotifyTelegram(true);
+        setNotifyVk(true);
     }, [open, initialNodeId]);
 
     const handleCheckTypeChange = (value: CheckType) => {
@@ -139,6 +148,9 @@ export function CreateServiceDialog({
             intervalSeconds: parsedIntervalSeconds,
             responseTimeThresholdMs: parsedResponseTimeThresholdMs,
             degradationThreshold: parsedDegradationThreshold,
+            notifyEmail,
+            notifyTelegram,
+            notifyVk,
         });
     };
 
@@ -289,6 +301,50 @@ export function CreateServiceDialog({
                                 />
                             </Grid>
                         </Grid>
+
+                        <Box>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Уведомления по этому сервису
+                            </Typography>
+
+                            <Stack spacing={0.5}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyEmail}
+                                            onChange={(event) =>
+                                                setNotifyEmail(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления на Email"
+                                />
+
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyTelegram}
+                                            onChange={(event) =>
+                                                setNotifyTelegram(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления в Telegram"
+                                />
+
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyVk}
+                                            onChange={(event) =>
+                                                setNotifyVk(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления во VK"
+                                />
+                            </Stack>
+                        </Box>
                     </Stack>
                 </DialogContent>
 

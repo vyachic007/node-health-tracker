@@ -37,6 +37,15 @@ export interface NetworkService {
     intervalSeconds: number;
     isEnabled: boolean;
 
+    responseTimeThresholdMs: number;
+    degradationThreshold: number;
+    consecutiveDegradations: number;
+    degraded: boolean;
+
+    notifyEmail: boolean;
+    notifyTelegram: boolean;
+    notifyVk: boolean;
+
     lastStatus: ServiceStatus | null;
     lastResponseTimeMs: number | null;
     lastHttpStatusCode: number | null;
@@ -58,11 +67,6 @@ export interface NetworkService {
     healthLevel: HealthLevel;
     recurrenceLevel: RecurrenceLevel;
 
-    responseTimeThresholdMs: number;
-    degradationThreshold: number;
-    consecutiveDegradations: number;
-    degraded: boolean;
-
     createdAt: string;
     updatedAt: string;
 }
@@ -78,6 +82,10 @@ export interface CreateNetworkServiceRequest {
 
     responseTimeThresholdMs: number;
     degradationThreshold: number;
+
+    notifyEmail: boolean;
+    notifyTelegram: boolean;
+    notifyVk: boolean;
 }
 
 export interface UpdateNetworkServiceRequest {
@@ -91,6 +99,10 @@ export interface UpdateNetworkServiceRequest {
 
     responseTimeThresholdMs: number;
     degradationThreshold: number;
+
+    notifyEmail: boolean;
+    notifyTelegram: boolean;
+    notifyVk: boolean;
 }
 
 export interface CheckResult {

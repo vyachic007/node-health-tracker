@@ -2,6 +2,7 @@ import {
     Alert,
     Box,
     Button,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
@@ -40,6 +41,9 @@ export function EditServiceDialog({
     const [responseTimeThresholdMs, setResponseTimeThresholdMs] = useState('');
     const [degradationThreshold, setDegradationThreshold] = useState('');
     const [isEnabled, setIsEnabled] = useState(true);
+    const [notifyEmail, setNotifyEmail] = useState(true);
+    const [notifyTelegram, setNotifyTelegram] = useState(true);
+    const [notifyVk, setNotifyVk] = useState(true);
 
     useEffect(() => {
         if (!service) {
@@ -54,6 +58,9 @@ export function EditServiceDialog({
         setResponseTimeThresholdMs(String(service.responseTimeThresholdMs ?? 1000));
         setDegradationThreshold(String(service.degradationThreshold ?? 3));
         setIsEnabled(service.isEnabled);
+        setNotifyEmail(service.notifyEmail);
+        setNotifyTelegram(service.notifyTelegram);
+        setNotifyVk(service.notifyVk);
     }, [service]);
 
     const handleSubmit = () => {
@@ -71,6 +78,9 @@ export function EditServiceDialog({
             isEnabled,
             responseTimeThresholdMs: Number(responseTimeThresholdMs),
             degradationThreshold: Number(degradationThreshold),
+            notifyEmail,
+            notifyTelegram,
+            notifyVk,
         });
     };
 
@@ -84,6 +94,9 @@ export function EditServiceDialog({
         !degradationThreshold.trim() ||
         Number(degradationThreshold) <= 0 ||
         (port.trim().length > 0 && Number(port) <= 0);
+
+    const degradationAlertSeverity: 'warning' | 'success' =
+        service?.degraded ? 'warning' : 'success';
 
     return (
         <Dialog
@@ -197,10 +210,54 @@ export function EditServiceDialog({
                         </Grid>
 
                         {service && (
-                            <Alert severity={service.degraded ? 'warning' : 'success'}>
+                            <Alert severity={degradationAlertSeverity}>
                                 Сейчас медленных проверок подряд: {service.consecutiveDegradations}. Для подтверждения деградации нужно: {service.degradationThreshold}.
                             </Alert>
                         )}
+
+                        <Box>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Уведомления по этому сервису
+                            </Typography>
+
+                            <Stack spacing={0.5}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyEmail}
+                                            onChange={(event) =>
+                                                setNotifyEmail(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления на Email"
+                                />
+
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyTelegram}
+                                            onChange={(event) =>
+                                                setNotifyTelegram(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления в Telegram"
+                                />
+
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={notifyVk}
+                                            onChange={(event) =>
+                                                setNotifyVk(event.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Отправлять уведомления во VK"
+                                />
+                            </Stack>
+                        </Box>
 
                         <FormControlLabel
                             control={
