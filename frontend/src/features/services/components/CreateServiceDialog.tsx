@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     Dialog,
@@ -255,6 +256,10 @@ export function CreateServiceDialog({
                             type="number"
                         />
 
+                        <Alert severity="info">
+                            Деградация фиксируется, если сервис несколько проверок подряд отвечает медленнее заданного порога.
+                        </Alert>
+
                         <Grid container spacing={2}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
@@ -263,7 +268,7 @@ export function CreateServiceDialog({
                                     onChange={(event) =>
                                         setResponseTimeThresholdMs(event.target.value)
                                     }
-                                    helperText="Например: 1000 означает 1 секунду"
+                                    helperText="Например: 300 для строгого контроля или 1000 для внешних сайтов"
                                     required
                                     fullWidth
                                     type="number"

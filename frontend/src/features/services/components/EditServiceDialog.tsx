@@ -51,8 +51,8 @@ export function EditServiceDialog({
         setPort(service.port === null ? '' : String(service.port));
         setPath(service.path ?? '');
         setIntervalSeconds(String(service.intervalSeconds));
-        setResponseTimeThresholdMs(String(service.responseTimeThresholdMs));
-        setDegradationThreshold(String(service.degradationThreshold));
+        setResponseTimeThresholdMs(String(service.responseTimeThresholdMs ?? 1000));
+        setDegradationThreshold(String(service.degradationThreshold ?? 3));
         setIsEnabled(service.isEnabled);
     }, [service]);
 
@@ -162,6 +162,10 @@ export function EditServiceDialog({
                             fullWidth
                         />
 
+                        <Alert severity="info">
+                            Деградация используется для фиксации ситуации, когда сервис формально доступен, но отвечает слишком медленно.
+                        </Alert>
+
                         <Grid container spacing={2}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
@@ -191,6 +195,12 @@ export function EditServiceDialog({
                                 />
                             </Grid>
                         </Grid>
+
+                        {service && (
+                            <Alert severity={service.degraded ? 'warning' : 'success'}>
+                                Сейчас медленных проверок подряд: {service.consecutiveDegradations}. Для подтверждения деградации нужно: {service.degradationThreshold}.
+                            </Alert>
+                        )}
 
                         <FormControlLabel
                             control={

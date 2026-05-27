@@ -143,7 +143,6 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     }
 
     private CheckResult executeCheck(NetworkService service) {
-
         LocalDateTime startedAt = LocalDateTime.now();
 
         log.info(
@@ -159,16 +158,9 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         CheckProbeResult probeResult;
 
         try {
-
-            ServiceChecker serviceChecker =
-                    serviceCheckerFactory.getChecker(
-                            service.getCheckType()
-                    );
-
+            ServiceChecker serviceChecker = serviceCheckerFactory.getChecker(service.getCheckType());
             probeResult = serviceChecker.check(service);
-
         } catch (RuntimeException exception) {
-
             log.error(
                     "Ошибка при выполнении проверки сервиса: serviceId={}, serviceName={}, checkType={}",
                     service.getId(),
@@ -181,103 +173,103 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         }
 
         LocalDateTime finishedAt = LocalDateTime.now();
-
-        int responseTimeMs =
-                calculateResponseTimeMs(startedAt, finishedAt);
+        int responseTimeMs = calculateResponseTimeMs(startedAt, finishedAt);
 
         service.setLastCheckedAt(finishedAt);
 
-        boolean degraded =
-                responseTimeMs >
-                        service.getResponseTimeThresholdMs();
+        ServiceStatus status = determineStatus(probeResult);
 
-        if (degraded) {
+        updateDegradationState(service, status, responseTimeMs);
 
-            service.setConsecutiveDegradations(
-                    service.getConsecutiveDegradations() + 1
-            );
+        NetworkService savedService = networkServiceRepository.save(service);
 
-            log.warn(
-                    "Обнаружена деградация сервиса: serviceId={}, responseTimeMs={}, thresholdMs={}, consecutiveDegradations={}",
-                    service.getId(),
-                    responseTimeMs,
-                    service.getResponseTimeThresholdMs(),
-                    service.getConsecutiveDegradations()
-            );
-
-        } else {
-
-            if (service.getConsecutiveDegradations() > 0) {
-
-                log.info(
-                        "Счётчик деградаций сброшен: serviceId={}, previousConsecutiveDegradations={}",
-                        service.getId(),
-                        service.getConsecutiveDegradations()
-                );
-            }
-
-            service.setConsecutiveDegradations(0);
-        }
-
-        networkServiceRepository.save(service);
-
-        DiagnosticResult diagnosticResult =
-                diagnosticService.diagnose(
-                        probeResult.dnsAvailable(),
-                        probeResult.pingAvailable(),
-                        probeResult.tcpAvailable(),
-                        probeResult.sslValid(),
-                        probeResult.heartbeatAvailable(),
-                        probeResult.httpStatusCode(),
-                        responseTimeMs
-                );
-
-        ServiceStatus status =
-                determineStatus(probeResult);
+        DiagnosticResult diagnosticResult = diagnosticService.diagnose(
+                probeResult.dnsAvailable(),
+                probeResult.pingAvailable(),
+                probeResult.tcpAvailable(),
+                probeResult.sslValid(),
+                probeResult.heartbeatAvailable(),
+                probeResult.httpStatusCode(),
+                responseTimeMs
+        );
 
         CheckResult checkResult = new CheckResult();
-
-        checkResult.setService(service);
+        checkResult.setService(savedService);
         checkResult.setStatus(status);
-
-        checkResult.setFailureLayer(
-                diagnosticResult.failureLayer()
-        );
-
-        checkResult.setDiagnosticMessage(
-                diagnosticResult.diagnosticMessage()
-        );
-
-        checkResult.setRecommendation(
-                diagnosticResult.recommendation()
-        );
-
+        checkResult.setFailureLayer(diagnosticResult.failureLayer());
+        checkResult.setDiagnosticMessage(diagnosticResult.diagnosticMessage());
+        checkResult.setRecommendation(diagnosticResult.recommendation());
         checkResult.setStartedAt(startedAt);
         checkResult.setFinishedAt(finishedAt);
-
         checkResult.setResponseTimeMs(responseTimeMs);
-
-        checkResult.setHttpStatusCode(
-                probeResult.httpStatusCode()
-        );
-
-        checkResult.setErrorMessage(
-                probeResult.errorMessage()
-        );
-
+        checkResult.setHttpStatusCode(probeResult.httpStatusCode());
+        checkResult.setErrorMessage(probeResult.errorMessage());
         checkResult.setCheckedAt(finishedAt);
 
         log.info(
-                "Проверка сервиса выполнена: serviceId={}, serviceName={}, status={}, responseTimeMs={}, degraded={}, consecutiveDegradations={}",
-                service.getId(),
-                service.getName(),
+                "Проверка сервиса выполнена: serviceId={}, serviceName={}, status={}, failureLayer={}, responseTimeMs={}, httpStatusCode={}, responseTimeThresholdMs={}, consecutiveDegradations={}",
+                savedService.getId(),
+                savedService.getName(),
                 checkResult.getStatus(),
-                responseTimeMs,
-                degraded,
-                service.getConsecutiveDegradations()
+                checkResult.getFailureLayer(),
+                checkResult.getResponseTimeMs(),
+                checkResult.getHttpStatusCode(),
+                savedService.getResponseTimeThresholdMs(),
+                savedService.getConsecutiveDegradations()
         );
 
         return checkResult;
+    }
+
+    private void updateDegradationState(
+            NetworkService service,
+            ServiceStatus status,
+            int responseTimeMs
+    ) {
+        Integer responseTimeThresholdMs = service.getResponseTimeThresholdMs();
+        Integer currentConsecutiveDegradations = service.getConsecutiveDegradations();
+
+        if (responseTimeThresholdMs == null) {
+            responseTimeThresholdMs = 1000;
+            service.setResponseTimeThresholdMs(responseTimeThresholdMs);
+        }
+
+        if (currentConsecutiveDegradations == null) {
+            currentConsecutiveDegradations = 0;
+        }
+
+        boolean serviceIsAvailableButSlow = status == ServiceStatus.UP
+                && responseTimeMs > responseTimeThresholdMs;
+
+        if (serviceIsAvailableButSlow) {
+            int updatedConsecutiveDegradations = currentConsecutiveDegradations + 1;
+            service.setConsecutiveDegradations(updatedConsecutiveDegradations);
+
+            log.warn(
+                    "Обнаружена деградация сервиса: serviceId={}, serviceName={}, responseTimeMs={}, responseTimeThresholdMs={}, consecutiveDegradations={}",
+                    service.getId(),
+                    service.getName(),
+                    responseTimeMs,
+                    responseTimeThresholdMs,
+                    updatedConsecutiveDegradations
+            );
+
+            return;
+        }
+
+        if (currentConsecutiveDegradations > 0) {
+            log.info(
+                    "Счётчик деградаций сброшен: serviceId={}, serviceName={}, previousConsecutiveDegradations={}, status={}, responseTimeMs={}, responseTimeThresholdMs={}",
+                    service.getId(),
+                    service.getName(),
+                    currentConsecutiveDegradations,
+                    status,
+                    responseTimeMs,
+                    responseTimeThresholdMs
+            );
+        }
+
+        service.setConsecutiveDegradations(0);
     }
 
     private int calculateResponseTimeMs(LocalDateTime startedAt, LocalDateTime finishedAt) {

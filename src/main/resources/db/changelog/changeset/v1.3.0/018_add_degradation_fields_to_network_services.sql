@@ -11,6 +11,6 @@ ALTER TABLE network_services
 ALTER TABLE network_services
     ADD COLUMN consecutive_degradations INTEGER NOT NULL DEFAULT 0;
 
---rollback ALTER TABLE DROP COLUMN response_time_threshold_ms;
---rollback ALTER TABLE DROP COLUMN degradation_threshold;
---rollback ALTER TABLE DROP COLUMN consecutive_degradations;
+-- rollback ALTER TABLE network_services DROP COLUMN consecutive_degradations;
+-- rollback ALTER TABLE network_services DROP COLUMN degradation_threshold;
+-- rollback ALTER TABLE network_services DROP COLUMN response_time_threshold_ms;

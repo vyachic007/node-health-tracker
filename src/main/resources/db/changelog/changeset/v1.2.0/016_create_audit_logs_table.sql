@@ -17,3 +17,5 @@ CREATE INDEX idx_audit_logs_user_id ON audit_logs (user_id);
 CREATE INDEX idx_audit_logs_action_type ON audit_logs (action_type);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs (created_at);
 CREATE INDEX idx_audit_logs_entity ON audit_logs (entity_type, entity_id);
+
+-- rollback DROP TABLE audit_logs;

@@ -147,7 +147,7 @@ export function ServiceDetailsPage() {
                     </Typography>
 
                     <Typography color="text.secondary">
-                        Детальная диагностика сервиса, история проверок, деградация и текущий результат.
+                        Детальная диагностика сервиса, история проверок, контроль деградации и текущий результат.
                     </Typography>
                 </Box>
 
@@ -163,10 +163,22 @@ export function ServiceDetailsPage() {
 
             <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 8 }}>
-                    <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
+                    <Card
+                        elevation={0}
+                        sx={{
+                            border: 1,
+                            borderColor: service.degraded ? 'warning.main' : 'divider',
+                            height: '100%',
+                        }}
+                    >
                         <CardContent>
                             <Stack spacing={2}>
-                                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                                <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    useFlexGap
+                                    sx={{ flexWrap: 'wrap' }}
+                                >
                                     <ServiceStatusChip status={service.lastStatus} />
 
                                     <HealthLevelChip level={service.healthLevel} />
@@ -337,12 +349,17 @@ export function ServiceDetailsPage() {
                                     </strong>
                                 </Typography>
 
-                                <Typography>
-                                    Деградация:{' '}
-                                    <strong>
-                                        {service.degraded ? 'Подтверждена' : 'Не подтверждена'}
-                                    </strong>
+                                <Divider />
+
+                                <Typography variant="h6">
+                                    Контроль деградации
                                 </Typography>
+
+                                <Alert severity={service.degraded ? 'warning' : 'success'}>
+                                    {service.degraded
+                                        ? 'Деградация подтверждена: сервис доступен, но несколько проверок подряд отвечает медленно.'
+                                        : 'Деградация не подтверждена: сервис отвечает в пределах порога или медленных проверок подряд пока недостаточно.'}
+                                </Alert>
 
                                 <Typography>
                                     Порог ответа:{' '}
@@ -352,10 +369,21 @@ export function ServiceDetailsPage() {
                                 </Typography>
 
                                 <Typography>
-                                    Порог подтверждения:{' '}
+                                    Медленных проверок подряд:{' '}
                                     <strong>
-                                        {service.degradationThreshold} проверок подряд
+                                        {service.consecutiveDegradations}
                                     </strong>
+                                </Typography>
+
+                                <Typography>
+                                    Нужно для подтверждения:{' '}
+                                    <strong>
+                                        {service.degradationThreshold}
+                                    </strong>
+                                </Typography>
+
+                                <Typography color="text.secondary">
+                                    Эта проверка нужна, чтобы видеть не только полный отказ сервиса, но и ухудшение качества работы до открытия критического инцидента.
                                 </Typography>
                             </Stack>
                         </CardContent>

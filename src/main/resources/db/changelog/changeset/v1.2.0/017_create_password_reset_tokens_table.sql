@@ -26,3 +26,5 @@ CREATE INDEX idx_password_reset_tokens_token_hash
 
 CREATE INDEX idx_password_reset_tokens_expires_at
     ON password_reset_tokens (expires_at);
+
+-- rollback DROP TABLE password_reset_tokens;

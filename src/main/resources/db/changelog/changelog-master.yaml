@@ -46,8 +46,10 @@ databaseChangeLog:
       relativeToChangelogFile: false
   - include:
       file: db/changelog/changeset/v1.2.0/016_create_audit_logs_table.sql
+      relativeToChangelogFile: false
   - include:
       file: db/changelog/changeset/v1.2.0/017_create_password_reset_tokens_table.sql
+      relativeToChangelogFile: false
   - include:
       file: db/changelog/changeset/v1.3.0/018_add_degradation_fields_to_network_services.sql
       relativeToChangelogFile: false

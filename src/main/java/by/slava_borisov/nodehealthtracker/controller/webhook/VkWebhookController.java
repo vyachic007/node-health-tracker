@@ -2,7 +2,7 @@ package by.slava_borisov.nodehealthtracker.controller.webhook;
 
 import by.slava_borisov.nodehealthtracker.config.VkProperties;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
