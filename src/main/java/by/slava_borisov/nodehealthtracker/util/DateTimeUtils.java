@@ -8,6 +8,12 @@ public final class DateTimeUtils {
     private static final DateTimeFormatter HUMAN_READABLE_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
+    private static final DateTimeFormatter HUMAN_READABLE_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private static final DateTimeFormatter HUMAN_READABLE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm:ss");
+
     private DateTimeUtils() {
     }
 
@@ -17,5 +23,21 @@ public final class DateTimeUtils {
         }
 
         return dateTime.format(HUMAN_READABLE_DATE_TIME_FORMATTER) + " МСК";
+    }
+
+    public static String formatMoscowDate(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "—";
+        }
+
+        return dateTime.format(HUMAN_READABLE_DATE_FORMATTER);
+    }
+
+    public static String formatMoscowTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "—";
+        }
+
+        return dateTime.format(HUMAN_READABLE_TIME_FORMATTER);
     }
 }

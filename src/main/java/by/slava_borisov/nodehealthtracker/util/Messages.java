@@ -443,20 +443,20 @@ public final class Messages {
             "Node Health Tracker: восстановление пароля";
 
     public static final String PASSWORD_RESET_EMAIL_BODY = """
-        Восстановление пароля
-
-        Пользователь: %s
-
-        Для восстановления пароля используйте следующий token:
-
-        %s
-
-        Token действует до: %s
-
-        Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
-
-        Это автоматическое уведомление Node Health Tracker.
-        """;
+            Восстановление пароля
+            
+            Пользователь: %s
+            
+            Для восстановления пароля используйте следующий token:
+            
+            %s
+            
+            Token действует до: %s
+            
+            Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
+            
+            Это автоматическое уведомление Node Health Tracker.
+            """;
 
     public static final String TOKEN_HASH_ALGORITHM = "SHA-256";
 
@@ -476,22 +476,23 @@ public final class Messages {
             "✅ Инцидент закрыт";
 
     public static final String TELEGRAM_NOTIFICATION_TEXT = """
-        %s
-
-        Сервис: %s
-        Тип проверки: %s
-        Проверяемый адрес: %s
-        Порт: %s
-        Путь: %s
-
-        ID сервиса: %d
-        ID инцидента: %d
-
-        Причина: %s
-        Время события: %s
-
-        Node Health Tracker
-        """;
+            %s
+            
+            Сервис: %s
+            Тип проверки: %s
+            Проверяемый адрес: %s
+            Порт: %s
+            Путь: %s
+            
+            ID сервиса: %d
+            ID инцидента: %d
+            
+            Причина: %s
+            Дата события: %s
+            Время события: %s МСК
+            
+            Node Health Tracker
+            """;
 
     public static final String EMAIL_INCIDENT_OPENED_SUBJECT =
             "Node Health Tracker: открыт инцидент";
@@ -506,22 +507,23 @@ public final class Messages {
             "Инцидент закрыт";
 
     public static final String EMAIL_NOTIFICATION_TEXT = """
-        %s
-
-        Сервис: %s
-        Тип проверки: %s
-        Проверяемый адрес: %s
-        Порт: %s
-        Путь: %s
-
-        ID сервиса: %d
-        ID инцидента: %d
-
-        Причина: %s
-        Время события: %s
-
-        Это автоматическое уведомление Node Health Tracker.
-        """;
+            %s
+            
+            Сервис: %s
+            Тип проверки: %s
+            Проверяемый адрес: %s
+            Порт: %s
+            Путь: %s
+            
+            ID сервиса: %d
+            ID инцидента: %d
+            
+            Причина: %s
+            Дата события: %s
+            Время события: %s МСК
+            
+            Это автоматическое уведомление Node Health Tracker.
+            """;
 
     public static final String VK_ACCESS_TOKEN_NOT_CONFIGURED =
             "VK access token is not configured";
@@ -536,20 +538,21 @@ public final class Messages {
             "✅ Инцидент закрыт";
 
     public static final String VK_NOTIFICATION_TEXT = """
-        %s
-
-        Сервис: %s
-        Тип проверки: %s
-        Проверяемый адрес: %s
-        Порт: %s
-        Путь: %s
-
-        ID сервиса: %d
-        ID инцидента: %d
-
-        Причина: %s
-        Время события: %s
-
-        Node Health Tracker
-        """;
+            %s
+            
+            Сервис: %s
+            Тип проверки: %s
+            Проверяемый адрес: %s
+            Порт: %s
+            Путь: %s
+            
+            ID сервиса: %d
+            ID инцидента: %d
+            
+            Причина: %s
+            Дата события: %s
+            Время события: %s МСК
+            
+            Node Health Tracker
+            """;
 }

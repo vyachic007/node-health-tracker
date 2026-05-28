@@ -83,6 +83,7 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         networkService.setRecoveryThreshold(2);
         networkService.setConsecutiveFailures(0);
         networkService.setConsecutiveSuccesses(0);
+        networkService.setConsecutiveDegradations(0);
         networkService.setCreatedAt(now);
         networkService.setUpdatedAt(now);
 

@@ -100,7 +100,8 @@ public class VkNotificationSender implements NotificationSender {
                 message.serviceId(),
                 message.incidentId(),
                 message.reason(),
-                DateTimeUtils.formatMoscowDateTime(message.eventTime())
+                DateTimeUtils.formatMoscowDate(message.eventTime()),
+                DateTimeUtils.formatMoscowTime(message.eventTime())
         );
     }
 
