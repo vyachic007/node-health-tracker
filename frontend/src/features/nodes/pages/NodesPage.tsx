@@ -272,7 +272,7 @@ export function NodesPage() {
 
             <Grid container spacing={2}>
                 {visibleNodes.map((node) => (
-                    <Grid key={node.id} size={{ xs: 12, md: 6, xl: 4 }}>
+                    <Grid key={node.id} size={{ xs: 12, md: 6 }}>
                         <NodeCard
                             node={node}
                             isDeleting={deletingNodeId === node.id}
