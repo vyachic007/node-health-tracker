@@ -205,17 +205,34 @@ export function NotificationSettingCard({
         setNotifyOnIncidentResolved(setting.notifyOnIncidentResolved);
     }, [setting]);
 
+    const buildSavePayload = (
+        nextIsEnabled = isEnabled,
+        nextDestination = destination,
+        nextNotifyOnIncidentOpen = notifyOnIncidentOpen,
+        nextNotifyOnIncidentResolved = notifyOnIncidentResolved,
+    ): UpdateNotificationSettingRequest => ({
+        isEnabled: nextIsEnabled,
+        destination: isMessenger ? nextDestination : nextDestination.trim(),
+        notifyOnIncidentOpen: nextNotifyOnIncidentOpen,
+        notifyOnIncidentResolved: nextNotifyOnIncidentResolved,
+    });
+
+    const handleEnabledChange = (nextIsEnabled: boolean) => {
+        if (isMessenger && !messengerConnected) {
+            return;
+        }
+
+        setIsEnabled(nextIsEnabled);
+
+        onSave(setting.id, buildSavePayload(nextIsEnabled));
+    };
+
     const handleSave = () => {
         if (isMessenger && !messengerConnected) {
             return;
         }
 
-        onSave(setting.id, {
-            isEnabled,
-            destination: isMessenger ? destination : destination.trim(),
-            notifyOnIncidentOpen,
-            notifyOnIncidentResolved,
-        });
+        onSave(setting.id, buildSavePayload());
 
         setIsSettingsOpen(false);
     };
@@ -315,8 +332,12 @@ export function NotificationSettingCard({
 
                             <Switch
                                 checked={isEnabled}
-                                onChange={(event) => setIsEnabled(event.target.checked)}
-                                disabled={isDeleting || (isMessenger && !messengerConnected)}
+                                onChange={(event) => handleEnabledChange(event.target.checked)}
+                                disabled={
+                                    isSaving ||
+                                    isDeleting ||
+                                    (isMessenger && !messengerConnected)
+                                }
                             />
                         </Stack>
 
