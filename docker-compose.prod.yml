@@ -8,6 +8,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
     environment:
       TZ: Europe/Moscow
       JAVA_TOOL_OPTIONS: -Duser.timezone=Europe/Moscow
@@ -48,8 +49,9 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-    expose:
-      - "8081"
+
+    ports:
+      - "8081:8081"
 
   frontend:
     build:

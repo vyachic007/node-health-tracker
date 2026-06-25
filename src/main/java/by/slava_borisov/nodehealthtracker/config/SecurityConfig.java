@@ -26,7 +26,12 @@ public class SecurityConfig {
             "/api/auth/password-reset/request",
             "/api/auth/password-reset/confirm",
             "/api/heartbeat/**",
-            "/api/telegram/webhook"
+            "/api/telegram/webhook",
+
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**"
     };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
