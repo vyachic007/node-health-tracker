@@ -59,7 +59,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
-                "Создание сервиса: userId={}, username={}, nodeId={}, name={}, checkType={}, targetHost={}, port={}, path={}, intervalSeconds={}",
+                "Создание сервиса: userId={}, username={}, nodeId={}, name={}, checkType={}, " +
+                        "targetHost={}, port={}, path={}, intervalSeconds={}",
                 currentUser.getId(),
                 currentUser.getUsername(),
                 request.nodeId(),
