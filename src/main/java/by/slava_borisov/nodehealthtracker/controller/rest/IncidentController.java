@@ -123,6 +123,7 @@ public class IncidentController {
         return incidentService.getIncidentById(incidentId);
     }
 
+
     @Operation(
             summary = "Получить timeline инцидента",
             description = """
@@ -175,6 +176,7 @@ public class IncidentController {
         return incidentTimelineService.getIncidentTimeline(incidentId);
     }
 
+
     @Operation(
             summary = "Получить recovery checklist",
             description = """
@@ -217,6 +219,7 @@ public class IncidentController {
         return incidentRecoveryChecklistService.getRecoveryChecklist(incidentId);
     }
 
+
     @Operation(
             summary = "Получить отчёт по инциденту",
             description = """
@@ -257,6 +260,7 @@ public class IncidentController {
     ) {
         return incidentReportService.getIncidentReport(incidentId);
     }
+
 
     @Operation(
             summary = "Получить анализ повторяемости инцидента",
@@ -299,6 +303,7 @@ public class IncidentController {
         return incidentRecurrenceAnalysisService.analyzeRecurrence(incidentId);
     }
 
+
     @Operation(
             summary = "Получить все инциденты текущего пользователя",
             description = "Возвращает все инциденты сервисов текущего пользователя, отсортированные по дате открытия от новых к старым."
@@ -323,6 +328,7 @@ public class IncidentController {
     public List<IncidentResponse> getCurrentUserIncidents() {
         return incidentService.getCurrentUserIncidents();
     }
+
 
     @Operation(
             summary = "Получить инциденты сервиса",
@@ -361,6 +367,7 @@ public class IncidentController {
     ) {
         return incidentService.getServiceIncidents(serviceId);
     }
+
 
     @Operation(
             summary = "Закрыть инцидент вручную",

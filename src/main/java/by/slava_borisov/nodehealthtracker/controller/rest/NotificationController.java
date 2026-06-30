@@ -63,6 +63,7 @@ public class NotificationController {
         return notificationService.getCurrentUserNotificationSettings();
     }
 
+
     @Operation(
             summary = "Создать настройку уведомлений",
             description = """
@@ -108,6 +109,7 @@ public class NotificationController {
         return notificationService.createNotificationSetting(request);
     }
 
+
     @Operation(
             summary = "Изменить настройку уведомлений",
             description = """
@@ -137,6 +139,7 @@ public class NotificationController {
         return notificationService.updateNotificationSetting(settingId, request);
     }
 
+
     @Operation(
             summary = "Удалить настройку уведомлений",
             description = "Удаляет настройку уведомлений текущего пользователя."
@@ -155,6 +158,7 @@ public class NotificationController {
     ) {
         notificationService.deleteNotificationSetting(settingId);
     }
+
 
     @Operation(
             summary = "Получить историю отправленных уведомлений",
@@ -177,6 +181,7 @@ public class NotificationController {
         return notificationService.getCurrentUserSentNotifications();
     }
 
+
     @Operation(
             summary = "Создать ссылку привязки Telegram",
             description = """
@@ -197,6 +202,7 @@ public class NotificationController {
     public TelegramBindLinkResponse createTelegramBindLink() {
         return telegramBindingService.createCurrentUserBindLink();
     }
+
 
     @Operation(
             summary = "Создать ссылку привязки VK",

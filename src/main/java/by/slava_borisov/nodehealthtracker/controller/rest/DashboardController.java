@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
@@ -65,6 +66,7 @@ public class DashboardController {
         return dashboardService.getCurrentUserSummary();
     }
 
+
     @Operation(
             summary = "Получить административный dashboard",
             description = """
@@ -104,6 +106,7 @@ public class DashboardController {
             )
     })
     @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
     public AdminDashboardSummaryResponse getAdminSummary() {
         return dashboardService.getAdminSummary();
     }

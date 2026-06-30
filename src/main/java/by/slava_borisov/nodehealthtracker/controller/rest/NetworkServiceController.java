@@ -22,7 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+        import java.util.List;
 
 @Tag(
         name = "Сетевые сервисы",
@@ -113,6 +113,7 @@ public class NetworkServiceController {
         return networkServiceService.createService(request);
     }
 
+
     @Operation(
             summary = "Изменить сервис мониторинга",
             description = """
@@ -182,6 +183,7 @@ public class NetworkServiceController {
         return networkServiceService.updateService(serviceId, request);
     }
 
+
     @Operation(
             summary = "Получить оценку здоровья сервиса",
             description = """
@@ -241,6 +243,7 @@ public class NetworkServiceController {
         return serviceHealthScoreService.calculateHealthScore(serviceId);
     }
 
+
     @Operation(
             summary = "Удалить сервис мониторинга",
             description = "Удаляет сервис мониторинга, принадлежащий текущему пользователю."
@@ -292,6 +295,7 @@ public class NetworkServiceController {
     ) {
         networkServiceService.deleteService(serviceId);
     }
+
 
     @Operation(
             summary = "Получить сервис мониторинга",
@@ -351,6 +355,7 @@ public class NetworkServiceController {
     ) {
         return networkServiceService.getServiceById(serviceId);
     }
+
 
     @Operation(
             summary = "Получить сервисы сетевого узла",
@@ -412,6 +417,7 @@ public class NetworkServiceController {
         return networkServiceService.getServicesByNodeId(nodeId);
     }
 
+
     @Operation(
             summary = "Получить все сервисы текущего пользователя",
             description = """
@@ -448,6 +454,7 @@ public class NetworkServiceController {
     public List<ServiceResponse> getCurrentUserServices() {
         return networkServiceService.getCurrentUserServices();
     }
+
 
     @Operation(
             summary = "Включить сервис мониторинга",
@@ -506,6 +513,7 @@ public class NetworkServiceController {
     ) {
         return networkServiceService.enableService(serviceId);
     }
+
 
     @Operation(
             summary = "Отключить сервис мониторинга",

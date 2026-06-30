@@ -91,6 +91,7 @@ public class AuthController {
         return authService.getCurrentUserProfile();
     }
 
+
     @Operation(
             summary = "Изменить профиль текущего пользователя",
             description = """
@@ -186,6 +187,7 @@ public class AuthController {
         return authService.updateCurrentUserProfile(request);
     }
 
+
     @Operation(
             summary = "Изменить пароль текущего пользователя",
             description = """
@@ -278,6 +280,7 @@ public class AuthController {
         authService.changeCurrentUserPassword(request);
     }
 
+
     @Operation(
             summary = "Зарегистрировать пользователя",
             description = """
@@ -366,6 +369,7 @@ public class AuthController {
     ) {
         return authService.register(request);
     }
+
 
     @Operation(
             summary = "Авторизовать пользователя",
@@ -477,6 +481,7 @@ public class AuthController {
         return authService.login(request);
     }
 
+
     @Operation(
             summary = "Запросить восстановление пароля",
             description = """
@@ -548,6 +553,7 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+
 
     @Operation(
             summary = "Подтвердить восстановление пароля",

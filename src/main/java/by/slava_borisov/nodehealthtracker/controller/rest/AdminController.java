@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
@@ -133,6 +135,7 @@ public class AdminController {
         return adminService.getAllUsers(status, role, query, page, size);
     }
 
+
     @Operation(
             summary = "Получить сводку пользователей",
             description = "Возвращает количество пользователей по статусам и ролям. Endpoint доступен только ADMIN."
@@ -154,6 +157,7 @@ public class AdminController {
     public UserAdminSummaryResponse getUserSummary() {
         return adminService.getUserSummary();
     }
+
 
     @Operation(
             summary = "Получить платформенную сводку",
@@ -180,6 +184,7 @@ public class AdminController {
         return adminService.getPlatformSummary();
     }
 
+
     @Operation(
             summary = "Получить пользователя по ID",
             description = "Возвращает административную карточку пользователя по идентификатору."
@@ -205,6 +210,7 @@ public class AdminController {
     ) {
         return adminService.getUserById(userId);
     }
+
 
     @Operation(
             summary = "Изменить статус пользователя",
@@ -239,6 +245,7 @@ public class AdminController {
         return adminService.updateUserStatus(userId, request);
     }
 
+
     @Operation(
             summary = "Изменить роль пользователя",
             description = """
@@ -271,6 +278,7 @@ public class AdminController {
     ) {
         return adminService.updateUserRole(userId, request);
     }
+
 
     @Operation(
             summary = "Удалить пользователя",

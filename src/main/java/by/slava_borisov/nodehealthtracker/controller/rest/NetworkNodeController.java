@@ -104,6 +104,7 @@ public class NetworkNodeController {
         return networkNodeService.createNode(request);
     }
 
+
     @Operation(
             summary = "Изменить сетевой узел",
             description = """
@@ -205,6 +206,7 @@ public class NetworkNodeController {
         return networkNodeService.updateNode(nodeId, request);
     }
 
+
     @Operation(
             summary = "Удалить сетевой узел",
             description = """
@@ -260,6 +262,7 @@ public class NetworkNodeController {
     ) {
         networkNodeService.deleteNode(nodeId);
     }
+
 
     @Operation(
             summary = "Получить сетевой узел",
@@ -319,6 +322,7 @@ public class NetworkNodeController {
     ) {
         return networkNodeService.getNodeById(nodeId);
     }
+
 
     @Operation(
             summary = "Получить сетевые узлы текущего пользователя",

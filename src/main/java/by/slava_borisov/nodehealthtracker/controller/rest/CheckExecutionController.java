@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -116,6 +117,7 @@ public class CheckExecutionController {
         return checkExecutionService.runCheck(serviceId);
     }
 
+
     @Operation(
             summary = "Запустить проверки всех включённых сервисов",
             description = """
@@ -141,6 +143,14 @@ public class CheckExecutionController {
                     content = @Content
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "Недостаточно прав: требуется роль администратора",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "500",
                     description = "Ошибка во время выполнения одной из проверок",
                     content = @Content(
@@ -149,10 +159,12 @@ public class CheckExecutionController {
                     )
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/run-enabled")
     public List<CheckResultResponse> runEnabledChecks() {
         return checkExecutionService.runEnabledChecks();
     }
+
 
     @Operation(
             summary = "Получить историю проверок сервиса",
