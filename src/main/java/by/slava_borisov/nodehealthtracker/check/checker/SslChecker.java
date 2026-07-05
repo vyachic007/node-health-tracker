@@ -3,11 +3,15 @@ package by.slava_borisov.nodehealthtracker.check.checker;
 import by.slava_borisov.nodehealthtracker.check.dto.CheckProbeResult;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
+import by.slava_borisov.nodehealthtracker.util.Messages;
 import org.springframework.stereotype.Component;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.net.URI;
-import java.net.URL;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import java.net.InetSocketAddress;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 @Component
 public class SslChecker implements ServiceChecker {
@@ -23,42 +27,40 @@ public class SslChecker implements ServiceChecker {
     @Override
     public CheckProbeResult check(NetworkService service) {
         try {
-            Integer httpStatusCode = executeSslRequest(service);
-            return CheckProbeResult.httpResult(httpStatusCode);
+            checkSslCertificate(service);
+            return CheckProbeResult.success();
         } catch (Exception exception) {
             return CheckProbeResult.sslFailed(exception.getMessage());
         }
     }
 
-    private Integer executeSslRequest(NetworkService service) throws Exception {
-        Integer port = service.getPort() != null ? service.getPort() : DEFAULT_HTTPS_PORT;
-        String path = resolvePath(service.getPath());
+    private void checkSslCertificate(NetworkService service) throws Exception {
+        String host = service.getTargetHost();
+        int port = service.getPort() != null ? service.getPort() : DEFAULT_HTTPS_PORT;
 
-        URI uri = new URI(
-                "https",
-                null,
-                service.getTargetHost(),
-                port,
-                path,
-                null,
-                null
-        );
+        SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-        URL url = uri.toURL();
+        try (SSLSocket socket = (SSLSocket) socketFactory.createSocket()) {
+            socket.connect(new InetSocketAddress(host, port), DEFAULT_TIMEOUT_MS);
+            socket.setSoTimeout(DEFAULT_TIMEOUT_MS);
 
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setConnectTimeout(DEFAULT_TIMEOUT_MS);
-        connection.setReadTimeout(DEFAULT_TIMEOUT_MS);
-        connection.setRequestMethod("GET");
+            SSLParameters sslParameters = socket.getSSLParameters();
+            sslParameters.setEndpointIdentificationAlgorithm("HTTPS");
+            socket.setSSLParameters(sslParameters);
 
-        return connection.getResponseCode();
-    }
+            socket.startHandshake();
 
-    private String resolvePath(String path) {
-        if (path == null || path.isBlank()) {
-            return "/";
+            Certificate[] certificates = socket.getSession().getPeerCertificates();
+
+            if (certificates.length == 0) {
+                throw new IllegalStateException(Messages.SSL_CERTIFICATE_NOT_RECEIVED);
+            }
+
+            if (!(certificates[0] instanceof X509Certificate certificate)) {
+                throw new IllegalStateException(Messages.SSL_CERTIFICATE_UNSUPPORTED_TYPE);
+            }
+
+            certificate.checkValidity();
         }
-
-        return path.startsWith("/") ? path : "/" + path;
     }
 }

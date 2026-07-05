@@ -555,4 +555,7 @@ public final class Messages {
             
             Node Health Tracker
             """;
+
+    public static final String SSL_CERTIFICATE_NOT_RECEIVED = "SSL-сертификат не был получен от сервера";
+    public static final String SSL_CERTIFICATE_UNSUPPORTED_TYPE = "Получен неподдерживаемый тип SSL-сертификата";
 }
