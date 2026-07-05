@@ -7,6 +7,7 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    IconButton,
     InputLabel,
     LinearProgress,
     MenuItem,
@@ -25,6 +26,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { useMemo, useState } from 'react';
@@ -263,6 +265,14 @@ export function ServicesPage() {
         }
     };
 
+    const handleCloseDeleteDialog = () => {
+        if (deleteServiceMutation.isPending) {
+            return;
+        }
+
+        setServiceToDelete(null);
+    };
+
     const handleConfirmDelete = () => {
         if (!serviceToDelete) {
             return;
@@ -463,11 +473,31 @@ export function ServicesPage() {
 
             <Dialog
                 open={Boolean(serviceToDelete)}
-                onClose={() => setServiceToDelete(null)}
+                onClose={handleCloseDeleteDialog}
                 fullWidth
                 maxWidth="xs"
             >
-                <DialogTitle>Удалить сервис?</DialogTitle>
+                <DialogTitle
+                    sx={{
+                        pr: 7,
+                        position: 'relative',
+                    }}
+                >
+                    Удалить сервис?
+
+                    <IconButton
+                        aria-label="Закрыть окно"
+                        onClick={handleCloseDeleteDialog}
+                        disabled={deleteServiceMutation.isPending}
+                        sx={{
+                            position: 'absolute',
+                            right: 12,
+                            top: 12,
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
 
                 <DialogContent>
                     <Stack spacing={1}>
@@ -486,7 +516,10 @@ export function ServicesPage() {
                 </DialogContent>
 
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setServiceToDelete(null)}>
+                    <Button
+                        onClick={handleCloseDeleteDialog}
+                        disabled={deleteServiceMutation.isPending}
+                    >
                         Отмена
                     </Button>
 

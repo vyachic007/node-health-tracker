@@ -1,13 +1,5 @@
 function normalizeBackendDate(value: string): Date {
-    const hasTimezone =
-        value.endsWith('Z') ||
-        /[+-]\d{2}:\d{2}$/.test(value);
-
-    if (hasTimezone) {
-        return new Date(value);
-    }
-
-    return new Date(`${value}Z`);
+    return new Date(value);
 }
 
 export function formatDateTime(value: string | null | undefined): string {
@@ -15,20 +7,15 @@ export function formatDateTime(value: string | null | undefined): string {
         return '—';
     }
 
-    const date = normalizeBackendDate(value);
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
 
-    if (Number.isNaN(date.getTime())) {
+    if (!match) {
         return '—';
     }
 
-    return new Intl.DateTimeFormat('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-    }).format(date);
+    const [, year, month, day, hour, minute, second = '00'] = match;
+
+    return `${day}.${month}.${year}, ${hour}:${minute}:${second}`;
 }
 
 export function formatMilliseconds(value: number | null | undefined): string {
