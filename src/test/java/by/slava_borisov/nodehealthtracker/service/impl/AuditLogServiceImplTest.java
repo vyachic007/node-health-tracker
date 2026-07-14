@@ -43,7 +43,6 @@ class AuditLogServiceImplTest {
         mockUser.setUsername("test_admin");
     }
 
-    // ==================== log Tests ====================
 
     @Test
     @DisplayName("Записать действие пользователя в аудит - успешно")
@@ -71,7 +70,6 @@ class AuditLogServiceImplTest {
         assertNotNull(savedLog.getCreatedAt());
     }
 
-    // ==================== logSystemAction Tests ====================
 
     @Test
     @DisplayName("Записать системное действие в аудит - успешно")
@@ -99,7 +97,6 @@ class AuditLogServiceImplTest {
         verify(currentUserService, never()).getCurrentUser();
     }
 
-    // ==================== getCurrentUserAuditLogs Tests ====================
 
     @Test
     @DisplayName("Получить логи аудита текущего пользователя - успешно")
@@ -122,7 +119,6 @@ class AuditLogServiceImplTest {
         verify(auditLogRepository, times(1)).findAllByUserIdOrderByCreatedAtDesc(1L);
     }
 
-    // ==================== getAllAuditLogs Tests ====================
 
     @Test
     @DisplayName("Получить все логи аудита системы - успешно")
@@ -143,7 +139,6 @@ class AuditLogServiceImplTest {
         verify(auditLogRepository, times(1)).findAllByOrderByCreatedAtDesc();
     }
 
-    // ==================== Helper Methods ====================
 
     private AuditLog createMockAuditLog(Long id, AuditActionType actionType, String username) {
         AuditLog log = new AuditLog();

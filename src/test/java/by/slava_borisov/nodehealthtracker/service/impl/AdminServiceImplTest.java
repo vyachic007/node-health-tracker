@@ -79,7 +79,6 @@ class AdminServiceImplTest {
                 .thenReturn(adminUser);
     }
 
-    // ==================== getAllUsers Tests ====================
 
     @Test
     @DisplayName("Получить список пользователей с фильтрами - успешно")
@@ -149,7 +148,6 @@ class AdminServiceImplTest {
         );
     }
 
-    // ==================== getUserSummary Tests ====================
 
     @Test
     @DisplayName("Получить сводку пользователей - успешно")
@@ -170,7 +168,6 @@ class AdminServiceImplTest {
         assertEquals(8L, result.regularUsers());
     }
 
-    // ==================== getUserById Tests ====================
 
     @Test
     @DisplayName("Получить пользователя по ID - успешно")
@@ -197,7 +194,6 @@ class AdminServiceImplTest {
         );
     }
 
-    // ==================== updateUserStatus Tests ====================
 
     @Test
     @DisplayName("Обновить статус пользователя - успешно")
@@ -245,7 +241,6 @@ class AdminServiceImplTest {
         );
     }
 
-    // ==================== updateUserRole Tests ====================
 
     @Test
     @DisplayName("Обновить роль пользователя - успешно")
@@ -304,7 +299,6 @@ class AdminServiceImplTest {
         );
     }
 
-    // ==================== deleteUser Tests ====================
 
     @Test
     @DisplayName("Удалить пользователя - успешно (soft delete)")
@@ -359,7 +353,6 @@ class AdminServiceImplTest {
         );
     }
 
-    // ==================== getPlatformSummary Tests ====================
 
     @Test
     @DisplayName("Получить платформенную сводку - успешно")
@@ -396,7 +389,6 @@ class AdminServiceImplTest {
         assertEquals(1000L, result.checksLast24Hours());
     }
 
-    // ==================== Helper Methods ====================
 
     private User createUser(Long id, String email, String username, RoleName role, UserStatus status) {
         User user = new User();
