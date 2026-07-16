@@ -444,17 +444,17 @@ public final class Messages {
 
     public static final String PASSWORD_RESET_EMAIL_BODY = """
             Восстановление пароля
-            
+
             Пользователь: %s
-            
+
             Для восстановления пароля используйте следующий token:
-            
+
             %s
-            
+
             Token действует до: %s
-            
+
             Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
-            
+
             Это автоматическое уведомление Node Health Tracker.
             """;
 
@@ -477,20 +477,19 @@ public final class Messages {
 
     public static final String TELEGRAM_NOTIFICATION_TEXT = """
             %s
-            
             Сервис: %s
             Тип проверки: %s
             Проверяемый адрес: %s
             Порт: %s
             Путь: %s
-            
+
             ID сервиса: %d
             ID инцидента: %d
-            
+
             Причина: %s
             Дата события: %s
             Время события: %s МСК
-            
+
             Node Health Tracker
             """;
 
@@ -508,20 +507,20 @@ public final class Messages {
 
     public static final String EMAIL_NOTIFICATION_TEXT = """
             %s
-            
+
             Сервис: %s
             Тип проверки: %s
             Проверяемый адрес: %s
             Порт: %s
             Путь: %s
-            
+
             ID сервиса: %d
             ID инцидента: %d
-            
+
             Причина: %s
             Дата события: %s
             Время события: %s МСК
-            
+
             Это автоматическое уведомление Node Health Tracker.
             """;
 
@@ -539,20 +538,20 @@ public final class Messages {
 
     public static final String VK_NOTIFICATION_TEXT = """
             %s
-            
+
             Сервис: %s
             Тип проверки: %s
             Проверяемый адрес: %s
             Порт: %s
             Путь: %s
-            
+
             ID сервиса: %d
             ID инцидента: %d
-            
+
             Причина: %s
             Дата события: %s
             Время события: %s МСК
-            
+
             Node Health Tracker
             """;
 }

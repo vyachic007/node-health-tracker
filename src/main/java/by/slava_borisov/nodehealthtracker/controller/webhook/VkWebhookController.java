@@ -3,6 +3,7 @@ package by.slava_borisov.nodehealthtracker.controller.webhook;
 import by.slava_borisov.nodehealthtracker.config.VkProperties;
 import by.slava_borisov.nodehealthtracker.dto.error.ApiErrorResponse;
 import by.slava_borisov.nodehealthtracker.service.NotificationService;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -12,8 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-import tools.jackson.databind.JsonNode;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @Tag(
@@ -40,14 +43,11 @@ public class VkWebhookController {
             summary = "Обработать VK callback",
             description = """
                     Принимает callback-событие от VK.
-                    
                     Если type = confirmation, endpoint возвращает confirmation code \
                     для подтверждения callback-сервера.
-                    
                     Если type = message_new, endpoint проверяет secret, извлекает текст \
                     сообщения и peer_id. При команде /start {bindToken} выполняется \
                     привязка VK к пользователю.
-                    
                     Endpoint публичный и не требует JWT-токена, потому что вызывается \
                     внешней системой VK.
                     """
@@ -61,37 +61,22 @@ public class VkWebhookController {
                             """,
                     content = @Content(
                             mediaType = "text/plain",
-                            schema = @Schema(
-                                    implementation = String.class,
-                                    example = "ok"
-                            ),
+                            schema = @Schema(implementation = String.class, example = "ok"),
                             examples = {
-                                    @ExampleObject(
-                                            name = "Обычный callback",
-                                            value = "ok"
-                                    ),
-                                    @ExampleObject(
-                                            name = "Confirmation callback",
-                                            value = "vk_confirmation_code"
-                                    )
+                                    @ExampleObject(name = "Обычный callback", value = "ok"),
+                                    @ExampleObject(name = "Confirmation callback", value = "vk_confirmation_code")
                             }
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Некорректное тело VK callback-запроса",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class)
-                    )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера при обработке VK callback",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class)
-                    )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
     @PostMapping("/webhook")
@@ -163,11 +148,7 @@ public class VkWebhookController {
         String text = message.path("text").asText("").trim();
         long peerId = message.path("peer_id").asLong(0);
 
-        log.info(
-                "Получено VK-сообщение: peerId={}, text={}",
-                peerId,
-                text
-        );
+        log.info("Получено VK-сообщение: peerId={}, text={}", peerId, text);
 
         if (peerId <= 0) {
             log.warn("VK-сообщение не обработано: peer_id отсутствует");
