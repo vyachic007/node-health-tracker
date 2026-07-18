@@ -84,7 +84,7 @@ class NetworkNodeServiceImplTest {
         networkNode.setId(10L);
         networkNode.setName("Test Node");
         networkNode.setHost("192.168.1.1");
-        networkNode.setOwner(ownerUser); // Устанавливаем владельца напрямую, без мокинга
+        networkNode.setOwner(ownerUser);
 
         createRequest = mock(NodeCreateRequest.class);
         updateRequest = mock(NodeUpdateRequest.class);
