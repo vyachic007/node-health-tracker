@@ -31,6 +31,10 @@ import {
 } from '../../../shared/lib/formatters';
 import { getCheckTypeLabel } from '../model/serviceLabels';
 import type { NetworkService } from '../model/serviceTypes';
+import {
+    checkTypeSupportsDegradation,
+    getServiceTargetLabel,
+} from '../model/serviceTypes';
 
 interface ServiceCardProps {
     service: NetworkService;
@@ -39,13 +43,6 @@ interface ServiceCardProps {
     onRunCheck: (serviceId: number) => void;
     onEdit: (service: NetworkService) => void;
     onDelete: (service: NetworkService) => void;
-}
-
-function getServiceTarget(service: NetworkService): string {
-    const port = service.port ? `:${service.port}` : '';
-    const path = service.path ?? '';
-
-    return `${service.targetHost}${port}${path}`;
 }
 
 function normalizeHost(rawHost: string): string {
@@ -118,6 +115,8 @@ function getStatusIcon(service: NetworkService) {
 }
 
 function getStatusLabel(service: NetworkService): string {
+    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+
     if (!service.lastStatus) {
         return 'Не проверялся';
     }
@@ -126,7 +125,7 @@ function getStatusLabel(service: NetworkService): string {
         return 'Отключён';
     }
 
-    if (service.lastStatus === 'UP' && service.degraded) {
+    if (service.lastStatus === 'UP' && service.degraded && supportsDegradation) {
         return 'С деградацией';
     }
 
@@ -138,11 +137,13 @@ function getStatusLabel(service: NetworkService): string {
 }
 
 function getStatusColor(service: NetworkService): 'success' | 'warning' | 'error' | 'default' {
+    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+
     if (!service.lastStatus || !service.isEnabled) {
         return 'default';
     }
 
-    if (service.lastStatus === 'UP' && service.degraded) {
+    if (service.lastStatus === 'UP' && service.degraded && supportsDegradation) {
         return 'warning';
     }
 
@@ -217,6 +218,12 @@ export function ServiceCard({
 
     const logoText = useMemo(() => getServiceLogoText(service), [service]);
     const logoUrl = useMemo(() => getServiceLogoUrl(service), [service]);
+    const serviceTarget = useMemo(() => getServiceTargetLabel(service), [service]);
+    const supportsDegradation = useMemo(
+        () => checkTypeSupportsDegradation(service.checkType),
+        [service.checkType],
+    );
+
     const lastCheck = useMemo(
         () => getLastCheckDateTime(service.lastCheckedAt),
         [service.lastCheckedAt],
@@ -320,7 +327,7 @@ export function ServiceCard({
                         </Typography>
 
                         <Typography variant="body2" color="text.secondary" noWrap>
-                            {getServiceTarget(service)}
+                            {serviceTarget}
                         </Typography>
                     </Box>
                 </Stack>
@@ -385,7 +392,7 @@ export function ServiceCard({
                     {formatMilliseconds(service.lastResponseTimeMs)}
                 </Typography>
 
-                {service.degraded && (
+                {supportsDegradation && service.degraded && (
                     <Typography variant="caption" color="warning.main">
                         медленно
                     </Typography>

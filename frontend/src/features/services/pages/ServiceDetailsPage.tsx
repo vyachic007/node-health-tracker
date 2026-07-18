@@ -26,7 +26,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -47,20 +47,16 @@ import {
 } from '../model/serviceLabels';
 import type { NetworkService } from '../model/serviceTypes';
 import {
+    checkTypeSupportsDegradation,
+    getServiceTargetLabel,
+} from '../model/serviceTypes';
+import {
     formatDateTime,
     formatMilliseconds,
     formatPercent,
     formatSeconds,
     getSecondsUntil,
 } from '../../../shared/lib/formatters';
-
-function getServiceTarget(service: NetworkService): string {
-    const port = service.port ? `:${service.port}` : '';
-    const path = service.path ?? '';
-
-    return `${service.targetHost}${port}${path}`;
-}
-
 
 function normalizeServiceHost(targetHost: string): string {
     return targetHost
@@ -129,11 +125,13 @@ function getServiceLogo(service: NetworkService): string {
 }
 
 function getLogoColor(service: NetworkService) {
+    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+
     if (service.lastStatus === 'DOWN') {
         return 'error.main';
     }
 
-    if (service.degraded) {
+    if (service.degraded && supportsDegradation) {
         return 'warning.main';
     }
 
@@ -236,17 +234,6 @@ export function ServiceDetailsPage() {
         },
     });
 
-    const chartData = useMemo(() => {
-        return [...history]
-            .reverse()
-            .slice(-30)
-            .map((item) => ({
-                time: formatDateTime(item.checkedAt),
-                responseTimeMs: item.responseTimeMs ?? 0,
-                status: item.status === 'UP' ? 'Работает' : 'Недоступен',
-            }));
-    }, [history]);
-
     if (!Number.isFinite(serviceId)) {
         return <Alert severity="error">Некорректный ID сервиса.</Alert>;
     }
@@ -258,6 +245,18 @@ export function ServiceDetailsPage() {
     if (isServiceError || !service) {
         return <Alert severity="error">Не удалось загрузить сервис.</Alert>;
     }
+
+    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+    const serviceTarget = getServiceTargetLabel(service);
+
+    const chartData = [...history]
+        .reverse()
+        .slice(-30)
+        .map((item) => ({
+            time: formatDateTime(item.checkedAt),
+            responseTimeMs: item.responseTimeMs ?? 0,
+            status: item.status === 'UP' ? 'Работает' : 'Недоступен',
+        }));
 
     const logo = getServiceLogo(service);
     const logoUrl = getServiceLogoUrl(service);
@@ -312,7 +311,7 @@ export function ServiceDetailsPage() {
                     border: 1,
                     borderColor: service.hasOpenIncident
                         ? 'error.main'
-                        : service.degraded
+                        : service.degraded && supportsDegradation
                             ? 'warning.main'
                             : 'divider',
                     overflow: 'hidden',
@@ -360,7 +359,7 @@ export function ServiceDetailsPage() {
 
                                         <HealthLevelChip level={service.healthLevel} />
 
-                                        {service.degraded && (
+                                        {supportsDegradation && service.degraded && (
                                             <Chip
                                                 icon={<WarningAmberIcon />}
                                                 label="Деградация"
@@ -385,11 +384,11 @@ export function ServiceDetailsPage() {
                                     </Typography>
 
                                     <Typography color="text.secondary" noWrap>
-                                        {getServiceTarget(service)}
+                                        {serviceTarget}
                                     </Typography>
 
                                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                        Детальная диагностика, история проверок, деградация и текущий результат.
+                                        Детальная диагностика, история проверок и текущий результат.
                                     </Typography>
                                 </Box>
                             </Stack>
@@ -528,7 +527,7 @@ export function ServiceDetailsPage() {
             </Card>
 
             <Grid container spacing={2}>
-                <Grid size={{ xs: 12, lg: 8 }}>
+                <Grid size={{ xs: 12, lg: supportsDegradation ? 8 : 12 }}>
                     <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
                         <CardContent>
                             <Stack spacing={2}>
@@ -556,19 +555,23 @@ export function ServiceDetailsPage() {
                                         </Typography>
                                     </Grid>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Порог медленного ответа</Typography>
-                                        <Typography sx={{ fontWeight: 800 }}>
-                                            {formatMilliseconds(service.responseTimeThresholdMs)}
-                                        </Typography>
-                                    </Grid>
+                                    {supportsDegradation && (
+                                        <>
+                                            <Grid size={{ xs: 12, sm: 6 }}>
+                                                <Typography color="text.secondary">Порог медленного ответа</Typography>
+                                                <Typography sx={{ fontWeight: 800 }}>
+                                                    {formatMilliseconds(service.responseTimeThresholdMs)}
+                                                </Typography>
+                                            </Grid>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography color="text.secondary">Медленных проверок подряд</Typography>
-                                        <Typography sx={{ fontWeight: 800 }}>
-                                            {service.consecutiveDegradations} из {service.degradationThreshold}
-                                        </Typography>
-                                    </Grid>
+                                            <Grid size={{ xs: 12, sm: 6 }}>
+                                                <Typography color="text.secondary">Медленных проверок подряд</Typography>
+                                                <Typography sx={{ fontWeight: 800 }}>
+                                                    {service.consecutiveDegradations} из {service.degradationThreshold}
+                                                </Typography>
+                                            </Grid>
+                                        </>
+                                    )}
 
                                     <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography color="text.secondary">Текущий простой</Typography>
@@ -594,14 +597,16 @@ export function ServiceDetailsPage() {
                                     </Grid>
                                 </Grid>
 
-                                <ServiceDegradationAlert
-                                    lastStatus={service.lastStatus}
-                                    lastResponseTimeMs={service.lastResponseTimeMs}
-                                    responseTimeThresholdMs={service.responseTimeThresholdMs}
-                                    degradationThreshold={service.degradationThreshold}
-                                    consecutiveDegradations={service.consecutiveDegradations}
-                                    degraded={service.degraded}
-                                />
+                                {supportsDegradation && (
+                                    <ServiceDegradationAlert
+                                        lastStatus={service.lastStatus}
+                                        lastResponseTimeMs={service.lastResponseTimeMs}
+                                        responseTimeThresholdMs={service.responseTimeThresholdMs}
+                                        degradationThreshold={service.degradationThreshold}
+                                        consecutiveDegradations={service.consecutiveDegradations}
+                                        degraded={service.degraded}
+                                    />
+                                )}
 
                                 {service.lastDiagnosticMessage && (
                                     <Alert severity={service.lastStatus === 'DOWN' ? 'error' : 'success'}>
@@ -619,50 +624,52 @@ export function ServiceDetailsPage() {
                     </Card>
                 </Grid>
 
-                <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
-                        <CardContent>
-                            <Stack spacing={2}>
-                                <Typography variant="h6">
-                                    Контроль деградации
-                                </Typography>
+                {supportsDegradation && (
+                    <Grid size={{ xs: 12, lg: 4 }}>
+                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider', height: '100%' }}>
+                            <CardContent>
+                                <Stack spacing={2}>
+                                    <Typography variant="h6">
+                                        Контроль деградации
+                                    </Typography>
 
-                                <Alert severity={service.degraded ? 'warning' : 'success'}>
-                                    {service.degraded
-                                        ? 'Деградация подтверждена: сервис доступен, но несколько проверок подряд отвечает медленно.'
-                                        : 'Деградация не подтверждена: сервис отвечает в пределах порога или медленных проверок подряд пока недостаточно.'}
-                                </Alert>
+                                    <Alert severity={service.degraded ? 'warning' : 'success'}>
+                                        {service.degraded
+                                            ? 'Деградация подтверждена: сервис доступен, но несколько проверок подряд отвечает медленно.'
+                                            : 'Деградация не подтверждена: сервис отвечает в пределах порога или медленных проверок подряд пока недостаточно.'}
+                                    </Alert>
 
-                                <Divider />
+                                    <Divider />
 
-                                <Typography>
-                                    Порог ответа:{' '}
-                                    <strong>
-                                        {formatMilliseconds(service.responseTimeThresholdMs)}
-                                    </strong>
-                                </Typography>
+                                    <Typography>
+                                        Порог ответа:{' '}
+                                        <strong>
+                                            {formatMilliseconds(service.responseTimeThresholdMs)}
+                                        </strong>
+                                    </Typography>
 
-                                <Typography>
-                                    Медленных проверок подряд:{' '}
-                                    <strong>
-                                        {service.consecutiveDegradations}
-                                    </strong>
-                                </Typography>
+                                    <Typography>
+                                        Медленных проверок подряд:{' '}
+                                        <strong>
+                                            {service.consecutiveDegradations}
+                                        </strong>
+                                    </Typography>
 
-                                <Typography>
-                                    Нужно для подтверждения:{' '}
-                                    <strong>
-                                        {service.degradationThreshold}
-                                    </strong>
-                                </Typography>
+                                    <Typography>
+                                        Нужно для подтверждения:{' '}
+                                        <strong>
+                                            {service.degradationThreshold}
+                                        </strong>
+                                    </Typography>
 
-                                <Typography color="text.secondary">
-                                    Эта проверка нужна, чтобы видеть не только полный отказ сервиса, но и ухудшение качества работы до открытия критического инцидента.
-                                </Typography>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                                    <Typography color="text.secondary">
+                                        Эта проверка нужна, чтобы видеть не только полный отказ сервиса, но и ухудшение качества работы до открытия критического инцидента.
+                                    </Typography>
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                )}
             </Grid>
 
             <Grid container spacing={2}>
@@ -684,7 +691,8 @@ export function ServiceDetailsPage() {
                                         </Typography>
 
                                         <Typography color="text.secondary">
-                                            Последние результаты проверок. Пунктирная линия показывает порог медленного ответа.
+                                            Последние результаты проверок.
+                                            {supportsDegradation && ' Пунктирная линия показывает порог медленного ответа.'}
                                         </Typography>
                                     </Box>
 
@@ -732,12 +740,14 @@ export function ServiceDetailsPage() {
                                                     }}
                                                 />
 
-                                                <ReferenceLine
-                                                    y={service.responseTimeThresholdMs}
-                                                    stroke={theme.palette.warning.main}
-                                                    strokeDasharray="6 6"
-                                                    label="Порог деградации"
-                                                />
+                                                {supportsDegradation && (
+                                                    <ReferenceLine
+                                                        y={service.responseTimeThresholdMs}
+                                                        stroke={theme.palette.warning.main}
+                                                        strokeDasharray="6 6"
+                                                        label="Порог деградации"
+                                                    />
+                                                )}
 
                                                 <Line
                                                     type="monotone"
@@ -771,20 +781,24 @@ export function ServiceDetailsPage() {
                                 </Typography>
 
                                 <Typography>
-                                    Адрес: <strong>{getServiceTarget(service)}</strong>
+                                    Адрес: <strong>{serviceTarget}</strong>
                                 </Typography>
 
                                 <Typography>
                                     Интервал: <strong>{formatSeconds(service.intervalSeconds)}</strong>
                                 </Typography>
 
-                                <Typography>
-                                    Порог ответа: <strong>{formatMilliseconds(service.responseTimeThresholdMs)}</strong>
-                                </Typography>
+                                {supportsDegradation && (
+                                    <>
+                                        <Typography>
+                                            Порог ответа: <strong>{formatMilliseconds(service.responseTimeThresholdMs)}</strong>
+                                        </Typography>
 
-                                <Typography>
-                                    Порог деградации: <strong>{service.degradationThreshold}</strong>
-                                </Typography>
+                                        <Typography>
+                                            Порог деградации: <strong>{service.degradationThreshold}</strong>
+                                        </Typography>
+                                    </>
+                                )}
 
                                 <Divider />
 
@@ -815,7 +829,8 @@ export function ServiceDetailsPage() {
                         ) : (
                             history.slice(0, 10).map((item) => {
                                 const isSlow =
-                                    item.status === 'UP'
+                                    supportsDegradation
+                                    && item.status === 'UP'
                                     && item.responseTimeMs !== null
                                     && item.responseTimeMs > service.responseTimeThresholdMs;
 

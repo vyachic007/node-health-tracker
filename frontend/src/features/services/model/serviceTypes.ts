@@ -119,3 +119,48 @@ export interface CheckResult {
     errorMessage: string | null;
     checkedAt: string;
 }
+
+export function checkTypeNeedsPort(checkType: CheckType): boolean {
+    return checkType === 'TCP'
+        || checkType === 'HTTP'
+        || checkType === 'HTTPS'
+        || checkType === 'SSL';
+}
+
+export function checkTypeNeedsPath(checkType: CheckType): boolean {
+    return checkType === 'HTTP' || checkType === 'HTTPS';
+}
+
+export function checkTypeSupportsDegradation(checkType: CheckType): boolean {
+    return checkType === 'HTTP' || checkType === 'HTTPS';
+}
+
+export function getDefaultPortByCheckType(checkType: CheckType): number | null {
+    switch (checkType) {
+        case 'HTTP':
+            return 80;
+
+        case 'HTTPS':
+        case 'SSL':
+            return 443;
+
+        default:
+            return null;
+    }
+}
+
+export function getDefaultPathByCheckType(checkType: CheckType): string {
+    return checkTypeNeedsPath(checkType) ? '/' : '';
+}
+
+export function getServiceTargetLabel(service: NetworkService): string {
+    const port = checkTypeNeedsPort(service.checkType) && service.port
+        ? `:${service.port}`
+        : '';
+
+    const path = checkTypeNeedsPath(service.checkType) && service.path
+        ? service.path
+        : '';
+
+    return `${service.targetHost}${port}${path}`;
+}

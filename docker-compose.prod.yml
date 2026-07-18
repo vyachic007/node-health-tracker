@@ -5,13 +5,15 @@ services:
       dockerfile: Dockerfile
     container_name: node-health-tracker-app
     restart: unless-stopped
+    ports:
+      - "8081:8081"
     depends_on:
       db:
         condition: service_healthy
 
     environment:
       TZ: Europe/Moscow
-      JAVA_TOOL_OPTIONS: -Duser.timezone=Europe/Moscow
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
 
       APP_PORT: 8081
 
