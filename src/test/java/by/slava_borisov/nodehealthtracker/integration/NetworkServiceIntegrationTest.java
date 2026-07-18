@@ -77,7 +77,6 @@ class NetworkServiceIntegrationTest {
         testNode.setUpdatedAt(now);
         testNode = networkNodeRepository.saveAndFlush(testNode);
 
-        // Мокаем CurrentUserService, чтобы он возвращал созданного пользователя
         when(currentUserService.getCurrentUser()).thenReturn(testUser);
     }
 
