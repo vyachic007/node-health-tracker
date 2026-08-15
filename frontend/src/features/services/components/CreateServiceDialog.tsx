@@ -10,6 +10,7 @@ import {
     FormControl,
     FormControlLabel,
     Grid,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
@@ -17,11 +18,38 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
 import { getCheckTypeLabel } from '../model/serviceLabels';
+
+const SERVICE_TYPE_FIELDS: Record<string, {
+    address: boolean;
+    port: boolean;
+    path: boolean;
+}> = {
+    HTTP: { address: true, port: false, path: true },
+    HTTPS: { address: true, port: false, path: true },
+    TCP: { address: true, port: true, path: false },
+    DNS: { address: true, port: false, path: false },
+    SSL: { address: true, port: true, path: false },
+    HEARTBEAT: { address: false, port: false, path: false },
+};
+
+const getServiceTypeFields = (type?: string) => {
+    const normalizedType = (type || "").toUpperCase();
+    return SERVICE_TYPE_FIELDS[normalizedType] ?? { address: true, port: true, path: true };
+};
+
 import type {
     CheckType,
     CreateNetworkServiceRequest,
+} from '../model/serviceTypes';
+import {
+    checkTypeNeedsPath,
+    checkTypeNeedsPort,
+    checkTypeSupportsDegradation,
+    getDefaultPathByCheckType,
+    getDefaultPortByCheckType,
 } from '../model/serviceTypes';
 
 interface CreateServiceDialogProps {
@@ -41,39 +69,6 @@ const DEFAULT_INTERVAL_SECONDS = '3600';
 const DEFAULT_RESPONSE_TIME_THRESHOLD_MS = '1000';
 const DEFAULT_DEGRADATION_THRESHOLD = '3';
 
-function getDefaultPort(checkType: CheckType): number | null {
-    switch (checkType) {
-        case 'HTTP':
-            return 80;
-
-        case 'HTTPS':
-        case 'SSL':
-            return 443;
-
-        case 'DNS':
-            return 53;
-
-        case 'PING':
-        case 'HEARTBEAT':
-            return null;
-
-        case 'TCP':
-        default:
-            return null;
-    }
-}
-
-function getDefaultPath(checkType: CheckType): string {
-    switch (checkType) {
-        case 'HTTP':
-        case 'HTTPS':
-            return '/';
-
-        default:
-            return '';
-    }
-}
-
 export function CreateServiceDialog({
                                         open,
                                         isSubmitting,
@@ -81,12 +76,14 @@ export function CreateServiceDialog({
                                         onClose,
                                         onSubmit,
                                     }: CreateServiceDialogProps) {
-    const [nodeId, setNodeId] = useState(initialNodeId?.toString() ?? '');
+const [nodeId, setNodeId] = useState(initialNodeId?.toString() ?? '');
     const [checkType, setCheckType] = useState<CheckType>(DEFAULT_CHECK_TYPE);
     const [name, setName] = useState('');
     const [targetHost, setTargetHost] = useState('');
-    const [port, setPort] = useState(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
-    const [path, setPath] = useState(getDefaultPath(DEFAULT_CHECK_TYPE));
+    const [port, setPort] = useState(
+        getDefaultPortByCheckType(DEFAULT_CHECK_TYPE)?.toString() ?? '',
+    );
+    const [path, setPath] = useState(getDefaultPathByCheckType(DEFAULT_CHECK_TYPE));
     const [intervalSeconds, setIntervalSeconds] = useState(DEFAULT_INTERVAL_SECONDS);
     const [responseTimeThresholdMs, setResponseTimeThresholdMs] = useState(
         DEFAULT_RESPONSE_TIME_THRESHOLD_MS,
@@ -100,6 +97,10 @@ export function CreateServiceDialog({
 
     const isNodeIdLocked = initialNodeId !== null && initialNodeId !== undefined;
 
+    const needsPort = checkTypeNeedsPort(checkType);
+    const needsPath = checkTypeNeedsPath(checkType);
+    const supportsDegradation = checkTypeSupportsDegradation(checkType);
+
     useEffect(() => {
         if (!open) {
             return;
@@ -109,8 +110,8 @@ export function CreateServiceDialog({
         setCheckType(DEFAULT_CHECK_TYPE);
         setName('');
         setTargetHost('');
-        setPort(getDefaultPort(DEFAULT_CHECK_TYPE)?.toString() ?? '');
-        setPath(getDefaultPath(DEFAULT_CHECK_TYPE));
+        setPort(getDefaultPortByCheckType(DEFAULT_CHECK_TYPE)?.toString() ?? '');
+        setPath(getDefaultPathByCheckType(DEFAULT_CHECK_TYPE));
         setIntervalSeconds(DEFAULT_INTERVAL_SECONDS);
         setResponseTimeThresholdMs(DEFAULT_RESPONSE_TIME_THRESHOLD_MS);
         setDegradationThreshold(DEFAULT_DEGRADATION_THRESHOLD);
@@ -122,11 +123,13 @@ export function CreateServiceDialog({
     const handleCheckTypeChange = (value: CheckType) => {
         setCheckType(value);
 
-        const defaultPort = getDefaultPort(value);
-        const defaultPath = getDefaultPath(value);
+        const defaultPort = getDefaultPortByCheckType(value);
+        const defaultPath = getDefaultPathByCheckType(value);
 
         setPort(defaultPort?.toString() ?? '');
         setPath(defaultPath);
+        setResponseTimeThresholdMs(DEFAULT_RESPONSE_TIME_THRESHOLD_MS);
+        setDegradationThreshold(DEFAULT_DEGRADATION_THRESHOLD);
     };
 
     const handleSubmit = (event: FormSubmitEvent) => {
@@ -143,11 +146,15 @@ export function CreateServiceDialog({
             checkType,
             name: name.trim(),
             targetHost: targetHost.trim(),
-            port: parsedPort,
-            path: path.trim() || null,
+            port: needsPort ? parsedPort : null,
+            path: needsPath ? path.trim() || null : null,
             intervalSeconds: parsedIntervalSeconds,
-            responseTimeThresholdMs: parsedResponseTimeThresholdMs,
-            degradationThreshold: parsedDegradationThreshold,
+            responseTimeThresholdMs: supportsDegradation
+                ? parsedResponseTimeThresholdMs
+                : Number(DEFAULT_RESPONSE_TIME_THRESHOLD_MS),
+            degradationThreshold: supportsDegradation
+                ? parsedDegradationThreshold
+                : Number(DEFAULT_DEGRADATION_THRESHOLD),
             notifyEmail,
             notifyTelegram,
             notifyVk,
@@ -170,15 +177,39 @@ export function CreateServiceDialog({
         !targetHost.trim() ||
         !intervalSeconds.trim() ||
         Number(intervalSeconds) <= 0 ||
-        !responseTimeThresholdMs.trim() ||
-        Number(responseTimeThresholdMs) <= 0 ||
-        !degradationThreshold.trim() ||
-        Number(degradationThreshold) <= 0;
+        (needsPort && (!port.trim() || Number(port) <= 0)) ||
+        (supportsDegradation && (
+            !responseTimeThresholdMs.trim() ||
+            Number(responseTimeThresholdMs) <= 0 ||
+            !degradationThreshold.trim() ||
+            Number(degradationThreshold) <= 0
+        ));
+    const visibleFields = getServiceTypeFields(checkType);
 
-    return (
+return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
             <Box component="form" onSubmit={handleSubmit}>
-                <DialogTitle>Добавить сервис для мониторинга</DialogTitle>
+                <DialogTitle
+                    sx={{
+                        pr: 7,
+                        position: 'relative',
+                    }}
+                >
+                    Добавить сервис для мониторинга
+
+                    <IconButton
+                        aria-label="Закрыть окно"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                        sx={{
+                            position: 'absolute',
+                            right: 12,
+                            top: 12,
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
 
                 <DialogContent>
                     <Stack spacing={2.5} sx={{ mt: 1 }}>
@@ -227,80 +258,105 @@ export function CreateServiceDialog({
                             fullWidth
                         />
 
-                        <TextField
-                            label="Проверяемый адрес"
+                        {visibleFields.address && (
+<TextField
+                            label="Адрес / домен"
                             value={targetHost}
                             onChange={(event) => setTargetHost(event.target.value)}
                             placeholder="Например: rutube.ru"
                             required
                             fullWidth
                         />
+)}
 
-                        <Grid container spacing={2}>
-                            <Grid size={6}>
-                                <TextField
-                                    label="Порт"
-                                    value={port}
-                                    onChange={(event) => setPort(event.target.value)}
-                                    fullWidth
-                                    type="number"
-                                />
-                            </Grid>
+                        {(needsPort || needsPath) && (
+                            <Grid container spacing={2}>
+                                {needsPort && (
+                                    <Grid size={needsPath ? 6 : 12}>
+                                        {visibleFields.port && (
+<TextField
+                                            label="Порт"
+                                            value={port}
+                                            onChange={(event) => setPort(event.target.value)}
+                                            required
+                                            fullWidth
+                                            type="number"
+                                        />
+)}
+                                    </Grid>
+                                )}
 
-                            <Grid size={6}>
-                                <TextField
-                                    label="Путь"
-                                    value={path}
-                                    onChange={(event) => setPath(event.target.value)}
-                                    placeholder="/"
-                                    fullWidth
-                                />
+                                {needsPath && (
+                                    <Grid size={needsPort ? 6 : 12}>
+                                        {visibleFields.path && (
+<TextField
+                                            label="Путь HTTP-запроса"
+                                            value={path}
+                                            onChange={(event) => setPath(event.target.value)}
+                                            placeholder="/"
+                                            fullWidth
+                                        />
+)}
+                                    </Grid>
+                                )}
                             </Grid>
-                        </Grid>
+                        )}
 
                         <TextField
-                            label="Интервал проверки, секунд"
+                            label={
+                                checkType === 'HEARTBEAT'
+                                    ? 'Интервал ожидания сигнала, секунд'
+                                    : 'Интервал проверки, секунд'
+                            }
                             value={intervalSeconds}
                             onChange={(event) => setIntervalSeconds(event.target.value)}
-                            helperText="Например: 60, 300, 3600"
+                            helperText={
+                                checkType === 'HEARTBEAT'
+                                    ? 'Если сигнал не придёт за несколько интервалов, heartbeat будет считаться устаревшим'
+                                    : 'Например: 60, 300, 3600'
+                            }
                             required
                             fullWidth
                             type="number"
                         />
 
-                        <Alert severity="info">
-                            Деградация фиксируется, если сервис несколько проверок подряд отвечает медленнее заданного порога.
-                        </Alert>
+                        {supportsDegradation && (
+                            <>
+                                <Alert severity="info">
+                                    Деградация фиксируется, если сервис несколько проверок подряд отвечает медленнее заданного порога.
+                                </Alert>
 
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField
-                                    label="Порог медленного ответа, мс"
-                                    value={responseTimeThresholdMs}
-                                    onChange={(event) =>
-                                        setResponseTimeThresholdMs(event.target.value)
-                                    }
-                                    helperText="Например: 300 для строгого контроля или 1000 для внешних сайтов"
-                                    required
-                                    fullWidth
-                                    type="number"
-                                />
-                            </Grid>
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <TextField
+                                            label="Порог медленного ответа, мс"
+                                            value={responseTimeThresholdMs}
+                                            onChange={(event) =>
+                                                setResponseTimeThresholdMs(event.target.value)
+                                            }
+                                            helperText="Например: 300 для строгого контроля или 1000 для внешних сайтов"
+                                            required
+                                            fullWidth
+                                            type="number"
+                                        />
+                                    </Grid>
 
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField
-                                    label="Порог деградации"
-                                    value={degradationThreshold}
-                                    onChange={(event) =>
-                                        setDegradationThreshold(event.target.value)
-                                    }
-                                    helperText="Сколько медленных проверок подряд нужно для подтверждения"
-                                    required
-                                    fullWidth
-                                    type="number"
-                                />
-                            </Grid>
-                        </Grid>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <TextField
+                                            label="Порог деградации"
+                                            value={degradationThreshold}
+                                            onChange={(event) =>
+                                                setDegradationThreshold(event.target.value)
+                                            }
+                                            helperText="Сколько медленных проверок подряд нужно для подтверждения"
+                                            required
+                                            fullWidth
+                                            type="number"
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </>
+                        )}
 
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -349,7 +405,7 @@ export function CreateServiceDialog({
                 </DialogContent>
 
                 <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button onClick={handleClose}>
+                    <Button onClick={handleClose} disabled={isSubmitting}>
                         Отмена
                     </Button>
 
