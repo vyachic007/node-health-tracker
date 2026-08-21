@@ -8,6 +8,5 @@ public enum FailureLayer {
     APPLICATION,
     SSL,
     PERFORMANCE,
-    HEARTBEAT,
     UNKNOWN
 }

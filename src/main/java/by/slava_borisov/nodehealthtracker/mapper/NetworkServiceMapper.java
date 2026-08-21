@@ -36,8 +36,6 @@ public interface NetworkServiceMapper {
     ServiceResponse toServiceResponse(NetworkService networkService);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "heartbeatToken", ignore = true)
-    @Mapping(target = "lastHeartbeatAt", ignore = true)
     @Mapping(target = "lastCheckedAt", ignore = true)
     @Mapping(target = "isEnabled", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -51,8 +49,6 @@ public interface NetworkServiceMapper {
     NetworkService toEntity(ServiceCreateRequest serviceCreateRequest);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "heartbeatToken", ignore = true)
-    @Mapping(target = "lastHeartbeatAt", ignore = true)
     @Mapping(target = "lastCheckedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

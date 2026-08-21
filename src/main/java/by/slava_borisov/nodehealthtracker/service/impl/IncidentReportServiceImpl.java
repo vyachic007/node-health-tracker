@@ -107,10 +107,15 @@ public class IncidentReportServiceImpl implements IncidentReportService {
     }
 
     private Integer calculateTimelineEventsCount(Long incidentId) {
-        return Math.toIntExact(incidentTimelineEventRepository.countByIncidentId(incidentId));
+        return Math.toIntExact(
+                incidentTimelineEventRepository.countByIncidentId(incidentId)
+        );
     }
 
-    private String buildSummary(IncidentStatus status, FailureLayer failureLayer) {
+    private String buildSummary(
+            IncidentStatus status,
+            FailureLayer failureLayer
+    ) {
         String statusSummary = status == IncidentStatus.RESOLVED
                 ? Messages.INCIDENT_REPORT_SUMMARY_RESOLVED
                 : Messages.INCIDENT_REPORT_SUMMARY_OPEN;
@@ -126,7 +131,6 @@ public class IncidentReportServiceImpl implements IncidentReportService {
             case SSL -> Messages.INCIDENT_REPORT_SUMMARY_SSL;
             case APPLICATION -> Messages.INCIDENT_REPORT_SUMMARY_APPLICATION;
             case PERFORMANCE -> Messages.INCIDENT_REPORT_SUMMARY_PERFORMANCE;
-            case HEARTBEAT -> Messages.INCIDENT_REPORT_SUMMARY_HEARTBEAT;
             case UNKNOWN -> Messages.INCIDENT_REPORT_SUMMARY_UNKNOWN;
         };
     }
@@ -134,8 +138,15 @@ public class IncidentReportServiceImpl implements IncidentReportService {
     private void validateIncidentOwner(Incident incident) {
         User currentUser = currentUserService.getCurrentUser();
 
-        if (!incident.getService().getNode().getOwner().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException(Messages.INCIDENT_ACCESS_DENIED);
+        if (!incident.getService()
+                .getNode()
+                .getOwner()
+                .getId()
+                .equals(currentUser.getId())) {
+
+            throw new AccessDeniedException(
+                    Messages.INCIDENT_ACCESS_DENIED
+            );
         }
     }
 }

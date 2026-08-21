@@ -74,7 +74,8 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     @Override
     @Transactional
     public List<CheckResultResponse> runEnabledChecks() {
-        List<NetworkService> enabledServices = networkServiceRepository.findAllByIsEnabledTrue();
+        List<NetworkService> enabledServices =
+                networkServiceRepository.findAllByIsEnabledTrue();
 
         log.info(
                 "Запущена проверка всех включённых сервисов: servicesCount={}",
@@ -99,7 +100,8 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
     @Override
     @Transactional
     public List<CheckResultResponse> runDueChecks() {
-        List<NetworkService> dueServices = networkServiceRepository.findServicesDueForCheck();
+        List<NetworkService> dueServices =
+                networkServiceRepository.findServicesDueForCheck();
 
         log.info(
                 "Запущена проверка сервисов по расписанию: dueServicesCount={}",
@@ -136,7 +138,8 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
                 currentUser.getUsername()
         );
 
-        return checkResultRepository.findAllByServiceIdOrderByCheckedAtDesc(serviceId)
+        return checkResultRepository
+                .findAllByServiceIdOrderByCheckedAtDesc(serviceId)
                 .stream()
                 .map(checkResultMapper::toCheckResultResponse)
                 .toList();
@@ -158,7 +161,9 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         CheckProbeResult probeResult;
 
         try {
-            ServiceChecker serviceChecker = serviceCheckerFactory.getChecker(service.getCheckType());
+            ServiceChecker serviceChecker =
+                    serviceCheckerFactory.getChecker(service.getCheckType());
+
             probeResult = serviceChecker.check(service);
         } catch (RuntimeException exception) {
             log.error(
@@ -173,37 +178,54 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         }
 
         LocalDateTime finishedAt = LocalDateTime.now();
-        int responseTimeMs = calculateResponseTimeMs(startedAt, finishedAt);
+        int responseTimeMs =
+                calculateResponseTimeMs(startedAt, finishedAt);
 
         service.setLastCheckedAt(finishedAt);
 
-        ServiceStatus status = determineStatus(probeResult);
+        ServiceStatus status =
+                determineStatus(probeResult);
 
-        updateDegradationState(service, status, responseTimeMs);
-
-        NetworkService savedService = networkServiceRepository.save(service);
-
-        DiagnosticResult diagnosticResult = diagnosticService.diagnose(
-                probeResult.dnsAvailable(),
-                probeResult.pingAvailable(),
-                probeResult.tcpAvailable(),
-                probeResult.sslValid(),
-                probeResult.heartbeatAvailable(),
-                probeResult.httpStatusCode(),
+        updateDegradationState(
+                service,
+                status,
                 responseTimeMs
         );
+
+        NetworkService savedService =
+                networkServiceRepository.save(service);
+
+        DiagnosticResult diagnosticResult =
+                diagnosticService.diagnose(
+                        probeResult.dnsAvailable(),
+                        probeResult.pingAvailable(),
+                        probeResult.tcpAvailable(),
+                        probeResult.sslValid(),
+                        probeResult.httpStatusCode(),
+                        responseTimeMs
+                );
 
         CheckResult checkResult = new CheckResult();
         checkResult.setService(savedService);
         checkResult.setStatus(status);
-        checkResult.setFailureLayer(diagnosticResult.failureLayer());
-        checkResult.setDiagnosticMessage(diagnosticResult.diagnosticMessage());
-        checkResult.setRecommendation(diagnosticResult.recommendation());
+        checkResult.setFailureLayer(
+                diagnosticResult.failureLayer()
+        );
+        checkResult.setDiagnosticMessage(
+                diagnosticResult.diagnosticMessage()
+        );
+        checkResult.setRecommendation(
+                diagnosticResult.recommendation()
+        );
         checkResult.setStartedAt(startedAt);
         checkResult.setFinishedAt(finishedAt);
         checkResult.setResponseTimeMs(responseTimeMs);
-        checkResult.setHttpStatusCode(probeResult.httpStatusCode());
-        checkResult.setErrorMessage(probeResult.errorMessage());
+        checkResult.setHttpStatusCode(
+                probeResult.httpStatusCode()
+        );
+        checkResult.setErrorMessage(
+                probeResult.errorMessage()
+        );
         checkResult.setCheckedAt(finishedAt);
 
         log.info(
@@ -226,24 +248,34 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
             ServiceStatus status,
             int responseTimeMs
     ) {
-        Integer responseTimeThresholdMs = service.getResponseTimeThresholdMs();
-        Integer currentConsecutiveDegradations = service.getConsecutiveDegradations();
+        Integer responseTimeThresholdMs =
+                service.getResponseTimeThresholdMs();
+
+        Integer currentConsecutiveDegradations =
+                service.getConsecutiveDegradations();
 
         if (responseTimeThresholdMs == null) {
             responseTimeThresholdMs = 1000;
-            service.setResponseTimeThresholdMs(responseTimeThresholdMs);
+            service.setResponseTimeThresholdMs(
+                    responseTimeThresholdMs
+            );
         }
 
         if (currentConsecutiveDegradations == null) {
             currentConsecutiveDegradations = 0;
         }
 
-        boolean serviceIsAvailableButSlow = status == ServiceStatus.UP
-                && responseTimeMs > responseTimeThresholdMs;
+        boolean serviceIsAvailableButSlow =
+                status == ServiceStatus.UP
+                        && responseTimeMs > responseTimeThresholdMs;
 
         if (serviceIsAvailableButSlow) {
-            int updatedConsecutiveDegradations = currentConsecutiveDegradations + 1;
-            service.setConsecutiveDegradations(updatedConsecutiveDegradations);
+            int updatedConsecutiveDegradations =
+                    currentConsecutiveDegradations + 1;
+
+            service.setConsecutiveDegradations(
+                    updatedConsecutiveDegradations
+            );
 
             log.warn(
                     "Обнаружена деградация сервиса: serviceId={}, serviceName={}, responseTimeMs={}, responseTimeThresholdMs={}, consecutiveDegradations={}",
@@ -272,32 +304,49 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
         service.setConsecutiveDegradations(0);
     }
 
-    private int calculateResponseTimeMs(LocalDateTime startedAt, LocalDateTime finishedAt) {
-        return Math.toIntExact(Duration.between(startedAt, finishedAt).toMillis());
+    private int calculateResponseTimeMs(
+            LocalDateTime startedAt,
+            LocalDateTime finishedAt
+    ) {
+        return Math.toIntExact(
+                Duration.between(
+                        startedAt,
+                        finishedAt
+                ).toMillis()
+        );
     }
 
-    private ServiceStatus determineStatus(CheckProbeResult probeResult) {
+    private ServiceStatus determineStatus(
+            CheckProbeResult probeResult
+    ) {
         if (!probeResult.dnsAvailable()
                 || !probeResult.pingAvailable()
                 || !probeResult.tcpAvailable()
-                || !probeResult.sslValid()
-                || !probeResult.heartbeatAvailable()) {
+                || !probeResult.sslValid()) {
             return ServiceStatus.DOWN;
         }
 
-        if (probeResult.httpStatusCode() != null && httpStatusCodeIsError(probeResult.httpStatusCode())) {
+        if (probeResult.httpStatusCode() != null
+                && httpStatusCodeIsError(
+                probeResult.httpStatusCode()
+        )) {
             return ServiceStatus.DOWN;
         }
 
         return ServiceStatus.UP;
     }
 
-    private boolean httpStatusCodeIsError(Integer httpStatusCode) {
+    private boolean httpStatusCodeIsError(
+            Integer httpStatusCode
+    ) {
         return httpStatusCode >= 400;
     }
 
-    private CheckResult saveAndProcessIncident(CheckResult checkResult) {
-        CheckResult savedCheckResult = checkResultRepository.save(checkResult);
+    private CheckResult saveAndProcessIncident(
+            CheckResult checkResult
+    ) {
+        CheckResult savedCheckResult =
+                checkResultRepository.save(checkResult);
 
         log.info(
                 "Результат проверки сохранён: checkResultId={}, serviceId={}, status={}",
@@ -306,17 +355,28 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
                 savedCheckResult.getStatus()
         );
 
-        incidentLifecycleService.processCheckResult(savedCheckResult);
+        incidentLifecycleService
+                .processCheckResult(savedCheckResult);
 
         return savedCheckResult;
     }
 
-    private NetworkService findServiceById(Long serviceId) {
-        return networkServiceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
+    private NetworkService findServiceById(
+            Long serviceId
+    ) {
+        return networkServiceRepository
+                .findById(serviceId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                Messages.NETWORK_SERVICE_NOT_FOUND
+                        )
+                );
     }
 
-    private void validateServiceAccess(NetworkService service, User currentUser) {
+    private void validateServiceAccess(
+            NetworkService service,
+            User currentUser
+    ) {
         if (!isServiceOwner(service, currentUser)) {
             log.warn(
                     "Отказано в доступе к сервису: serviceId={}, username={}",
@@ -324,12 +384,18 @@ public class CheckExecutionServiceImpl implements CheckExecutionService {
                     currentUser.getUsername()
             );
 
-            throw new AccessDeniedException(Messages.NETWORK_SERVICE_ACCESS_DENIED);
+            throw new AccessDeniedException(
+                    Messages.NETWORK_SERVICE_ACCESS_DENIED
+            );
         }
     }
 
-    private boolean isServiceOwner(NetworkService service, User currentUser) {
-        return service.getNode()
+    private boolean isServiceOwner(
+            NetworkService service,
+            User currentUser
+    ) {
+        return service
+                .getNode()
                 .getOwner()
                 .getId()
                 .equals(currentUser.getId());

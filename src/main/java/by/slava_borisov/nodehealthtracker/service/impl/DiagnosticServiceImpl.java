@@ -16,7 +16,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             boolean pingAvailable,
             boolean tcpAvailable,
             boolean sslValid,
-            boolean heartbeatAvailable,
             Integer httpStatusCode,
             Integer responseTimeMs
     ) {
@@ -49,14 +48,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     FailureLayer.SSL,
                     Messages.SSL_VALIDATION_FAILED,
                     Messages.SSL_VALIDATION_FAILED_RECOMMENDATION
-            );
-        }
-
-        if (!heartbeatAvailable) {
-            return new DiagnosticResult(
-                    FailureLayer.HEARTBEAT,
-                    Messages.HEARTBEAT_FAILED,
-                    Messages.HEARTBEAT_FAILED_RECOMMENDATION
             );
         }
 

@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface NetworkServiceRepository extends JpaRepository<NetworkService, Long> {
 
@@ -15,8 +14,6 @@ public interface NetworkServiceRepository extends JpaRepository<NetworkService, 
     List<NetworkService> findAllByNodeIdOrderByCreatedAtDesc(Long nodeId);
 
     List<NetworkService> findAllByNodeOwnerIdOrderByCreatedAtDesc(Long ownerId);
-
-    Optional<NetworkService> findByHeartbeatToken(String heartbeatToken);
 
     long countByNodeOwnerId(Long ownerId);
 

@@ -106,25 +106,29 @@ class CheckExecutionServiceImplTest {
     @DisplayName("Ручная проверка сервиса - успешно")
     void runCheck_success() {
         CheckProbeResult checkProbeResult = mock(CheckProbeResult.class);
+
         when(checkProbeResult.dnsAvailable()).thenReturn(true);
         when(checkProbeResult.pingAvailable()).thenReturn(true);
         when(checkProbeResult.tcpAvailable()).thenReturn(true);
         when(checkProbeResult.sslValid()).thenReturn(true);
-        when(checkProbeResult.heartbeatAvailable()).thenReturn(true);
         when(checkProbeResult.httpStatusCode()).thenReturn(200);
 
-        DiagnosticService.DiagnosticResult diagnosticResult = new DiagnosticService.DiagnosticResult(
-                FailureLayer.UNKNOWN,
-                "All good",
-                "Keep running"
-        );
+        DiagnosticService.DiagnosticResult diagnosticResult =
+                new DiagnosticService.DiagnosticResult(
+                        FailureLayer.UNKNOWN,
+                        "All good",
+                        "Keep running"
+                );
 
         when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.of(networkService));
-        when(serviceCheckerFactory.getChecker(CheckType.HTTP)).thenReturn(serviceChecker);
-        when(serviceChecker.check(networkService)).thenReturn(checkProbeResult);
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.of(networkService));
+        when(serviceCheckerFactory.getChecker(CheckType.HTTP))
+                .thenReturn(serviceChecker);
+        when(serviceChecker.check(networkService))
+                .thenReturn(checkProbeResult);
+
         when(diagnosticService.diagnose(
-                anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
@@ -132,21 +136,28 @@ class CheckExecutionServiceImplTest {
                 anyInt(),
                 anyInt()
         )).thenReturn(diagnosticResult);
-        when(networkServiceRepository.save(any(NetworkService.class))).thenReturn(networkService);
-        when(checkResultRepository.save(any(CheckResult.class))).thenReturn(checkResult);
-        when(checkResultMapper.toCheckResultResponse(checkResult)).thenReturn(checkResultResponse);
+
+        when(networkServiceRepository.save(any(NetworkService.class)))
+                .thenReturn(networkService);
+        when(checkResultRepository.save(any(CheckResult.class)))
+                .thenReturn(checkResult);
+        when(checkResultMapper.toCheckResultResponse(checkResult))
+                .thenReturn(checkResultResponse);
 
         CheckResultResponse result = checkExecutionService.runCheck(10L);
 
         assertNotNull(result);
-        verify(incidentLifecycleService, times(1)).processCheckResult(checkResult);
+
+        verify(incidentLifecycleService, times(1))
+                .processCheckResult(checkResult);
     }
 
     @Test
     @DisplayName("Ручная проверка сервиса - сервис не найден")
     void runCheck_serviceNotFound_throwsException() {
         when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.empty());
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.empty());
 
         assertThrows(
                 ResourceNotFoundException.class,
@@ -157,8 +168,10 @@ class CheckExecutionServiceImplTest {
     @Test
     @DisplayName("Ручная проверка сервиса - отказ в доступе")
     void runCheck_accessDenied_throwsException() {
-        when(currentUserService.getCurrentUser()).thenReturn(differentUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.of(networkService));
+        when(currentUserService.getCurrentUser())
+                .thenReturn(differentUser);
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.of(networkService));
 
         assertThrows(
                 AccessDeniedException.class,
@@ -170,25 +183,28 @@ class CheckExecutionServiceImplTest {
     @DisplayName("Проверка всех включённых сервисов - успешно")
     void runEnabledChecks_success() {
         CheckProbeResult checkProbeResult = mock(CheckProbeResult.class);
+
         when(checkProbeResult.dnsAvailable()).thenReturn(true);
         when(checkProbeResult.pingAvailable()).thenReturn(true);
         when(checkProbeResult.tcpAvailable()).thenReturn(true);
         when(checkProbeResult.sslValid()).thenReturn(true);
-        when(checkProbeResult.heartbeatAvailable()).thenReturn(true);
         when(checkProbeResult.httpStatusCode()).thenReturn(200);
 
-        DiagnosticService.DiagnosticResult diagnosticResult = new DiagnosticService.DiagnosticResult(
-                FailureLayer.UNKNOWN,
-                "All good",
-                "Keep running"
-        );
+        DiagnosticService.DiagnosticResult diagnosticResult =
+                new DiagnosticService.DiagnosticResult(
+                        FailureLayer.UNKNOWN,
+                        "All good",
+                        "Keep running"
+                );
 
         when(networkServiceRepository.findAllByIsEnabledTrue())
                 .thenReturn(List.of(networkService));
-        when(serviceCheckerFactory.getChecker(CheckType.HTTP)).thenReturn(serviceChecker);
-        when(serviceChecker.check(networkService)).thenReturn(checkProbeResult);
+        when(serviceCheckerFactory.getChecker(CheckType.HTTP))
+                .thenReturn(serviceChecker);
+        when(serviceChecker.check(networkService))
+                .thenReturn(checkProbeResult);
+
         when(diagnosticService.diagnose(
-                anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
@@ -196,40 +212,50 @@ class CheckExecutionServiceImplTest {
                 anyInt(),
                 anyInt()
         )).thenReturn(diagnosticResult);
-        when(networkServiceRepository.save(any(NetworkService.class))).thenReturn(networkService);
-        when(checkResultRepository.save(any(CheckResult.class))).thenReturn(checkResult);
-        when(checkResultMapper.toCheckResultResponse(checkResult)).thenReturn(checkResultResponse);
 
-        List<CheckResultResponse> results = checkExecutionService.runEnabledChecks();
+        when(networkServiceRepository.save(any(NetworkService.class)))
+                .thenReturn(networkService);
+        when(checkResultRepository.save(any(CheckResult.class)))
+                .thenReturn(checkResult);
+        when(checkResultMapper.toCheckResultResponse(checkResult))
+                .thenReturn(checkResultResponse);
+
+        List<CheckResultResponse> results =
+                checkExecutionService.runEnabledChecks();
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        verify(incidentLifecycleService, times(1)).processCheckResult(checkResult);
+
+        verify(incidentLifecycleService, times(1))
+                .processCheckResult(checkResult);
     }
 
     @Test
     @DisplayName("Проверка сервисов по расписанию - успешно")
     void runDueChecks_success() {
         CheckProbeResult checkProbeResult = mock(CheckProbeResult.class);
+
         when(checkProbeResult.dnsAvailable()).thenReturn(true);
         when(checkProbeResult.pingAvailable()).thenReturn(true);
         when(checkProbeResult.tcpAvailable()).thenReturn(true);
         when(checkProbeResult.sslValid()).thenReturn(true);
-        when(checkProbeResult.heartbeatAvailable()).thenReturn(true);
         when(checkProbeResult.httpStatusCode()).thenReturn(200);
 
-        DiagnosticService.DiagnosticResult diagnosticResult = new DiagnosticService.DiagnosticResult(
-                FailureLayer.UNKNOWN,
-                "All good",
-                "Keep running"
-        );
+        DiagnosticService.DiagnosticResult diagnosticResult =
+                new DiagnosticService.DiagnosticResult(
+                        FailureLayer.UNKNOWN,
+                        "All good",
+                        "Keep running"
+                );
 
         when(networkServiceRepository.findServicesDueForCheck())
                 .thenReturn(List.of(networkService));
-        when(serviceCheckerFactory.getChecker(CheckType.HTTP)).thenReturn(serviceChecker);
-        when(serviceChecker.check(networkService)).thenReturn(checkProbeResult);
+        when(serviceCheckerFactory.getChecker(CheckType.HTTP))
+                .thenReturn(serviceChecker);
+        when(serviceChecker.check(networkService))
+                .thenReturn(checkProbeResult);
+
         when(diagnosticService.diagnose(
-                anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
@@ -237,11 +263,16 @@ class CheckExecutionServiceImplTest {
                 anyInt(),
                 anyInt()
         )).thenReturn(diagnosticResult);
-        when(networkServiceRepository.save(any(NetworkService.class))).thenReturn(networkService);
-        when(checkResultRepository.save(any(CheckResult.class))).thenReturn(checkResult);
-        when(checkResultMapper.toCheckResultResponse(checkResult)).thenReturn(checkResultResponse);
 
-        List<CheckResultResponse> results = checkExecutionService.runDueChecks();
+        when(networkServiceRepository.save(any(NetworkService.class)))
+                .thenReturn(networkService);
+        when(checkResultRepository.save(any(CheckResult.class)))
+                .thenReturn(checkResult);
+        when(checkResultMapper.toCheckResultResponse(checkResult))
+                .thenReturn(checkResultResponse);
+
+        List<CheckResultResponse> results =
+                checkExecutionService.runDueChecks();
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -250,13 +281,17 @@ class CheckExecutionServiceImplTest {
     @Test
     @DisplayName("Получение истории проверок сервиса - успешно")
     void getCheckHistory_success() {
-        when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.of(networkService));
+        when(currentUserService.getCurrentUser())
+                .thenReturn(ownerUser);
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.of(networkService));
         when(checkResultRepository.findAllByServiceIdOrderByCheckedAtDesc(10L))
                 .thenReturn(List.of(checkResult));
-        when(checkResultMapper.toCheckResultResponse(checkResult)).thenReturn(checkResultResponse);
+        when(checkResultMapper.toCheckResultResponse(checkResult))
+                .thenReturn(checkResultResponse);
 
-        List<CheckResultResponse> results = checkExecutionService.getCheckHistory(10L);
+        List<CheckResultResponse> results =
+                checkExecutionService.getCheckHistory(10L);
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -265,8 +300,10 @@ class CheckExecutionServiceImplTest {
     @Test
     @DisplayName("Получение истории проверок - отказ в доступе")
     void getCheckHistory_accessDenied_throwsException() {
-        when(currentUserService.getCurrentUser()).thenReturn(differentUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.of(networkService));
+        when(currentUserService.getCurrentUser())
+                .thenReturn(differentUser);
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.of(networkService));
 
         assertThrows(
                 AccessDeniedException.class,
@@ -278,25 +315,30 @@ class CheckExecutionServiceImplTest {
     @DisplayName("Определение статуса DOWN при ошибке HTTP")
     void executeCheck_httpError_setsStatusDown() {
         CheckProbeResult checkProbeResult = mock(CheckProbeResult.class);
+
         when(checkProbeResult.dnsAvailable()).thenReturn(true);
         when(checkProbeResult.pingAvailable()).thenReturn(true);
         when(checkProbeResult.tcpAvailable()).thenReturn(true);
         when(checkProbeResult.sslValid()).thenReturn(true);
-        when(checkProbeResult.heartbeatAvailable()).thenReturn(true);
         when(checkProbeResult.httpStatusCode()).thenReturn(500);
 
-        DiagnosticService.DiagnosticResult diagnosticResult = new DiagnosticService.DiagnosticResult(
-                FailureLayer.APPLICATION,
-                "HTTP error",
-                "Check service"
-        );
+        DiagnosticService.DiagnosticResult diagnosticResult =
+                new DiagnosticService.DiagnosticResult(
+                        FailureLayer.APPLICATION,
+                        "HTTP error",
+                        "Check service"
+                );
 
-        when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
-        when(networkServiceRepository.findById(10L)).thenReturn(Optional.of(networkService));
-        when(serviceCheckerFactory.getChecker(CheckType.HTTP)).thenReturn(serviceChecker);
-        when(serviceChecker.check(networkService)).thenReturn(checkProbeResult);
+        when(currentUserService.getCurrentUser())
+                .thenReturn(ownerUser);
+        when(networkServiceRepository.findById(10L))
+                .thenReturn(Optional.of(networkService));
+        when(serviceCheckerFactory.getChecker(CheckType.HTTP))
+                .thenReturn(serviceChecker);
+        when(serviceChecker.check(networkService))
+                .thenReturn(checkProbeResult);
+
         when(diagnosticService.diagnose(
-                anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
                 anyBoolean(),
@@ -304,14 +346,25 @@ class CheckExecutionServiceImplTest {
                 anyInt(),
                 anyInt()
         )).thenReturn(diagnosticResult);
-        when(networkServiceRepository.save(any(NetworkService.class))).thenReturn(networkService);
-        when(checkResultRepository.save(any(CheckResult.class))).thenReturn(checkResult);
-        when(checkResultMapper.toCheckResultResponse(any(CheckResult.class))).thenReturn(checkResultResponse);
+
+        when(networkServiceRepository.save(any(NetworkService.class)))
+                .thenReturn(networkService);
+        when(checkResultRepository.save(any(CheckResult.class)))
+                .thenReturn(checkResult);
+        when(checkResultMapper.toCheckResultResponse(any(CheckResult.class)))
+                .thenReturn(checkResultResponse);
 
         checkExecutionService.runCheck(10L);
 
-        ArgumentCaptor<CheckResult> captor = ArgumentCaptor.forClass(CheckResult.class);
-        verify(checkResultRepository).save(captor.capture());
-        assertEquals(ServiceStatus.DOWN, captor.getValue().getStatus());
+        ArgumentCaptor<CheckResult> captor =
+                ArgumentCaptor.forClass(CheckResult.class);
+
+        verify(checkResultRepository)
+                .save(captor.capture());
+
+        assertEquals(
+                ServiceStatus.DOWN,
+                captor.getValue().getStatus()
+        );
     }
 }

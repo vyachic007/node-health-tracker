@@ -87,8 +87,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 CheckType.HTTP,
                 "example.com",
                 80,
-                "/",
-                null
+                "/"
         );
 
         NetworkService apiService = createServiceIfNotExists(
@@ -97,8 +96,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 CheckType.HTTPS,
                 "example.com",
                 443,
-                "/api/health",
-                null
+                "/api/health"
         );
 
         NetworkService databaseService = createServiceIfNotExists(
@@ -107,7 +105,6 @@ public class DemoDataSeeder implements CommandLineRunner {
                 CheckType.TCP,
                 "127.0.0.1",
                 5432,
-                null,
                 null
         );
 
@@ -116,7 +113,6 @@ public class DemoDataSeeder implements CommandLineRunner {
                 "Demo DNS Resolver",
                 CheckType.DNS,
                 "google.com",
-                null,
                 null,
                 null
         );
@@ -127,18 +123,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 CheckType.SSL,
                 "example.com",
                 443,
-                null,
                 null
-        );
-
-        NetworkService heartbeatService = createServiceIfNotExists(
-                infrastructureNode,
-                "Demo Heartbeat Agent",
-                CheckType.HEARTBEAT,
-                "agent-demo.local",
-                null,
-                null,
-                "demo-heartbeat-token"
         );
 
         createDemoMonitoringDataIfNotExists(
@@ -146,8 +131,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 apiService,
                 databaseService,
                 dnsService,
-                sslService,
-                heartbeatService
+                sslService
         );
     }
 
@@ -220,8 +204,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             CheckType checkType,
             String targetHost,
             Integer port,
-            String path,
-            String heartbeatToken
+            String path
     ) {
         return networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(node.getId())
                 .stream()
@@ -234,8 +217,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                         checkType,
                         targetHost,
                         port,
-                        path,
-                        heartbeatToken
+                        path
                 ));
     }
 
@@ -256,8 +238,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             CheckType checkType,
             String targetHost,
             Integer port,
-            String path,
-            String heartbeatToken
+            String path
     ) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -268,8 +249,6 @@ public class DemoDataSeeder implements CommandLineRunner {
         service.setTargetHost(targetHost);
         service.setPort(port);
         service.setPath(path);
-        service.setHeartbeatToken(heartbeatToken);
-        service.setLastHeartbeatAt(null);
         service.setLastCheckedAt(null);
         service.setIntervalSeconds(DEMO_SERVICE_INTERVAL_SECONDS);
         service.setIsEnabled(true);
@@ -288,8 +267,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             NetworkService apiService,
             NetworkService databaseService,
             NetworkService dnsService,
-            NetworkService sslService,
-            NetworkService heartbeatService
+            NetworkService sslService
     ) {
         if (checkResultRepository.countByServiceIdAndCheckedAtAfter(
                 websiteService.getId(),
@@ -372,18 +350,6 @@ public class DemoDataSeeder implements CommandLineRunner {
                 "SSL certificate validation failed"
         );
 
-        CheckResult heartbeatDownResult = createCheckResult(
-                heartbeatService,
-                ServiceStatus.DOWN,
-                FailureLayer.HEARTBEAT,
-                "Heartbeat от агента давно не поступал.",
-                "Проверьте, запущен ли агент и может ли он подключиться к серверу мониторинга.",
-                now.minusMinutes(15),
-                null,
-                null,
-                "Heartbeat timeout"
-        );
-
         createResolvedIncidentIfNotExists(
                 databaseService,
                 databaseDownResult,
@@ -399,19 +365,11 @@ public class DemoDataSeeder implements CommandLineRunner {
                 now.minusMinutes(20)
         );
 
-        createOpenIncidentIfNotExists(
-                heartbeatService,
-                heartbeatDownResult,
-                IncidentSeverity.MEDIUM,
-                now.minusMinutes(15)
-        );
-
         updateLastCheckedAt(websiteService, websiteUpResult.getCheckedAt());
         updateLastCheckedAt(apiService, apiUpResult.getCheckedAt());
         updateLastCheckedAt(databaseService, databaseRecoveryResult.getCheckedAt());
         updateLastCheckedAt(dnsService, dnsUpResult.getCheckedAt());
         updateLastCheckedAt(sslService, sslDownResult.getCheckedAt());
-        updateLastCheckedAt(heartbeatService, heartbeatDownResult.getCheckedAt());
     }
 
     private CheckResult createCheckResult(
@@ -448,7 +406,10 @@ public class DemoDataSeeder implements CommandLineRunner {
             LocalDateTime openedAt,
             LocalDateTime closedAt
     ) {
-        if (incidentRepository.countByServiceIdAndStatus(service.getId(), IncidentStatus.RESOLVED) > 0) {
+        if (incidentRepository.countByServiceIdAndStatus(
+                service.getId(),
+                IncidentStatus.RESOLVED
+        ) > 0) {
             return;
         }
 
@@ -468,7 +429,8 @@ public class DemoDataSeeder implements CommandLineRunner {
                 savedIncident,
                 openedByCheckResult,
                 IncidentTimelineEventType.CHECK_FAILED,
-                "Проверка завершилась ошибкой: " + openedByCheckResult.getDiagnosticMessage(),
+                "Проверка завершилась ошибкой: "
+                        + openedByCheckResult.getDiagnosticMessage(),
                 openedAt
         );
 
@@ -476,7 +438,8 @@ public class DemoDataSeeder implements CommandLineRunner {
                 savedIncident,
                 openedByCheckResult,
                 IncidentTimelineEventType.SEVERITY_ASSIGNED,
-                "Назначена критичность инцидента: " + savedIncident.getSeverity(),
+                "Назначена критичность инцидента: "
+                        + savedIncident.getSeverity(),
                 openedAt.plusSeconds(1)
         );
 
@@ -511,7 +474,10 @@ public class DemoDataSeeder implements CommandLineRunner {
             IncidentSeverity severity,
             LocalDateTime openedAt
     ) {
-        if (incidentRepository.findByServiceIdAndStatus(service.getId(), IncidentStatus.OPEN).isPresent()) {
+        if (incidentRepository.findByServiceIdAndStatus(
+                service.getId(),
+                IncidentStatus.OPEN
+        ).isPresent()) {
             return;
         }
 
@@ -531,7 +497,8 @@ public class DemoDataSeeder implements CommandLineRunner {
                 savedIncident,
                 openedByCheckResult,
                 IncidentTimelineEventType.CHECK_FAILED,
-                "Проверка завершилась ошибкой: " + openedByCheckResult.getDiagnosticMessage(),
+                "Проверка завершилась ошибкой: "
+                        + openedByCheckResult.getDiagnosticMessage(),
                 openedAt
         );
 
@@ -539,7 +506,8 @@ public class DemoDataSeeder implements CommandLineRunner {
                 savedIncident,
                 openedByCheckResult,
                 IncidentTimelineEventType.SEVERITY_ASSIGNED,
-                "Назначена критичность инцидента: " + savedIncident.getSeverity(),
+                "Назначена критичность инцидента: "
+                        + savedIncident.getSeverity(),
                 openedAt.plusSeconds(1)
         );
 

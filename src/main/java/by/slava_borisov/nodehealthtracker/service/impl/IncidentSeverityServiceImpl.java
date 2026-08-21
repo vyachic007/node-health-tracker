@@ -20,7 +20,7 @@ public class IncidentSeverityServiceImpl implements IncidentSeverityService {
         return switch (failureLayer) {
             case DNS, NETWORK -> IncidentSeverity.CRITICAL;
             case PORT, SSL -> IncidentSeverity.HIGH;
-            case APPLICATION, PERFORMANCE, HEARTBEAT -> IncidentSeverity.MEDIUM;
+            case APPLICATION, PERFORMANCE -> IncidentSeverity.MEDIUM;
             case UNKNOWN -> IncidentSeverity.LOW;
         };
     }

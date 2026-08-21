@@ -7,6 +7,5 @@ public enum CheckType {
     HTTP,
     HTTPS,
     DNS,
-    SSL,
-    HEARTBEAT
+    SSL
 }

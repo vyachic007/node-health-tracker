@@ -64,7 +64,6 @@ public class IncidentRecoveryChecklistServiceImpl implements IncidentRecoveryChe
             case SSL -> Messages.RECOVERY_CHECKLIST_SUMMARY_SSL;
             case APPLICATION -> Messages.RECOVERY_CHECKLIST_SUMMARY_APPLICATION;
             case PERFORMANCE -> Messages.RECOVERY_CHECKLIST_SUMMARY_PERFORMANCE;
-            case HEARTBEAT -> Messages.RECOVERY_CHECKLIST_SUMMARY_HEARTBEAT;
             case UNKNOWN -> Messages.RECOVERY_CHECKLIST_SUMMARY_UNKNOWN;
         };
     }
@@ -77,7 +76,6 @@ public class IncidentRecoveryChecklistServiceImpl implements IncidentRecoveryChe
             case SSL -> buildSslChecklist();
             case APPLICATION -> buildApplicationChecklist();
             case PERFORMANCE -> buildPerformanceChecklist();
-            case HEARTBEAT -> buildHeartbeatChecklist();
             case UNKNOWN -> buildUnknownChecklist();
         };
     }
@@ -134,15 +132,6 @@ public class IncidentRecoveryChecklistServiceImpl implements IncidentRecoveryChe
                 item(2, Messages.RECOVERY_PERFORMANCE_STEP_2_TITLE, Messages.RECOVERY_PERFORMANCE_STEP_2_DESCRIPTION, true),
                 item(3, Messages.RECOVERY_PERFORMANCE_STEP_3_TITLE, Messages.RECOVERY_PERFORMANCE_STEP_3_DESCRIPTION, false),
                 item(4, Messages.RECOVERY_PERFORMANCE_STEP_4_TITLE, Messages.RECOVERY_PERFORMANCE_STEP_4_DESCRIPTION, false)
-        );
-    }
-
-    private List<RecoveryChecklistItemResponse> buildHeartbeatChecklist() {
-        return List.of(
-                item(1, Messages.RECOVERY_HEARTBEAT_STEP_1_TITLE, Messages.RECOVERY_HEARTBEAT_STEP_1_DESCRIPTION, true),
-                item(2, Messages.RECOVERY_HEARTBEAT_STEP_2_TITLE, Messages.RECOVERY_HEARTBEAT_STEP_2_DESCRIPTION, true),
-                item(3, Messages.RECOVERY_HEARTBEAT_STEP_3_TITLE, Messages.RECOVERY_HEARTBEAT_STEP_3_DESCRIPTION, true),
-                item(4, Messages.RECOVERY_HEARTBEAT_STEP_4_TITLE, Messages.RECOVERY_HEARTBEAT_STEP_4_DESCRIPTION, false)
         );
     }
 

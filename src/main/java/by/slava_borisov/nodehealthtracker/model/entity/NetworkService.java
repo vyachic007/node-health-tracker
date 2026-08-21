@@ -34,12 +34,6 @@ public class NetworkService {
     @Column(name = "check_type", nullable = false, length = 20)
     private CheckType checkType;
 
-    @Column(name = "heartbeat_token", unique = true)
-    private String heartbeatToken;
-
-    @Column(name = "last_heartbeat_at")
-    private LocalDateTime lastHeartbeatAt;
-
     @Column(name = "last_checked_at")
     private LocalDateTime lastCheckedAt;
 

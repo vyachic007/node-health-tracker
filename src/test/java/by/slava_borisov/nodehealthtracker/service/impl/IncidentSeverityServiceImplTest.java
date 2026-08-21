@@ -32,62 +32,87 @@ class IncidentSeverityServiceImplTest {
     @DisplayName("Определение серьезности - слой DNS (CRITICAL)")
     void determineSeverity_dns_returnsCritical() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.DNS);
-        assertEquals(IncidentSeverity.CRITICAL, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.CRITICAL,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой NETWORK (CRITICAL)")
     void determineSeverity_network_returnsCritical() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.NETWORK);
-        assertEquals(IncidentSeverity.CRITICAL, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.CRITICAL,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой PORT (HIGH)")
     void determineSeverity_port_returnsHigh() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.PORT);
-        assertEquals(IncidentSeverity.HIGH, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.HIGH,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой SSL (HIGH)")
     void determineSeverity_ssl_returnsHigh() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.SSL);
-        assertEquals(IncidentSeverity.HIGH, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.HIGH,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой APPLICATION (MEDIUM)")
     void determineSeverity_application_returnsMedium() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.APPLICATION);
-        assertEquals(IncidentSeverity.MEDIUM, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.MEDIUM,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой PERFORMANCE (MEDIUM)")
     void determineSeverity_performance_returnsMedium() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.PERFORMANCE);
-        assertEquals(IncidentSeverity.MEDIUM, incidentSeverityService.determineSeverity(checkResult));
-    }
 
-    @Test
-    @DisplayName("Определение серьезности - слой HEARTBEAT (MEDIUM)")
-    void determineSeverity_heartbeat_returnsMedium() {
-        when(checkResult.getFailureLayer()).thenReturn(FailureLayer.HEARTBEAT);
-        assertEquals(IncidentSeverity.MEDIUM, incidentSeverityService.determineSeverity(checkResult));
+        assertEquals(
+                IncidentSeverity.MEDIUM,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой UNKNOWN (LOW)")
     void determineSeverity_unknown_returnsLow() {
         when(checkResult.getFailureLayer()).thenReturn(FailureLayer.UNKNOWN);
-        assertEquals(IncidentSeverity.LOW, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.LOW,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 
     @Test
     @DisplayName("Определение серьезности - слой null (MEDIUM)")
     void determineSeverity_nullLayer_returnsMedium() {
         when(checkResult.getFailureLayer()).thenReturn(null);
-        assertEquals(IncidentSeverity.MEDIUM, incidentSeverityService.determineSeverity(checkResult));
+
+        assertEquals(
+                IncidentSeverity.MEDIUM,
+                incidentSeverityService.determineSeverity(checkResult)
+        );
     }
 }

@@ -10,8 +10,6 @@ public record CheckProbeResult(
 
         boolean sslValid,
 
-        boolean heartbeatAvailable,
-
         Integer httpStatusCode,
 
         String errorMessage
@@ -19,7 +17,6 @@ public record CheckProbeResult(
 
     public static CheckProbeResult success() {
         return new CheckProbeResult(
-                true,
                 true,
                 true,
                 true,
@@ -35,7 +32,6 @@ public record CheckProbeResult(
                 true,
                 true,
                 true,
-                true,
                 null,
                 errorMessage
         );
@@ -45,7 +41,6 @@ public record CheckProbeResult(
         return new CheckProbeResult(
                 true,
                 false,
-                true,
                 true,
                 true,
                 null,
@@ -59,7 +54,6 @@ public record CheckProbeResult(
                 true,
                 false,
                 true,
-                true,
                 null,
                 errorMessage
         );
@@ -67,19 +61,6 @@ public record CheckProbeResult(
 
     public static CheckProbeResult sslFailed(String errorMessage) {
         return new CheckProbeResult(
-                true,
-                true,
-                true,
-                false,
-                true,
-                null,
-                errorMessage
-        );
-    }
-
-    public static CheckProbeResult heartbeatFailed(String errorMessage) {
-        return new CheckProbeResult(
-                true,
                 true,
                 true,
                 true,
@@ -95,7 +76,6 @@ public record CheckProbeResult(
                 true,
                 true,
                 true,
-                true,
                 httpStatusCode,
                 null
         );
@@ -106,7 +86,6 @@ public record CheckProbeResult(
                 true,
                 true,
                 false,
-                true,
                 true,
                 null,
                 errorMessage

@@ -1,6 +1,5 @@
 package by.slava_borisov.nodehealthtracker.service.impl;
 
-import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceCreateRequest;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceHealthScoreResponse;
 import by.slava_borisov.nodehealthtracker.dto.service.ServiceResponse;
@@ -14,7 +13,7 @@ import by.slava_borisov.nodehealthtracker.model.entity.NetworkNode;
 import by.slava_borisov.nodehealthtracker.model.entity.NetworkService;
 import by.slava_borisov.nodehealthtracker.model.entity.User;
 import by.slava_borisov.nodehealthtracker.model.enums.AuditActionType;
-import by.slava_borisov.nodehealthtracker.model.enums.CheckType;
+import by.slava_borisov.nodehealthtracker.model.enums.HealthLevel;
 import by.slava_borisov.nodehealthtracker.model.enums.IncidentStatus;
 import by.slava_borisov.nodehealthtracker.model.enums.ServiceStatus;
 import by.slava_borisov.nodehealthtracker.repository.CheckResultRepository;
@@ -35,7 +34,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -88,16 +86,6 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         networkService.setCreatedAt(now);
         networkService.setUpdatedAt(now);
 
-        if (networkService.getCheckType() == CheckType.HEARTBEAT) {
-            networkService.setHeartbeatToken(generateHeartbeatToken());
-
-            log.info(
-                    "Для HEARTBEAT-сервиса сгенерирован heartbeat-token: serviceName={}, nodeId={}",
-                    networkService.getName(),
-                    node.getId()
-            );
-        }
-
         NetworkService savedService = networkServiceRepository.save(networkService);
 
         auditLogService.log(
@@ -126,7 +114,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         User currentUser = currentUserService.getCurrentUser();
 
         log.info(
-                "Обновление сервиса: serviceId={}, userId={}, username={}, newName={}, newCheckType={}, newTargetHost={}, newPort={}, newPath={}, newIntervalSeconds={}",
+                "Обновление сервиса: serviceId={}, userId={}, username={}, newName={}, newCheckType={}, " +
+                        "newTargetHost={}, newPort={}, newPath={}, newIntervalSeconds={}",
                 serviceId,
                 currentUser.getId(),
                 currentUser.getUsername(),
@@ -143,29 +132,6 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
         networkServiceMapper.updateEntityFromDto(request, networkService);
         networkService.setUpdatedAt(LocalDateTime.now());
-
-        if (networkService.getCheckType() == CheckType.HEARTBEAT
-                && networkService.getHeartbeatToken() == null) {
-            networkService.setHeartbeatToken(generateHeartbeatToken());
-
-            log.info(
-                    "Для обновлённого HEARTBEAT-сервиса сгенерирован heartbeat-token: serviceId={}, serviceName={}",
-                    networkService.getId(),
-                    networkService.getName()
-            );
-        }
-
-        if (networkService.getCheckType() != CheckType.HEARTBEAT) {
-            networkService.setHeartbeatToken(null);
-            networkService.setLastHeartbeatAt(null);
-
-            log.info(
-                    "Heartbeat-данные очищены, так как сервис больше не HEARTBEAT: serviceId={}, serviceName={}, checkType={}",
-                    networkService.getId(),
-                    networkService.getName(),
-                    networkService.getCheckType()
-            );
-        }
 
         NetworkService savedService = networkServiceRepository.save(networkService);
 
@@ -255,7 +221,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
         NetworkNode node = findNodeById(nodeId);
         validateNodeOwner(node);
 
-        List<ServiceResponse> services = networkServiceRepository.findAllByNodeIdOrderByCreatedAtDesc(nodeId)
+        List<ServiceResponse> services = networkServiceRepository
+                .findAllByNodeIdOrderByCreatedAtDesc(nodeId)
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
@@ -281,7 +248,8 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 currentUser.getUsername()
         );
 
-        List<ServiceResponse> services = networkServiceRepository.findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
+        List<ServiceResponse> services = networkServiceRepository
+                .findAllByNodeOwnerIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
                 .map(this::buildServiceResponse)
                 .toList();
@@ -406,8 +374,6 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 networkService.getId(),
                 networkService.getNode().getId(),
                 networkService.getCheckType(),
-                networkService.getHeartbeatToken(),
-                networkService.getLastHeartbeatAt(),
                 networkService.getLastCheckedAt(),
                 networkService.getName(),
                 networkService.getTargetHost(),
@@ -479,7 +445,10 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
                 .orElse(0L);
     }
 
-    private Double calculateAvailabilityPercent24h(Long serviceId, LocalDateTime checkedAtAfter) {
+    private Double calculateAvailabilityPercent24h(
+            Long serviceId,
+            LocalDateTime checkedAtAfter
+    ) {
         long totalChecks = checkResultRepository.countByServiceIdAndCheckedAtAfter(
                 serviceId,
                 checkedAtAfter
@@ -489,11 +458,12 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
             return null;
         }
 
-        long successfulChecks = checkResultRepository.countByServiceIdAndStatusAndCheckedAtAfter(
-                serviceId,
-                ServiceStatus.UP,
-                checkedAtAfter
-        );
+        long successfulChecks =
+                checkResultRepository.countByServiceIdAndStatusAndCheckedAtAfter(
+                        serviceId,
+                        ServiceStatus.UP,
+                        checkedAtAfter
+                );
 
         double availability = successfulChecks * 100.0 / totalChecks;
 
@@ -510,12 +480,16 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
     private NetworkService findServiceById(Long serviceId) {
         return networkServiceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(Messages.NETWORK_SERVICE_NOT_FOUND)
+                );
     }
 
     private NetworkNode findNodeById(Long nodeId) {
         return networkNodeRepository.findById(nodeId)
-                .orElseThrow(() -> new ResourceNotFoundException(Messages.NETWORK_NODE_NOT_FOUND));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(Messages.NETWORK_NODE_NOT_FOUND)
+                );
     }
 
     private void validateServiceOwner(NetworkService networkService) {
@@ -536,9 +510,5 @@ public class NetworkServiceServiceImpl implements NetworkServiceService {
 
             throw new AccessDeniedException(Messages.NETWORK_NODE_ACCESS_DENIED);
         }
-    }
-
-    private String generateHeartbeatToken() {
-        return UUID.randomUUID().toString();
     }
 }

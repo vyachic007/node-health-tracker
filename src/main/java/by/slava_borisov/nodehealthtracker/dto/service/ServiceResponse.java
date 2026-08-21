@@ -31,20 +31,6 @@ public record ServiceResponse(
         CheckType checkType,
 
         @Schema(
-                description = "Уникальный токен для отправки heartbeat-сигналов",
-                example = "550e8400-e29b-41d4-a716-446655440000",
-                nullable = true
-        )
-        String heartbeatToken,
-
-        @Schema(
-                description = "Дата и время получения последнего heartbeat-сигнала",
-                example = "2026-06-26T14:25:00",
-                nullable = true
-        )
-        LocalDateTime lastHeartbeatAt,
-
-        @Schema(
                 description = "Дата и время последней выполненной проверки",
                 example = "2026-06-26T14:30:00",
                 nullable = true
