@@ -27,7 +27,6 @@ public record IncidentRecurrenceAnalysisResponse(
                         "SSL",
                         "APPLICATION",
                         "PERFORMANCE",
-                        "HEARTBEAT",
                         "UNKNOWN"
                 }
         )

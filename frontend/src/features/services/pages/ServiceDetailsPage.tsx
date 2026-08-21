@@ -117,10 +117,6 @@ function getServiceLogo(service: NetworkService): string {
         return 'DNS';
     }
 
-    if (service.checkType === 'HEARTBEAT') {
-        return 'HB';
-    }
-
     return 'WEB';
 }
 

@@ -23,11 +23,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
@@ -127,7 +127,6 @@ public class IncidentController {
         return incidentService.getIncidentById(incidentId);
     }
 
-
     @Operation(
             summary = "Получить timeline инцидента",
             description = """
@@ -146,7 +145,11 @@ public class IncidentController {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Инцидент принадлежит сервису другого пользователя",
@@ -174,19 +177,22 @@ public class IncidentController {
     })
     @GetMapping("/{incidentId}/timeline")
     public List<IncidentTimelineEventResponse> getIncidentTimeline(
-            @Parameter(description = "Уникальный идентификатор инцидента", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор инцидента",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long incidentId
     ) {
         return incidentTimelineService.getIncidentTimeline(incidentId);
     }
-
 
     @Operation(
             summary = "Получить recovery checklist",
             description = """
                     Возвращает чек-лист восстановления по инциденту. \
                     Список шагов формируется на основе уровня сбоя: DNS, NETWORK, PORT, SSL, \
-                    APPLICATION, PERFORMANCE, HEARTBEAT или UNKNOWN.
+                    APPLICATION, PERFORMANCE или UNKNOWN.
                     """
     )
     @ApiResponses({
@@ -198,31 +204,47 @@ public class IncidentController {
                             schema = @Schema(implementation = IncidentRecoveryChecklistResponse.class)
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Инцидент принадлежит сервису другого пользователя",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Инцидент не найден",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @GetMapping("/{incidentId}/recovery-checklist")
     public IncidentRecoveryChecklistResponse getRecoveryChecklist(
-            @Parameter(description = "Уникальный идентификатор инцидента", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор инцидента",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long incidentId
     ) {
         return incidentRecoveryChecklistService.getRecoveryChecklist(incidentId);
     }
-
 
     @Operation(
             summary = "Получить отчёт по инциденту",
@@ -240,31 +262,47 @@ public class IncidentController {
                             schema = @Schema(implementation = IncidentReportResponse.class)
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Инцидент принадлежит сервису другого пользователя",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Инцидент не найден",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @GetMapping("/{incidentId}/report")
     public IncidentReportResponse getIncidentReport(
-            @Parameter(description = "Уникальный идентификатор инцидента", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор инцидента",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long incidentId
     ) {
         return incidentReportService.getIncidentReport(incidentId);
     }
-
 
     @Operation(
             summary = "Получить анализ повторяемости инцидента",
@@ -282,31 +320,47 @@ public class IncidentController {
                             schema = @Schema(implementation = IncidentRecurrenceAnalysisResponse.class)
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Инцидент принадлежит сервису другого пользователя",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Инцидент не найден",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @GetMapping("/{incidentId}/recurrence-analysis")
     public IncidentRecurrenceAnalysisResponse getIncidentRecurrenceAnalysis(
-            @Parameter(description = "Уникальный идентификатор инцидента", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор инцидента",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long incidentId
     ) {
         return incidentRecurrenceAnalysisService.analyzeRecurrence(incidentId);
     }
-
 
     @Operation(
             summary = "Получить все инциденты текущего пользователя",
@@ -318,21 +372,29 @@ public class IncidentController {
                     description = "Список инцидентов успешно получен",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = IncidentResponse.class))
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = IncidentResponse.class)
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @GetMapping("/my")
     public List<IncidentResponse> getCurrentUserIncidents() {
         return incidentService.getCurrentUserIncidents();
     }
-
 
     @Operation(
             summary = "Получить инциденты сервиса",
@@ -344,34 +406,52 @@ public class IncidentController {
                     description = "Список инцидентов сервиса успешно получен",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = IncidentResponse.class))
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = IncidentResponse.class)
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Сервис принадлежит другому пользователю",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Сервис мониторинга не найден",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @GetMapping("/services/{serviceId}")
     public List<IncidentResponse> getServiceIncidents(
-            @Parameter(description = "Уникальный идентификатор сервиса мониторинга", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор сервиса мониторинга",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long serviceId
     ) {
         return incidentService.getServiceIncidents(serviceId);
     }
-
 
     @Operation(
             summary = "Закрыть инцидент вручную",
@@ -408,26 +488,43 @@ public class IncidentController {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "JWT-токен отсутствует, недействителен или просрочен", content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT-токен отсутствует, недействителен или просрочен",
+                    content = @Content
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Инцидент принадлежит сервису другого пользователя",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Инцидент не найден",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Внутренняя ошибка сервера",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
             )
     })
     @PostMapping("/{incidentId}/close")
     public IncidentResponse closeIncident(
-            @Parameter(description = "Уникальный идентификатор закрываемого инцидента", example = "1", required = true)
+            @Parameter(
+                    description = "Уникальный идентификатор закрываемого инцидента",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long incidentId
     ) {
         return incidentService.closeIncident(incidentId);

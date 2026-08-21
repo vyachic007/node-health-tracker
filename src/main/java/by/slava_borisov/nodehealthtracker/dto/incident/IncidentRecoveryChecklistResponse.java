@@ -38,7 +38,6 @@ public record IncidentRecoveryChecklistResponse(
                         "SSL",
                         "APPLICATION",
                         "PERFORMANCE",
-                        "HEARTBEAT",
                         "UNKNOWN"
                 }
         )

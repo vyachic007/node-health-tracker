@@ -26,7 +26,6 @@ public class SecurityConfig {
             "/api/auth/login",
             "/api/auth/password-reset/request",
             "/api/auth/password-reset/confirm",
-            "/api/heartbeat/**",
             "/api/telegram/webhook",
             "/api/vk/webhook",
 

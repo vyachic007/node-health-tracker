@@ -69,8 +69,8 @@ const SERVICE_TYPE_FIELDS: Record<
         port: true,
         path: false,
     },
-    HEARTBEAT: {
-        address: false,
+    PING: {
+        address: true,
         port: false,
         path: false,
     },
@@ -417,45 +417,27 @@ export function CreateServiceDialog({
                                 }
                             >
                                 <MenuItem value="HTTP">
-                                    {getCheckTypeLabel(
-                                        'HTTP',
-                                    )}
+                                    {getCheckTypeLabel('HTTP')}
                                 </MenuItem>
 
                                 <MenuItem value="HTTPS">
-                                    {getCheckTypeLabel(
-                                        'HTTPS',
-                                    )}
+                                    {getCheckTypeLabel('HTTPS')}
                                 </MenuItem>
 
                                 <MenuItem value="TCP">
-                                    {getCheckTypeLabel(
-                                        'TCP',
-                                    )}
+                                    {getCheckTypeLabel('TCP')}
                                 </MenuItem>
 
                                 <MenuItem value="DNS">
-                                    {getCheckTypeLabel(
-                                        'DNS',
-                                    )}
+                                    {getCheckTypeLabel('DNS')}
                                 </MenuItem>
 
                                 <MenuItem value="SSL">
-                                    {getCheckTypeLabel(
-                                        'SSL',
-                                    )}
+                                    {getCheckTypeLabel('SSL')}
                                 </MenuItem>
 
                                 <MenuItem value="PING">
-                                    {getCheckTypeLabel(
-                                        'PING',
-                                    )}
-                                </MenuItem>
-
-                                <MenuItem value="HEARTBEAT">
-                                    {getCheckTypeLabel(
-                                        'HEARTBEAT',
-                                    )}
+                                    {getCheckTypeLabel('PING')}
                                 </MenuItem>
                             </Select>
                         </FormControl>
@@ -544,24 +526,14 @@ export function CreateServiceDialog({
                         )}
 
                         <TextField
-                            label={
-                                checkType ===
-                                'HEARTBEAT'
-                                    ? 'Интервал ожидания сигнала, секунд'
-                                    : 'Интервал проверки, секунд'
-                            }
+                            label="Интервал проверки, секунд"
                             value={intervalSeconds}
                             onChange={(event) =>
                                 setIntervalSeconds(
                                     event.target.value,
                                 )
                             }
-                            helperText={
-                                checkType ===
-                                'HEARTBEAT'
-                                    ? 'Если сигнал не придёт за несколько интервалов, heartbeat будет считаться устаревшим'
-                                    : 'Например: 60, 300, 3600'
-                            }
+                            helperText="Например: 60, 300, 3600"
                             required
                             fullWidth
                             type="number"
@@ -593,9 +565,7 @@ export function CreateServiceDialog({
                                             }
                                             onChange={(event) =>
                                                 setResponseTimeThresholdMs(
-                                                    event
-                                                        .target
-                                                        .value,
+                                                    event.target.value,
                                                 )
                                             }
                                             helperText="Например: 300 для строгого контроля или 1000 для внешних сайтов"
@@ -618,9 +588,7 @@ export function CreateServiceDialog({
                                             }
                                             onChange={(event) =>
                                                 setDegradationThreshold(
-                                                    event
-                                                        .target
-                                                        .value,
+                                                    event.target.value,
                                                 )
                                             }
                                             helperText="Сколько медленных проверок подряд нужно для подтверждения"
@@ -650,9 +618,7 @@ export function CreateServiceDialog({
                                             }
                                             onChange={(event) =>
                                                 setNotifyEmail(
-                                                    event
-                                                        .target
-                                                        .checked,
+                                                    event.target.checked,
                                                 )
                                             }
                                         />
@@ -668,9 +634,7 @@ export function CreateServiceDialog({
                                             }
                                             onChange={(event) =>
                                                 setNotifyTelegram(
-                                                    event
-                                                        .target
-                                                        .checked,
+                                                    event.target.checked,
                                                 )
                                             }
                                         />
@@ -686,9 +650,7 @@ export function CreateServiceDialog({
                                             }
                                             onChange={(event) =>
                                                 setNotifyVk(
-                                                    event
-                                                        .target
-                                                        .checked,
+                                                    event.target.checked,
                                                 )
                                             }
                                         />

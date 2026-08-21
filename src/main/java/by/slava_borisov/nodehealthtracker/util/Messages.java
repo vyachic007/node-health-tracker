@@ -62,18 +62,6 @@ public final class Messages {
     public static final String CHECKER_NOT_FOUND =
             "Обработчик проверки для типа %s не найден";
 
-    public static final String HEARTBEAT_NOT_RECEIVED =
-            "Heartbeat от сервиса еще не поступал";
-
-    public static final String HEARTBEAT_EXPIRED =
-            "Heartbeat от сервиса давно не поступал";
-
-    public static final String HEARTBEAT_FAILED =
-            "Heartbeat-мониторинг обнаружил отсутствие сигнала от сервиса.";
-
-    public static final String HEARTBEAT_FAILED_RECOMMENDATION =
-            "Проверьте, запущен ли внешний сервис, отправляет ли он heartbeat-запросы и корректно ли настроен heartbeat token.";
-
     public static final String INCIDENT_NOT_FOUND =
             "Инцидент не найден";
 
@@ -103,15 +91,6 @@ public final class Messages {
 
     public static final String NETWORK_SERVICE_ACCESS_DENIED =
             "Нет доступа к этому сервису мониторинга";
-
-    public static final String HEARTBEAT_TOKEN_NOT_FOUND =
-            "Heartbeat token не найден";
-
-    public static final String HEARTBEAT_ACCEPTED =
-            "Heartbeat успешно принят";
-
-    public static final String HEARTBEAT_TOKEN_REQUIRED =
-            "Heartbeat token обязателен";
 
     public static final String JWT_TOKEN_INVALID =
             "JWT-токен недействителен";
@@ -215,141 +194,180 @@ public final class Messages {
     public static final String RECOVERY_CHECKLIST_SUMMARY_PERFORMANCE =
             "Проблема связана с производительностью сервиса.";
 
-    public static final String RECOVERY_CHECKLIST_SUMMARY_HEARTBEAT =
-            "Проблема связана с отсутствием heartbeat-сигнала от агента.";
-
     public static final String RECOVERY_CHECKLIST_SUMMARY_UNKNOWN =
             "Точный уровень проблемы не определён, требуется базовая диагностика.";
 
-    public static final String RECOVERY_DNS_STEP_1_TITLE = "Проверить доменное имя";
+    public static final String RECOVERY_DNS_STEP_1_TITLE =
+            "Проверить доменное имя";
+
     public static final String RECOVERY_DNS_STEP_1_DESCRIPTION =
             "Убедитесь, что домен указан без ошибки и соответствует нужному сервису.";
 
-    public static final String RECOVERY_DNS_STEP_2_TITLE = "Проверить DNS-записи";
+    public static final String RECOVERY_DNS_STEP_2_TITLE =
+            "Проверить DNS-записи";
+
     public static final String RECOVERY_DNS_STEP_2_DESCRIPTION =
             "Проверьте A, AAAA или CNAME-записи домена.";
 
-    public static final String RECOVERY_DNS_STEP_3_TITLE = "Проверить резолвинг";
+    public static final String RECOVERY_DNS_STEP_3_TITLE =
+            "Проверить резолвинг";
+
     public static final String RECOVERY_DNS_STEP_3_DESCRIPTION =
             "Выполните nslookup или dig и убедитесь, что домен преобразуется в IP-адрес.";
 
-    public static final String RECOVERY_DNS_STEP_4_TITLE = "Проверить DNS-провайдера";
+    public static final String RECOVERY_DNS_STEP_4_TITLE =
+            "Проверить DNS-провайдера";
+
     public static final String RECOVERY_DNS_STEP_4_DESCRIPTION =
             "Убедитесь, что у DNS-провайдера нет сбоя или задержки обновления записей.";
 
-    public static final String RECOVERY_NETWORK_STEP_1_TITLE = "Проверить доступность хоста";
+    public static final String RECOVERY_NETWORK_STEP_1_TITLE =
+            "Проверить доступность хоста";
+
     public static final String RECOVERY_NETWORK_STEP_1_DESCRIPTION =
             "Выполните ping или traceroute до целевого узла.";
 
-    public static final String RECOVERY_NETWORK_STEP_2_TITLE = "Проверить сетевой маршрут";
+    public static final String RECOVERY_NETWORK_STEP_2_TITLE =
+            "Проверить сетевой маршрут";
+
     public static final String RECOVERY_NETWORK_STEP_2_DESCRIPTION =
             "Убедитесь, что между клиентом и сервером нет проблем маршрутизации.";
 
-    public static final String RECOVERY_NETWORK_STEP_3_TITLE = "Проверить firewall";
+    public static final String RECOVERY_NETWORK_STEP_3_TITLE =
+            "Проверить firewall";
+
     public static final String RECOVERY_NETWORK_STEP_3_DESCRIPTION =
             "Проверьте, не блокирует ли firewall входящий или исходящий трафик.";
 
-    public static final String RECOVERY_NETWORK_STEP_4_TITLE = "Проверить состояние сервера";
+    public static final String RECOVERY_NETWORK_STEP_4_TITLE =
+            "Проверить состояние сервера";
+
     public static final String RECOVERY_NETWORK_STEP_4_DESCRIPTION =
             "Убедитесь, что сервер включён и доступен из сети.";
 
-    public static final String RECOVERY_PORT_STEP_1_TITLE = "Проверить запуск сервиса";
+    public static final String RECOVERY_PORT_STEP_1_TITLE =
+            "Проверить запуск сервиса";
+
     public static final String RECOVERY_PORT_STEP_1_DESCRIPTION =
             "Убедитесь, что приложение или служба действительно запущены на сервере.";
 
-    public static final String RECOVERY_PORT_STEP_2_TITLE = "Проверить целевой порт";
+    public static final String RECOVERY_PORT_STEP_2_TITLE =
+            "Проверить целевой порт";
+
     public static final String RECOVERY_PORT_STEP_2_DESCRIPTION =
             "Проверьте, слушает ли сервис нужный порт через netstat, ss или lsof.";
 
-    public static final String RECOVERY_PORT_STEP_3_TITLE = "Проверить firewall";
+    public static final String RECOVERY_PORT_STEP_3_TITLE =
+            "Проверить firewall";
+
     public static final String RECOVERY_PORT_STEP_3_DESCRIPTION =
             "Убедитесь, что порт не заблокирован firewall или правилами безопасности.";
 
-    public static final String RECOVERY_PORT_STEP_4_TITLE = "Проверить Docker port mapping";
+    public static final String RECOVERY_PORT_STEP_4_TITLE =
+            "Проверить Docker port mapping";
+
     public static final String RECOVERY_PORT_STEP_4_DESCRIPTION =
             "Если сервис работает в Docker, проверьте проброс портов в docker-compose.yml.";
 
-    public static final String RECOVERY_PORT_STEP_5_TITLE = "Проверить reverse proxy";
+    public static final String RECOVERY_PORT_STEP_5_TITLE =
+            "Проверить reverse proxy";
+
     public static final String RECOVERY_PORT_STEP_5_DESCRIPTION =
             "Если используется Nginx или другой proxy, проверьте upstream и proxy_pass.";
 
-    public static final String RECOVERY_SSL_STEP_1_TITLE = "Проверить срок сертификата";
+    public static final String RECOVERY_SSL_STEP_1_TITLE =
+            "Проверить срок сертификата";
+
     public static final String RECOVERY_SSL_STEP_1_DESCRIPTION =
             "Убедитесь, что SSL/TLS-сертификат не истёк.";
 
-    public static final String RECOVERY_SSL_STEP_2_TITLE = "Проверить цепочку сертификатов";
+    public static final String RECOVERY_SSL_STEP_2_TITLE =
+            "Проверить цепочку сертификатов";
+
     public static final String RECOVERY_SSL_STEP_2_DESCRIPTION =
             "Проверьте, корректно ли настроены intermediate certificates.";
 
-    public static final String RECOVERY_SSL_STEP_3_TITLE = "Проверить HTTPS-конфигурацию";
+    public static final String RECOVERY_SSL_STEP_3_TITLE =
+            "Проверить HTTPS-конфигурацию";
+
     public static final String RECOVERY_SSL_STEP_3_DESCRIPTION =
             "Проверьте настройки HTTPS на сервере или reverse proxy.";
 
-    public static final String RECOVERY_SSL_STEP_4_TITLE = "Проверить домен сертификата";
+    public static final String RECOVERY_SSL_STEP_4_TITLE =
+            "Проверить домен сертификата";
+
     public static final String RECOVERY_SSL_STEP_4_DESCRIPTION =
             "Убедитесь, что сертификат выпущен именно для проверяемого домена.";
 
-    public static final String RECOVERY_APPLICATION_STEP_1_TITLE = "Проверить HTTP-статус";
+    public static final String RECOVERY_APPLICATION_STEP_1_TITLE =
+            "Проверить HTTP-статус";
+
     public static final String RECOVERY_APPLICATION_STEP_1_DESCRIPTION =
             "Посмотрите, какой HTTP-код возвращает приложение.";
 
-    public static final String RECOVERY_APPLICATION_STEP_2_TITLE = "Проверить логи приложения";
+    public static final String RECOVERY_APPLICATION_STEP_2_TITLE =
+            "Проверить логи приложения";
+
     public static final String RECOVERY_APPLICATION_STEP_2_DESCRIPTION =
             "Проверьте backend-логи на наличие исключений или ошибок обработки запроса.";
 
-    public static final String RECOVERY_APPLICATION_STEP_3_TITLE = "Проверить базу данных";
+    public static final String RECOVERY_APPLICATION_STEP_3_TITLE =
+            "Проверить базу данных";
+
     public static final String RECOVERY_APPLICATION_STEP_3_DESCRIPTION =
             "Убедитесь, что приложение может подключиться к базе данных.";
 
-    public static final String RECOVERY_APPLICATION_STEP_4_TITLE = "Проверить reverse proxy";
+    public static final String RECOVERY_APPLICATION_STEP_4_TITLE =
+            "Проверить reverse proxy";
+
     public static final String RECOVERY_APPLICATION_STEP_4_DESCRIPTION =
             "Проверьте настройки Nginx, gateway или другого прокси-сервера.";
 
-    public static final String RECOVERY_PERFORMANCE_STEP_1_TITLE = "Проверить нагрузку на сервер";
+    public static final String RECOVERY_PERFORMANCE_STEP_1_TITLE =
+            "Проверить нагрузку на сервер";
+
     public static final String RECOVERY_PERFORMANCE_STEP_1_DESCRIPTION =
             "Оцените CPU, RAM, disk I/O и сетевую нагрузку.";
 
-    public static final String RECOVERY_PERFORMANCE_STEP_2_TITLE = "Проверить время ответа БД";
+    public static final String RECOVERY_PERFORMANCE_STEP_2_TITLE =
+            "Проверить время ответа БД";
+
     public static final String RECOVERY_PERFORMANCE_STEP_2_DESCRIPTION =
             "Убедитесь, что база данных не является причиной задержки.";
 
-    public static final String RECOVERY_PERFORMANCE_STEP_3_TITLE = "Проверить долгие запросы";
+    public static final String RECOVERY_PERFORMANCE_STEP_3_TITLE =
+            "Проверить долгие запросы";
+
     public static final String RECOVERY_PERFORMANCE_STEP_3_DESCRIPTION =
             "Посмотрите slow queries, тяжёлые endpoints или зависшие операции.";
 
-    public static final String RECOVERY_PERFORMANCE_STEP_4_TITLE = "Проверить количество подключений";
+    public static final String RECOVERY_PERFORMANCE_STEP_4_TITLE =
+            "Проверить количество подключений";
+
     public static final String RECOVERY_PERFORMANCE_STEP_4_DESCRIPTION =
             "Убедитесь, что пул соединений и лимиты сервера не исчерпаны.";
 
-    public static final String RECOVERY_HEARTBEAT_STEP_1_TITLE = "Проверить работу агента";
-    public static final String RECOVERY_HEARTBEAT_STEP_1_DESCRIPTION =
-            "Убедитесь, что агент запущен на контролируемом узле.";
+    public static final String RECOVERY_UNKNOWN_STEP_1_TITLE =
+            "Проверить последние результаты проверок";
 
-    public static final String RECOVERY_HEARTBEAT_STEP_2_TITLE = "Проверить heartbeat token";
-    public static final String RECOVERY_HEARTBEAT_STEP_2_DESCRIPTION =
-            "Проверьте, что агент отправляет heartbeat с корректным токеном.";
-
-    public static final String RECOVERY_HEARTBEAT_STEP_3_TITLE = "Проверить расписание отправки";
-    public static final String RECOVERY_HEARTBEAT_STEP_3_DESCRIPTION =
-            "Убедитесь, что heartbeat отправляется с нужным интервалом.";
-
-    public static final String RECOVERY_HEARTBEAT_STEP_4_TITLE = "Проверить сетевой доступ агента";
-    public static final String RECOVERY_HEARTBEAT_STEP_4_DESCRIPTION =
-            "Проверьте, может ли агент подключиться к серверу мониторинга.";
-
-    public static final String RECOVERY_UNKNOWN_STEP_1_TITLE = "Проверить последние результаты проверок";
     public static final String RECOVERY_UNKNOWN_STEP_1_DESCRIPTION =
             "Посмотрите последние check results и errorMessage.";
 
-    public static final String RECOVERY_UNKNOWN_STEP_2_TITLE = "Проверить доступность хоста";
+    public static final String RECOVERY_UNKNOWN_STEP_2_TITLE =
+            "Проверить доступность хоста";
+
     public static final String RECOVERY_UNKNOWN_STEP_2_DESCRIPTION =
             "Убедитесь, что узел доступен из сети.";
 
-    public static final String RECOVERY_UNKNOWN_STEP_3_TITLE = "Проверить приложение и порт";
+    public static final String RECOVERY_UNKNOWN_STEP_3_TITLE =
+            "Проверить приложение и порт";
+
     public static final String RECOVERY_UNKNOWN_STEP_3_DESCRIPTION =
             "Проверьте, запущено ли приложение и открыт ли нужный порт.";
 
-    public static final String RECOVERY_UNKNOWN_STEP_4_TITLE = "Проверить системные логи";
+    public static final String RECOVERY_UNKNOWN_STEP_4_TITLE =
+            "Проверить системные логи";
+
     public static final String RECOVERY_UNKNOWN_STEP_4_DESCRIPTION =
             "Изучите логи приложения, сервера и контейнеров.";
 
@@ -377,9 +395,6 @@ public final class Messages {
     public static final String INCIDENT_REPORT_SUMMARY_PERFORMANCE =
             "Основная причина была связана с производительностью сервиса.";
 
-    public static final String INCIDENT_REPORT_SUMMARY_HEARTBEAT =
-            "Основная причина была связана с отсутствием heartbeat-сигнала.";
-
     public static final String INCIDENT_REPORT_SUMMARY_UNKNOWN =
             "Основная причина не была точно определена.";
 
@@ -404,40 +419,59 @@ public final class Messages {
     public static final String HEALTH_SCORE_SUMMARY_CRITICAL =
             "Сервис находится в критическом состоянии. Требуется немедленная диагностика.";
 
-    public static final String AUDIT_NODE_CREATED = "Создан узел: ";
+    public static final String AUDIT_NODE_CREATED =
+            "Создан узел: ";
 
-    public static final String AUDIT_NODE_UPDATED = "Обновлён узел: ";
+    public static final String AUDIT_NODE_UPDATED =
+            "Обновлён узел: ";
 
-    public static final String AUDIT_NODE_DELETED = "Удалён узел: ";
+    public static final String AUDIT_NODE_DELETED =
+            "Удалён узел: ";
 
-    public static final String AUDIT_SERVICE_CREATED = "Создан сервис: ";
+    public static final String AUDIT_SERVICE_CREATED =
+            "Создан сервис: ";
 
-    public static final String AUDIT_SERVICE_UPDATED = "Обновлён сервис: ";
-    public static final String AUDIT_SERVICE_DELETED = "Удалён сервис: ";
+    public static final String AUDIT_SERVICE_UPDATED =
+            "Обновлён сервис: ";
 
-    public static final String AUDIT_SERVICE_ENABLED = "Включён сервис: ";
+    public static final String AUDIT_SERVICE_DELETED =
+            "Удалён сервис: ";
 
-    public static final String AUDIT_SERVICE_DISABLED = "Отключён сервис: ";
+    public static final String AUDIT_SERVICE_ENABLED =
+            "Включён сервис: ";
 
-    public static final String AUDIT_INCIDENT_OPENED = "Система открыла инцидент по сервису: ";
+    public static final String AUDIT_SERVICE_DISABLED =
+            "Отключён сервис: ";
 
-    public static final String AUDIT_INCIDENT_RESOLVED = "Система закрыла инцидент по сервису: ";
+    public static final String AUDIT_INCIDENT_OPENED =
+            "Система открыла инцидент по сервису: ";
 
-    public static final String AUDIT_INCIDENT_MANUALLY_RESOLVED = "Пользователь закрыл инцидент по сервису: ";
+    public static final String AUDIT_INCIDENT_RESOLVED =
+            "Система закрыла инцидент по сервису: ";
 
-    public static final String AUDIT_USER_BLOCKED = "Администратор заблокировал пользователя: ";
+    public static final String AUDIT_INCIDENT_MANUALLY_RESOLVED =
+            "Пользователь закрыл инцидент по сервису: ";
 
-    public static final String AUDIT_USER_UNBLOCKED = "Администратор разблокировал пользователя: ";
+    public static final String AUDIT_USER_BLOCKED =
+            "Администратор заблокировал пользователя: ";
 
-    public static final String AUDIT_USER_ROLE_UPDATED = "Администратор изменил роль пользователя: ";
+    public static final String AUDIT_USER_UNBLOCKED =
+            "Администратор разблокировал пользователя: ";
 
-    public static final String AUDIT_USER_DELETED = "Администратор удалил пользователя: ";
+    public static final String AUDIT_USER_ROLE_UPDATED =
+            "Администратор изменил роль пользователя: ";
 
-    public static final String PASSWORD_RESET_TOKEN_INVALID = "Недействительный токен восстановления пароля";
+    public static final String AUDIT_USER_DELETED =
+            "Администратор удалил пользователя: ";
 
-    public static final String PASSWORD_RESET_TOKEN_EXPIRED = "Срок действия токена восстановления пароля истёк";
+    public static final String PASSWORD_RESET_TOKEN_INVALID =
+            "Недействительный токен восстановления пароля";
 
-    public static final String PASSWORD_RESET_TOKEN_ALREADY_USED = "Токен восстановления пароля уже был использован";
+    public static final String PASSWORD_RESET_TOKEN_EXPIRED =
+            "Срок действия токена восстановления пароля истёк";
+
+    public static final String PASSWORD_RESET_TOKEN_ALREADY_USED =
+            "Токен восстановления пароля уже был использован";
 
     public static final String PASSWORD_RESET_EMAIL_SUBJECT =
             "Node Health Tracker: восстановление пароля";
@@ -458,7 +492,8 @@ public final class Messages {
             Это автоматическое уведомление Node Health Tracker.
             """;
 
-    public static final String TOKEN_HASH_ALGORITHM = "SHA-256";
+    public static final String TOKEN_HASH_ALGORITHM =
+            "SHA-256";
 
     public static final String PASSWORD_RESET_HASH_ALGORITHM_NOT_AVAILABLE =
             "SHA-256 algorithm is not available";

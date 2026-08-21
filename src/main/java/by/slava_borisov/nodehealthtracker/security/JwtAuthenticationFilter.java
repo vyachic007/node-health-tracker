@@ -6,6 +6,7 @@ import by.slava_borisov.nodehealthtracker.model.enums.UserStatus;
 import by.slava_borisov.nodehealthtracker.repository.UserRepository;
 import by.slava_borisov.nodehealthtracker.service.JwtService;
 import by.slava_borisov.nodehealthtracker.util.Messages;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -19,7 +20,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -115,8 +115,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestPath.equals("/api/auth/login")
                 || requestPath.equals("/api/auth/password-reset/request")
                 || requestPath.equals("/api/auth/password-reset/confirm")
-                || requestPath.equals("/api/vk/webhook")
-                || requestPath.startsWith("/api/heartbeat/");
+                || requestPath.equals("/api/telegram/webhook")
+                || requestPath.equals("/api/vk/webhook");
     }
 
     private boolean isTokenIssuedBeforeCredentialsChange(String token, User user) {

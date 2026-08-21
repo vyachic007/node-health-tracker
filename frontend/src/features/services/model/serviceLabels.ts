@@ -13,7 +13,6 @@ export const checkTypeLabels: Record<CheckType, string> = {
     HTTPS: 'HTTPS',
     DNS: 'DNS',
     SSL: 'SSL-сертификат',
-    HEARTBEAT: 'Heartbeat',
 };
 
 export const serviceStatusLabels: Record<ServiceStatus, string> = {
@@ -35,7 +34,6 @@ export const failureLayerLabels: Record<FailureLayer, string> = {
     APPLICATION: 'Приложение',
     SSL: 'SSL',
     PERFORMANCE: 'Производительность',
-    HEARTBEAT: 'Heartbeat',
     UNKNOWN: 'Не определён',
 };
 

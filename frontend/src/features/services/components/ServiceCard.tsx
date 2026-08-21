@@ -55,17 +55,26 @@ function normalizeHost(rawHost: string): string {
 }
 
 function getServiceLogoText(service: NetworkService): string {
-    const source = `${service.name} ${service.targetHost} ${service.checkType}`.toLowerCase();
+    const source =
+        `${service.name} ${service.targetHost} ${service.checkType}`.toLowerCase();
 
     if (source.includes('rutube')) {
         return 'RT';
     }
 
-    if (source.includes('gmail') || source.includes('mail') || source.includes('smtp')) {
+    if (
+        source.includes('gmail') ||
+        source.includes('mail') ||
+        source.includes('smtp')
+    ) {
         return 'GM';
     }
 
-    if (source.includes('postgres') || source.includes('database') || source.includes('db')) {
+    if (
+        source.includes('postgres') ||
+        source.includes('database') ||
+        source.includes('db')
+    ) {
         return 'DB';
     }
 
@@ -85,14 +94,12 @@ function getServiceLogoText(service: NetworkService): string {
         return 'DNS';
     }
 
-    if (service.checkType === 'HEARTBEAT') {
-        return 'HB';
-    }
-
     return 'WEB';
 }
 
-function getServiceLogoUrl(service: NetworkService): string | undefined {
+function getServiceLogoUrl(
+    service: NetworkService,
+): string | undefined {
     const host = normalizeHost(service.targetHost);
 
     if (!host || host.includes('.local')) {
@@ -115,7 +122,8 @@ function getStatusIcon(service: NetworkService) {
 }
 
 function getStatusLabel(service: NetworkService): string {
-    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+    const supportsDegradation =
+        checkTypeSupportsDegradation(service.checkType);
 
     if (!service.lastStatus) {
         return 'Не проверялся';
@@ -125,7 +133,11 @@ function getStatusLabel(service: NetworkService): string {
         return 'Отключён';
     }
 
-    if (service.lastStatus === 'UP' && service.degraded && supportsDegradation) {
+    if (
+        service.lastStatus === 'UP' &&
+        service.degraded &&
+        supportsDegradation
+    ) {
         return 'С деградацией';
     }
 
@@ -136,14 +148,21 @@ function getStatusLabel(service: NetworkService): string {
     return 'Недоступен';
 }
 
-function getStatusColor(service: NetworkService): 'success' | 'warning' | 'error' | 'default' {
-    const supportsDegradation = checkTypeSupportsDegradation(service.checkType);
+function getStatusColor(
+    service: NetworkService,
+): 'success' | 'warning' | 'error' | 'default' {
+    const supportsDegradation =
+        checkTypeSupportsDegradation(service.checkType);
 
     if (!service.lastStatus || !service.isEnabled) {
         return 'default';
     }
 
-    if (service.lastStatus === 'UP' && service.degraded && supportsDegradation) {
+    if (
+        service.lastStatus === 'UP' &&
+        service.degraded &&
+        supportsDegradation
+    ) {
         return 'warning';
     }
 
@@ -155,14 +174,23 @@ function getStatusColor(service: NetworkService): 'success' | 'warning' | 'error
 }
 
 function getAvailabilityProgress(value: number | null): number {
-    if (value === null || value === undefined || Number.isNaN(value)) {
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(value)
+    ) {
         return 0;
     }
 
-    return Math.max(0, Math.min(value, 100));
+    return Math.max(
+        0,
+        Math.min(value, 100),
+    );
 }
 
-function getAvailabilityColor(value: number | null): 'success' | 'warning' | 'error' | 'inherit' {
+function getAvailabilityColor(
+    value: number | null,
+): 'success' | 'warning' | 'error' | 'inherit' {
     if (value === null || value === undefined) {
         return 'inherit';
     }
@@ -178,7 +206,12 @@ function getAvailabilityColor(value: number | null): 'success' | 'warning' | 'er
     return 'error';
 }
 
-function getLastCheckDateTime(value: string | null): { date: string; time: string } {
+function getLastCheckDateTime(
+    value: string | null,
+): {
+    date: string;
+    time: string;
+} {
     if (!value) {
         return {
             date: '—',
@@ -213,12 +246,31 @@ export function ServiceCard({
                                 onEdit,
                                 onDelete,
                             }: ServiceCardProps) {
-    const [secondsUntilNextCheck, setSecondsUntilNextCheck] = useState<number | null>(null);
-    const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const [
+        secondsUntilNextCheck,
+        setSecondsUntilNextCheck,
+    ] = useState<number | null>(null);
 
-    const logoText = useMemo(() => getServiceLogoText(service), [service]);
-    const logoUrl = useMemo(() => getServiceLogoUrl(service), [service]);
-    const serviceTarget = useMemo(() => getServiceTargetLabel(service), [service]);
+    const [
+        menuAnchorEl,
+        setMenuAnchorEl,
+    ] = useState<null | HTMLElement>(null);
+
+    const logoText = useMemo(
+        () => getServiceLogoText(service),
+        [service],
+    );
+
+    const logoUrl = useMemo(
+        () => getServiceLogoUrl(service),
+        [service],
+    );
+
+    const serviceTarget = useMemo(
+        () => getServiceTargetLabel(service),
+        [service],
+    );
+
     const supportsDegradation = useMemo(
         () => checkTypeSupportsDegradation(service.checkType),
         [service.checkType],
@@ -229,39 +281,78 @@ export function ServiceCard({
         [service.lastCheckedAt],
     );
 
-    const availabilityProgress = getAvailabilityProgress(service.availabilityPercent24h);
-    const availabilityColor = getAvailabilityColor(service.availabilityPercent24h);
+    const availabilityProgress =
+        getAvailabilityProgress(
+            service.availabilityPercent24h,
+        );
+
+    const availabilityColor =
+        getAvailabilityColor(
+            service.availabilityPercent24h,
+        );
 
     useEffect(() => {
-        if (service.secondsUntilNextCheck !== null && service.secondsUntilNextCheck !== undefined) {
-            setSecondsUntilNextCheck(Math.max(service.secondsUntilNextCheck, 0));
+        if (
+            service.secondsUntilNextCheck !== null &&
+            service.secondsUntilNextCheck !== undefined
+        ) {
+            setSecondsUntilNextCheck(
+                Math.max(
+                    service.secondsUntilNextCheck,
+                    0,
+                ),
+            );
+
             return;
         }
 
         if (service.nextCheckAt) {
-            setSecondsUntilNextCheck(Math.max(getSecondsUntil(service.nextCheckAt) ?? 0, 0));
+            setSecondsUntilNextCheck(
+                Math.max(
+                    getSecondsUntil(
+                        service.nextCheckAt,
+                    ) ?? 0,
+                    0,
+                ),
+            );
+
             return;
         }
 
         setSecondsUntilNextCheck(null);
-    }, [service.id, service.secondsUntilNextCheck, service.nextCheckAt]);
+    }, [
+        service.id,
+        service.secondsUntilNextCheck,
+        service.nextCheckAt,
+    ]);
 
     useEffect(() => {
-        const timerId = window.setInterval(() => {
-            setSecondsUntilNextCheck((current) => {
-                if (current === null) {
-                    return null;
-                }
+        const timerId =
+            window.setInterval(() => {
+                setSecondsUntilNextCheck(
+                    (current) => {
+                        if (current === null) {
+                            return null;
+                        }
 
-                return Math.max(current - 1, 0);
-            });
-        }, 1000);
+                        return Math.max(
+                            current - 1,
+                            0,
+                        );
+                    },
+                );
+            }, 1000);
 
-        return () => window.clearInterval(timerId);
+        return () =>
+            window.clearInterval(timerId);
     }, []);
 
-    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setMenuAnchorEl(event.currentTarget);
+    const handleMenuOpen = (
+        event: React.MouseEvent<HTMLElement>,
+    ) => {
+        setMenuAnchorEl(
+            event.currentTarget,
+        );
     };
 
     const handleMenuClose = () => {
@@ -292,13 +383,21 @@ export function ServiceCard({
                         borderLeftColor: 'error.main',
                     },
                     '& td': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.018)',
+                        backgroundColor:
+                            'rgba(211, 47, 47, 0.018)',
                     },
                 }),
             }}
         >
             <TableCell>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 260 }}>
+                <Stack
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                        alignItems: 'center',
+                        minWidth: 260,
+                    }}
+                >
                     <Avatar
                         variant="rounded"
                         src={logoUrl}
@@ -307,7 +406,10 @@ export function ServiceCard({
                             height: 38,
                             fontSize: 12,
                             fontWeight: 900,
-                            bgcolor: service.lastStatus === 'DOWN' ? 'error.main' : 'primary.main',
+                            bgcolor:
+                                service.lastStatus === 'DOWN'
+                                    ? 'error.main'
+                                    : 'primary.main',
                             color: 'common.white',
                             border: logoUrl ? 1 : 0,
                             borderColor: 'divider',
@@ -322,11 +424,18 @@ export function ServiceCard({
                     </Avatar>
 
                     <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontWeight: 900 }} noWrap>
+                        <Typography
+                            sx={{ fontWeight: 900 }}
+                            noWrap
+                        >
                             {service.name}
                         </Typography>
 
-                        <Typography variant="body2" color="text.secondary" noWrap>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                        >
                             {serviceTarget}
                         </Typography>
                     </Box>
@@ -335,14 +444,21 @@ export function ServiceCard({
 
             <TableCell sx={{ width: 120 }}>
                 <Chip
-                    label={getCheckTypeLabel(service.checkType)}
+                    label={getCheckTypeLabel(
+                        service.checkType,
+                    )}
                     size="small"
                     variant="outlined"
                 />
             </TableCell>
 
             <TableCell sx={{ width: 180 }}>
-                <Stack spacing={0.75} sx={{ alignItems: 'flex-start' }}>
+                <Stack
+                    spacing={0.75}
+                    sx={{
+                        alignItems: 'flex-start',
+                    }}
+                >
                     <Chip
                         icon={getStatusIcon(service)}
                         label={getStatusLabel(service)}
@@ -364,12 +480,26 @@ export function ServiceCard({
 
             <TableCell sx={{ width: 165 }}>
                 <Stack spacing={0.75}>
-                    <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 800 }}>
-                            {formatPercent(service.availabilityPercent24h)}
+                    <Stack
+                        direction="row"
+                        sx={{
+                            justifyContent:
+                                'space-between',
+                        }}
+                    >
+                        <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 800 }}
+                        >
+                            {formatPercent(
+                                service.availabilityPercent24h,
+                            )}
                         </Typography>
 
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                        >
                             24ч
                         </Typography>
                     </Stack>
@@ -388,45 +518,90 @@ export function ServiceCard({
             </TableCell>
 
             <TableCell sx={{ width: 105 }}>
-                <Typography sx={{ fontWeight: 900 }}>
-                    {formatMilliseconds(service.lastResponseTimeMs)}
+                <Typography
+                    sx={{ fontWeight: 900 }}
+                >
+                    {formatMilliseconds(
+                        service.lastResponseTimeMs,
+                    )}
                 </Typography>
 
-                {supportsDegradation && service.degraded && (
-                    <Typography variant="caption" color="warning.main">
-                        медленно
-                    </Typography>
-                )}
+                {supportsDegradation &&
+                    service.degraded && (
+                        <Typography
+                            variant="caption"
+                            color="warning.main"
+                        >
+                            медленно
+                        </Typography>
+                    )}
             </TableCell>
 
             <TableCell sx={{ width: 110 }}>
-                <Typography sx={{ fontWeight: 900 }}>
-                    {formatSeconds(secondsUntilNextCheck)}
+                <Typography
+                    sx={{ fontWeight: 900 }}
+                >
+                    {formatSeconds(
+                        secondsUntilNextCheck,
+                    )}
                 </Typography>
             </TableCell>
 
             <TableCell sx={{ width: 150 }}>
-                <Typography sx={{ fontWeight: 900 }} noWrap>
+                <Typography
+                    sx={{ fontWeight: 900 }}
+                    noWrap
+                >
                     {lastCheck.date}
                 </Typography>
 
-                <Typography variant="body2" color="text.secondary" noWrap>
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                >
                     {lastCheck.time}
                 </Typography>
 
-                <Typography variant="caption" color="text.secondary">
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                >
                     score: {service.healthScore}/100
                 </Typography>
             </TableCell>
 
-            <TableCell align="right" sx={{ width: 115 }}>
-                <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
-                    <Tooltip title={isChecking ? 'Проверка выполняется' : 'Проверить сейчас'}>
+            <TableCell
+                align="right"
+                sx={{ width: 115 }}
+            >
+                <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{
+                        justifyContent:
+                            'flex-end',
+                    }}
+                >
+                    <Tooltip
+                        title={
+                            isChecking
+                                ? 'Проверка выполняется'
+                                : 'Проверить сейчас'
+                        }
+                    >
                         <span>
                             <IconButton
                                 color="primary"
-                                onClick={() => onRunCheck(service.id)}
-                                disabled={isChecking || isDeleting}
+                                onClick={() =>
+                                    onRunCheck(
+                                        service.id,
+                                    )
+                                }
+                                disabled={
+                                    isChecking ||
+                                    isDeleting
+                                }
                                 size="small"
                             >
                                 <SpeedIcon />
@@ -444,7 +619,8 @@ export function ServiceCard({
                                 size="small"
                                 sx={{
                                     border: 1,
-                                    borderColor: 'primary.main',
+                                    borderColor:
+                                        'primary.main',
                                 }}
                             >
                                 <InfoIcon />
@@ -456,8 +632,13 @@ export function ServiceCard({
                         <span>
                             <IconButton
                                 size="small"
-                                onClick={handleMenuOpen}
-                                disabled={isChecking || isDeleting}
+                                onClick={
+                                    handleMenuOpen
+                                }
+                                disabled={
+                                    isChecking ||
+                                    isDeleting
+                                }
                             >
                                 <MoreVertIcon />
                             </IconButton>
@@ -467,8 +648,12 @@ export function ServiceCard({
 
                 <Menu
                     anchorEl={menuAnchorEl}
-                    open={Boolean(menuAnchorEl)}
-                    onClose={handleMenuClose}
+                    open={Boolean(
+                        menuAnchorEl,
+                    )}
+                    onClose={
+                        handleMenuClose
+                    }
                     anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'right',
@@ -478,17 +663,42 @@ export function ServiceCard({
                         horizontal: 'right',
                     }}
                 >
-                    <MenuItem onClick={handleEdit}>
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <MenuItem
+                        onClick={handleEdit}
+                    >
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                                alignItems:
+                                    'center',
+                            }}
+                        >
                             <EditIcon fontSize="small" />
-                            <span>Редактировать</span>
+                            <span>
+                                Редактировать
+                            </span>
                         </Stack>
                     </MenuItem>
 
-                    <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <MenuItem
+                        onClick={handleDelete}
+                        sx={{
+                            color: 'error.main',
+                        }}
+                    >
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                                alignItems:
+                                    'center',
+                            }}
+                        >
                             <DeleteIcon fontSize="small" />
-                            <span>Удалить</span>
+                            <span>
+                                Удалить
+                            </span>
                         </Stack>
                     </MenuItem>
                 </Menu>

@@ -17,26 +17,12 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
+
 import { getCheckTypeLabel } from '../model/serviceLabels';
-import type { NetworkService, UpdateNetworkServiceRequest } from '../model/serviceTypes';
-
-const SERVICE_TYPE_FIELDS: Record<string, {
-    address: boolean;
-    port: boolean;
-    path: boolean;
-}> = {
-    HTTP: { address: true, port: false, path: true },
-    HTTPS: { address: true, port: false, path: true },
-    TCP: { address: true, port: true, path: false },
-    DNS: { address: true, port: false, path: false },
-    SSL: { address: true, port: true, path: false },
-    HEARTBEAT: { address: false, port: false, path: false },
-};
-
-const getServiceTypeFields = (type?: string) => {
-    const normalizedType = (type || "").toUpperCase();
-    return SERVICE_TYPE_FIELDS[normalizedType] ?? { address: true, port: true, path: true };
-};
+import type {
+    NetworkService,
+    UpdateNetworkServiceRequest,
+} from '../model/serviceTypes';
 
 import {
     checkTypeNeedsPath,
@@ -45,12 +31,67 @@ import {
     getDefaultPortByCheckType,
 } from '../model/serviceTypes';
 
+const SERVICE_TYPE_FIELDS: Record<
+    string,
+    {
+        address: boolean;
+        port: boolean;
+        path: boolean;
+    }
+> = {
+    HTTP: {
+        address: true,
+        port: false,
+        path: true,
+    },
+    HTTPS: {
+        address: true,
+        port: false,
+        path: true,
+    },
+    TCP: {
+        address: true,
+        port: true,
+        path: false,
+    },
+    DNS: {
+        address: true,
+        port: false,
+        path: false,
+    },
+    SSL: {
+        address: true,
+        port: true,
+        path: false,
+    },
+    PING: {
+        address: true,
+        port: false,
+        path: false,
+    },
+};
+
+const getServiceTypeFields = (type?: string) => {
+    const normalizedType = (type || '').toUpperCase();
+
+    return (
+        SERVICE_TYPE_FIELDS[normalizedType] ?? {
+            address: true,
+            port: true,
+            path: true,
+        }
+    );
+};
+
 interface EditServiceDialogProps {
     open: boolean;
     service: NetworkService | null;
     isSubmitting: boolean;
     onClose: () => void;
-    onSubmit: (serviceId: number, payload: UpdateNetworkServiceRequest) => void;
+    onSubmit: (
+        serviceId: number,
+        payload: UpdateNetworkServiceRequest,
+    ) => void;
 }
 
 const DEFAULT_RESPONSE_TIME_THRESHOLD_MS = 1000;
@@ -63,46 +104,69 @@ export function EditServiceDialog({
                                       onClose,
                                       onSubmit,
                                   }: EditServiceDialogProps) {
-const [name, setName] = useState('');
+    const [name, setName] = useState('');
     const [targetHost, setTargetHost] = useState('');
     const [port, setPort] = useState('');
     const [path, setPath] = useState('');
     const [intervalSeconds, setIntervalSeconds] = useState('');
-    const [responseTimeThresholdMs, setResponseTimeThresholdMs] = useState('');
-    const [degradationThreshold, setDegradationThreshold] = useState('');
+    const [responseTimeThresholdMs, setResponseTimeThresholdMs] =
+        useState('');
+    const [degradationThreshold, setDegradationThreshold] =
+        useState('');
     const [isEnabled, setIsEnabled] = useState(true);
     const [notifyEmail, setNotifyEmail] = useState(true);
     const [notifyTelegram, setNotifyTelegram] = useState(true);
     const [notifyVk, setNotifyVk] = useState(true);
 
-    const needsPort = service ? checkTypeNeedsPort(service.checkType) : false;
-    const needsPath = service ? checkTypeNeedsPath(service.checkType) : false;
+    const needsPort = service
+        ? checkTypeNeedsPort(service.checkType)
+        : false;
+
+    const needsPath = service
+        ? checkTypeNeedsPath(service.checkType)
+        : false;
+
     const supportsDegradation = service
         ? checkTypeSupportsDegradation(service.checkType)
         : false;
+
+    const visibleFields =
+        getServiceTypeFields(service?.checkType);
 
     useEffect(() => {
         if (!service) {
             return;
         }
 
-        const defaultPort = getDefaultPortByCheckType(service.checkType);
+        const defaultPort =
+            getDefaultPortByCheckType(service.checkType);
 
         setName(service.name);
         setTargetHost(service.targetHost);
+
         setPort(
             service.port === null
                 ? defaultPort?.toString() ?? ''
                 : String(service.port),
         );
+
         setPath(service.path ?? '');
         setIntervalSeconds(String(service.intervalSeconds));
+
         setResponseTimeThresholdMs(
-            String(service.responseTimeThresholdMs ?? DEFAULT_RESPONSE_TIME_THRESHOLD_MS),
+            String(
+                service.responseTimeThresholdMs ??
+                DEFAULT_RESPONSE_TIME_THRESHOLD_MS,
+            ),
         );
+
         setDegradationThreshold(
-            String(service.degradationThreshold ?? DEFAULT_DEGRADATION_THRESHOLD),
+            String(
+                service.degradationThreshold ??
+                DEFAULT_DEGRADATION_THRESHOLD,
+            ),
         );
+
         setIsEnabled(service.isEnabled);
         setNotifyEmail(service.notifyEmail);
         setNotifyTelegram(service.notifyTelegram);
@@ -126,16 +190,30 @@ const [name, setName] = useState('');
             checkType: service.checkType,
             name: name.trim(),
             targetHost: targetHost.trim(),
-            port: needsPort && port.trim() ? Number(port) : null,
-            path: needsPath ? path.trim() || null : null,
+
+            port:
+                needsPort && port.trim()
+                    ? Number(port)
+                    : null,
+
+            path:
+                needsPath
+                    ? path.trim() || null
+                    : null,
+
             intervalSeconds: Number(intervalSeconds),
             isEnabled,
-            responseTimeThresholdMs: supportsDegradation
-                ? Number(responseTimeThresholdMs)
-                : DEFAULT_RESPONSE_TIME_THRESHOLD_MS,
-            degradationThreshold: supportsDegradation
-                ? Number(degradationThreshold)
-                : DEFAULT_DEGRADATION_THRESHOLD,
+
+            responseTimeThresholdMs:
+                supportsDegradation
+                    ? Number(responseTimeThresholdMs)
+                    : DEFAULT_RESPONSE_TIME_THRESHOLD_MS,
+
+            degradationThreshold:
+                supportsDegradation
+                    ? Number(degradationThreshold)
+                    : DEFAULT_DEGRADATION_THRESHOLD,
+
             notifyEmail,
             notifyTelegram,
             notifyVk,
@@ -147,20 +225,31 @@ const [name, setName] = useState('');
         !targetHost.trim() ||
         !intervalSeconds.trim() ||
         Number(intervalSeconds) <= 0 ||
-        (needsPort && (!port.trim() || Number(port) <= 0)) ||
-        (supportsDegradation && (
-            !responseTimeThresholdMs.trim() ||
-            Number(responseTimeThresholdMs) <= 0 ||
-            !degradationThreshold.trim() ||
-            Number(degradationThreshold) <= 0
-        ));
+        (
+            needsPort &&
+            (
+                !port.trim() ||
+                Number(port) <= 0
+            )
+        ) ||
+        (
+            supportsDegradation &&
+            (
+                !responseTimeThresholdMs.trim() ||
+                Number(responseTimeThresholdMs) <= 0 ||
+                !degradationThreshold.trim() ||
+                Number(degradationThreshold) <= 0
+            )
+        );
 
-    const degradationAlertSeverity: 'warning' | 'success' =
-        service?.degraded ? 'warning' : 'success';
+    const degradationAlertSeverity:
+        | 'warning'
+        | 'success' =
+        service?.degraded
+            ? 'warning'
+            : 'success';
 
-        const visibleFields = getServiceTypeFields(service?.checkType);
-
-return (
+    return (
         <Dialog
             open={open}
             onClose={handleClose}
@@ -199,11 +288,17 @@ return (
                                 </Typography>
 
                                 <Typography sx={{ fontWeight: 800 }}>
-                                    {getCheckTypeLabel(service.checkType)}
+                                    {getCheckTypeLabel(
+                                        service.checkType,
+                                    )}
                                 </Typography>
 
-                                <Alert severity="info" sx={{ mt: 1.5 }}>
-                                    Тип проверки при редактировании не меняется. Остальные параметры можно обновить.
+                                <Alert
+                                    severity="info"
+                                    sx={{ mt: 1.5 }}
+                                >
+                                    Тип проверки при редактировании не меняется.
+                                    Остальные параметры можно обновить.
                                 </Alert>
                             </Box>
                         )}
@@ -211,69 +306,96 @@ return (
                         <TextField
                             label="Название сервиса"
                             value={name}
-                            onChange={(event) => setName(event.target.value)}
+                            onChange={(event) =>
+                                setName(event.target.value)
+                            }
                             required
                             fullWidth
                         />
 
                         {visibleFields.address && (
-<TextField
-                            label="Адрес / домен"
-                            value={targetHost}
-                            onChange={(event) => setTargetHost(event.target.value)}
-                            required
-                            fullWidth
-                        />
-)}
+                            <TextField
+                                label="Адрес / домен"
+                                value={targetHost}
+                                onChange={(event) =>
+                                    setTargetHost(
+                                        event.target.value,
+                                    )
+                                }
+                                required
+                                fullWidth
+                            />
+                        )}
 
                         {(needsPort || needsPath) && (
-                            <Grid container spacing={2}>
+                            <Grid
+                                container
+                                spacing={2}
+                            >
                                 {needsPort && (
-                                    <Grid size={{ xs: 12, sm: needsPath ? 6 : 12 }}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            sm: needsPath
+                                                ? 6
+                                                : 12,
+                                        }}
+                                    >
                                         {visibleFields.port && (
-<TextField
-                                            label="Порт"
-                                            type="number"
-                                            value={port}
-                                            onChange={(event) => setPort(event.target.value)}
-                                            placeholder="80, 443, 5432..."
-                                            required
-                                            fullWidth
-                                        />
-)}
+                                            <TextField
+                                                label="Порт"
+                                                type="number"
+                                                value={port}
+                                                onChange={(event) =>
+                                                    setPort(
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                placeholder="80, 443, 5432..."
+                                                required
+                                                fullWidth
+                                            />
+                                        )}
                                     </Grid>
                                 )}
 
                                 {needsPath && (
-                                    <Grid size={{ xs: 12, sm: needsPort ? 6 : 12 }}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            sm: needsPort
+                                                ? 6
+                                                : 12,
+                                        }}
+                                    >
                                         {visibleFields.path && (
-<TextField
-                                            label="Путь HTTP-запроса"
-                                            value={path}
-                                            onChange={(event) => setPath(event.target.value)}
-                                            placeholder="/ или /api/health"
-                                            fullWidth
-                                        />
-)}
+                                            <TextField
+                                                label="Путь HTTP-запроса"
+                                                value={path}
+                                                onChange={(event) =>
+                                                    setPath(
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                placeholder="/ или /api/health"
+                                                fullWidth
+                                            />
+                                        )}
                                     </Grid>
                                 )}
                             </Grid>
                         )}
 
                         <TextField
-                            label={
-                                service?.checkType === 'HEARTBEAT'
-                                    ? 'Интервал ожидания сигнала, секунд'
-                                    : 'Интервал проверки, секунд'
-                            }
+                            label="Интервал проверки, секунд"
                             type="number"
                             value={intervalSeconds}
-                            onChange={(event) => setIntervalSeconds(event.target.value)}
-                            helperText={
-                                service?.checkType === 'HEARTBEAT'
-                                    ? 'Если сигнал не придёт за несколько интервалов, heartbeat будет считаться устаревшим'
-                                    : 'Например: 60 — раз в минуту, 300 — раз в 5 минут, 3600 — раз в час'
+                            onChange={(event) =>
+                                setIntervalSeconds(
+                                    event.target.value,
+                                )
                             }
+                            helperText="Например: 60 — раз в минуту, 300 — раз в 5 минут, 3600 — раз в час"
                             required
                             fullWidth
                         />
@@ -281,17 +403,31 @@ return (
                         {supportsDegradation && (
                             <>
                                 <Alert severity="info">
-                                    Деградация используется для фиксации ситуации, когда сервис формально доступен, но отвечает слишком медленно.
+                                    Деградация используется для фиксации
+                                    ситуации, когда сервис формально
+                                    доступен, но отвечает слишком медленно.
                                 </Alert>
 
-                                <Grid container spacing={2}>
-                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                <Grid
+                                    container
+                                    spacing={2}
+                                >
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            sm: 6,
+                                        }}
+                                    >
                                         <TextField
                                             label="Порог медленного ответа, мс"
                                             type="number"
-                                            value={responseTimeThresholdMs}
+                                            value={
+                                                responseTimeThresholdMs
+                                            }
                                             onChange={(event) =>
-                                                setResponseTimeThresholdMs(event.target.value)
+                                                setResponseTimeThresholdMs(
+                                                    event.target.value,
+                                                )
                                             }
                                             helperText="Если ответ дольше этого значения, проверка считается медленной"
                                             required
@@ -299,13 +435,22 @@ return (
                                         />
                                     </Grid>
 
-                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            sm: 6,
+                                        }}
+                                    >
                                         <TextField
                                             label="Порог деградации"
                                             type="number"
-                                            value={degradationThreshold}
+                                            value={
+                                                degradationThreshold
+                                            }
                                             onChange={(event) =>
-                                                setDegradationThreshold(event.target.value)
+                                                setDegradationThreshold(
+                                                    event.target.value,
+                                                )
                                             }
                                             helperText="Сколько медленных проверок подряд нужно для подтверждения деградации"
                                             required
@@ -315,15 +460,25 @@ return (
                                 </Grid>
 
                                 {service && (
-                                    <Alert severity={degradationAlertSeverity}>
-                                        Сейчас медленных проверок подряд: {service.consecutiveDegradations}. Для подтверждения деградации нужно: {service.degradationThreshold}.
+                                    <Alert
+                                        severity={
+                                            degradationAlertSeverity
+                                        }
+                                    >
+                                        Сейчас медленных проверок подряд:{' '}
+                                        {service.consecutiveDegradations}.
+                                        Для подтверждения деградации нужно:{' '}
+                                        {service.degradationThreshold}.
                                     </Alert>
                                 )}
                             </>
                         )}
 
                         <Box>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            <Typography
+                                variant="subtitle2"
+                                sx={{ mb: 1 }}
+                            >
                                 Уведомления по этому сервису
                             </Typography>
 
@@ -333,7 +488,9 @@ return (
                                         <Checkbox
                                             checked={notifyEmail}
                                             onChange={(event) =>
-                                                setNotifyEmail(event.target.checked)
+                                                setNotifyEmail(
+                                                    event.target.checked,
+                                                )
                                             }
                                         />
                                     }
@@ -343,9 +500,13 @@ return (
                                 <FormControlLabel
                                     control={
                                         <Checkbox
-                                            checked={notifyTelegram}
+                                            checked={
+                                                notifyTelegram
+                                            }
                                             onChange={(event) =>
-                                                setNotifyTelegram(event.target.checked)
+                                                setNotifyTelegram(
+                                                    event.target.checked,
+                                                )
                                             }
                                         />
                                     }
@@ -357,7 +518,9 @@ return (
                                         <Checkbox
                                             checked={notifyVk}
                                             onChange={(event) =>
-                                                setNotifyVk(event.target.checked)
+                                                setNotifyVk(
+                                                    event.target.checked,
+                                                )
                                             }
                                         />
                                     }
@@ -370,16 +533,32 @@ return (
                             control={
                                 <Switch
                                     checked={isEnabled}
-                                    onChange={(event) => setIsEnabled(event.target.checked)}
+                                    onChange={(event) =>
+                                        setIsEnabled(
+                                            event.target.checked,
+                                        )
+                                    }
                                 />
                             }
-                            label={isEnabled ? 'Сервис включён' : 'Сервис отключён'}
+                            label={
+                                isEnabled
+                                    ? 'Сервис включён'
+                                    : 'Сервис отключён'
+                            }
                         />
                     </Stack>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button onClick={handleClose} disabled={isSubmitting}>
+                <DialogActions
+                    sx={{
+                        px: 3,
+                        pb: 3,
+                    }}
+                >
+                    <Button
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
                         Отмена
                     </Button>
 
@@ -387,9 +566,14 @@ return (
                         type="button"
                         variant="contained"
                         onClick={handleSubmit}
-                        disabled={isSubmitting || isFormInvalid}
+                        disabled={
+                            isSubmitting ||
+                            isFormInvalid
+                        }
                     >
-                        {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                        {isSubmitting
+                            ? 'Сохранение...'
+                            : 'Сохранить'}
                     </Button>
                 </DialogActions>
             </Box>

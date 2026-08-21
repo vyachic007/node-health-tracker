@@ -43,7 +43,6 @@ public record IncidentReportResponse(
                         "SSL",
                         "APPLICATION",
                         "PERFORMANCE",
-                        "HEARTBEAT",
                         "UNKNOWN"
                 }
         )

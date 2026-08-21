@@ -17,7 +17,8 @@ public record ServiceUpdateRequest(
                         "HTTPS",
                         "TCP",
                         "PING",
-                        "HEARTBEAT"
+                        "DNS",
+                        "SSL"
                 }
         )
         @NotNull

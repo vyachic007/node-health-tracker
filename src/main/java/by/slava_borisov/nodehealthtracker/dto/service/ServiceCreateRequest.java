@@ -24,7 +24,8 @@ public record ServiceCreateRequest(
                         "HTTPS",
                         "TCP",
                         "PING",
-                        "HEARTBEAT"
+                        "DNS",
+                        "SSL"
                 }
         )
         @NotNull

@@ -4,8 +4,7 @@ export type CheckType =
     | 'HTTP'
     | 'HTTPS'
     | 'DNS'
-    | 'SSL'
-    | 'HEARTBEAT';
+    | 'SSL';
 
 export type ServiceStatus = 'UP' | 'DOWN';
 
@@ -16,7 +15,6 @@ export type FailureLayer =
     | 'APPLICATION'
     | 'SSL'
     | 'PERFORMANCE'
-    | 'HEARTBEAT'
     | 'UNKNOWN';
 
 export type HealthLevel = 'HEALTHY' | 'DEGRADED' | 'UNSTABLE' | 'CRITICAL';
@@ -27,8 +25,6 @@ export interface NetworkService {
     id: number;
     nodeId: number;
     checkType: CheckType;
-    heartbeatToken: string | null;
-    lastHeartbeatAt: string | null;
     lastCheckedAt: string | null;
     name: string;
     targetHost: string;

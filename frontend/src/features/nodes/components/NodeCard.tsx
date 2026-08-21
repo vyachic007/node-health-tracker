@@ -101,14 +101,15 @@ function getCheckTypeColor(checkType: string): ChipProps['color'] {
         case 'HTTPS':
         case 'HTTP':
             return 'success';
+
         case 'TCP':
         case 'PING':
             return 'info';
+
         case 'DNS':
         case 'SSL':
             return 'warning';
-        case 'HEARTBEAT':
-            return 'secondary';
+
         default:
             return 'default';
     }

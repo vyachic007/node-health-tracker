@@ -20,16 +20,16 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-        import java.util.List;
+import java.util.List;
 
 @Tag(
         name = "Сетевые сервисы",
@@ -51,8 +51,7 @@ public class NetworkServiceController {
             summary = "Создать сервис мониторинга",
             description = """
                     Создаёт новый сервис мониторинга внутри указанного сетевого узла. \
-                    Сервис автоматически создаётся во включённом состоянии. \
-                    Для проверки типа HEARTBEAT автоматически генерируется уникальный токен.
+                    Сервис автоматически создаётся во включённом состоянии.
                     """
     )
     @ApiResponses({
@@ -119,7 +118,6 @@ public class NetworkServiceController {
     ) {
         return networkServiceService.createService(request);
     }
-
 
     @Operation(
             summary = "Изменить сервис мониторинга",
@@ -190,7 +188,6 @@ public class NetworkServiceController {
         return networkServiceService.updateService(serviceId, request);
     }
 
-
     @Operation(
             summary = "Получить оценку здоровья сервиса",
             description = """
@@ -250,7 +247,6 @@ public class NetworkServiceController {
         return serviceHealthScoreService.calculateHealthScore(serviceId);
     }
 
-
     @Operation(
             summary = "Удалить сервис мониторинга",
             description = "Удаляет сервис мониторинга, принадлежащий текущему пользователю."
@@ -302,7 +298,6 @@ public class NetworkServiceController {
     ) {
         networkServiceService.deleteService(serviceId);
     }
-
 
     @Operation(
             summary = "Получить сервис мониторинга",
@@ -362,7 +357,6 @@ public class NetworkServiceController {
     ) {
         return networkServiceService.getServiceById(serviceId);
     }
-
 
     @Operation(
             summary = "Получить сервисы сетевого узла",
@@ -424,7 +418,6 @@ public class NetworkServiceController {
         return networkServiceService.getServicesByNodeId(nodeId);
     }
 
-
     @Operation(
             summary = "Получить все сервисы текущего пользователя",
             description = """
@@ -461,7 +454,6 @@ public class NetworkServiceController {
     public List<ServiceResponse> getCurrentUserServices() {
         return networkServiceService.getCurrentUserServices();
     }
-
 
     @Operation(
             summary = "Включить сервис мониторинга",
@@ -520,7 +512,6 @@ public class NetworkServiceController {
     ) {
         return networkServiceService.enableService(serviceId);
     }
-
 
     @Operation(
             summary = "Отключить сервис мониторинга",
